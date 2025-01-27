@@ -1,26 +1,100 @@
 <?php
+// reset_password.php
+
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
 
-// Start the session and generate a CSRF token
 startSession();
 
-// Load environment configuration
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 
-// Sanitize user input
 $user_input = $_GET['input'] ?? '';
 $sanitized_input = sanitize_input($user_input);
 
-// Perform auto login if applicable
 autoLogin();
-
-// Validate reCAPTCHA environment variables
 validateReCaptchaEnvVariables();
-
-// Redirect to the index page if the user is already logged in
 redirect_if_logged_in();
+
+// Ambil token dari URL
+$token = $_GET['hash'] ?? '';
+var_dump($token); // Debugging: Cek nilai token
+
+// Get PDO connection
+$pdo = getPDOConnection();
+if (!$pdo) {
+    die('Database connection failed.');
+}
+
+// Validasi token dan ambil data user
+$user = validateResetToken($token, $pdo);
+var_dump($user); // Debugging: Cek nilai $user
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $token = $_POST['token'] ?? '';
+    $csrf_token = $_POST['csrf_token'] ?? '';
+    $new_password = $_POST['password'] ?? '';
+
+    // Validate CSRF token
+    if (!isset($_SESSION['csrf_token']) || $_SESSION['csrf_token'] !== $csrf_token) {
+        die('CSRF token validation failed.');
+    }
+
+    // Validate reCAPTCHA
+    $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+    $recaptcha_secret = RECAPTCHA_SECRET_KEY;
+    $recaptcha_url = "https://www.google.com/recaptcha/api/siteverify?secret=$recaptcha_secret&response=$recaptcha_response";
+    $recaptcha_data = json_decode(file_get_contents($recaptcha_url));
+
+    if (!$recaptcha_data->success) {
+        die('reCAPTCHA validation failed.');
+    }
+
+    // Update password jika token valid
+    if ($user) {
+        $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
+        updateUserPassword($user['user_id'], $hashed_password, $pdo); // Pass PDO connection to the function
+        markTokenAsUsed($token, $pdo); // Pass PDO connection to the function
+
+        // Redirect to login page with success message
+        header("Location: login.php?message=Password+reset+successfully.");
+        exit();
+    } else {
+        die('Invalid or expired token.');
+    }
+}
+
+// Function to validate the reset token
+function validateResetToken($token, $pdo)
+{
+    $sql = "SELECT pr.user_id, u.email 
+            FROM password_resets pr
+            JOIN users u ON pr.user_id = u.user_id
+            WHERE pr.hash = :hash 
+              AND pr.completed = 0 
+              AND pr.expires_at > NOW()";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['hash' => $token]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Function to update the user's password
+function updateUserPassword($user_id, $hashed_password, $pdo)
+{
+    $sql = "UPDATE users SET password = :password WHERE user_id = :user_id";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['password' => $hashed_password, 'user_id' => $user_id]);
+}
+
+// Function to mark the token as used
+function markTokenAsUsed($token, $pdo)
+{
+    $sql = "UPDATE password_resets 
+            SET completed = 1, completed_at = NOW() 
+            WHERE hash = :hash";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute(['hash' => $token]);
+}
 ?>
 
 <!DOCTYPE html>
@@ -69,10 +143,10 @@ redirect_if_logged_in();
                         <div class="alert alert-info"><?php echo htmlspecialchars($_GET['message']); ?></div>
                     <?php endif; ?>
 
-                    <form action="../../config/auth/process_reset_password.php" method="POST">
+                    <form action="" method="POST">
                         <div class="form-group">
                             <input type="hidden" name="token"
-                                value="<?php echo htmlspecialchars($_GET['token'] ?? ''); ?>" />
+                                value="<?php echo htmlspecialchars($_GET['hash'] ?? ''); ?>" />
                             <input type="hidden" name="csrf_token"
                                 value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>" />
                             <label for="password" class="mb-3 text-start d-block">New Password</label>
