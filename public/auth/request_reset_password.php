@@ -21,6 +21,37 @@ validateReCaptchaEnvVariables();
 
 // Redirect to the index page if the user is already logged in
 redirect_if_logged_in();
+
+// Handle form submission
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email_or_username = sanitize_input($_POST['email_or_username'] ?? '');
+    $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+
+    // Validate CSRF token and reCAPTCHA
+    if (validateCsrfAndRecaptcha(['csrf_token' => $_POST['csrf_token'] ?? '', 'g-recaptcha-response' => $recaptcha_response], new HttpClient())) {
+        // Check if email or username exists in the database
+        $pdo = getPDOConnection();
+        if ($pdo) {
+            // Query untuk memeriksa apakah input cocok dengan email ATAU username
+            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :input OR username = :input");
+            $stmt->execute(['input' => $email_or_username]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+            if ($user) {
+                // User found, proceed with password reset
+                // Di sini Anda bisa menambahkan logika untuk mengirim email reset password
+                echo '<div class="alert alert-success">Password reset instructions have been sent to your email.</div>';
+            } else {
+                // User not found, show error message
+                echo '<div class="alert alert-danger">Email or username not found.</div>';
+            }
+        } else {
+            echo '<div class="alert alert-danger">Database connection error.</div>';
+        }
+    } else {
+        echo '<div class="alert alert-danger">Invalid CSRF token or reCAPTCHA.</div>';
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -69,6 +100,7 @@ redirect_if_logged_in();
                     </div>
                     <h4 class="text-start">Lupa Password</h4>
                     <form action="forgot_password.php" method="POST">
+                        <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                         <div class="form-group">
                             <div class="mb-3">
                                 <label for="email_or_username" class="mb-3 text-start d-block">E-mail Address or
