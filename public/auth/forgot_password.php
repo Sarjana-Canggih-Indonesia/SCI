@@ -1,5 +1,5 @@
 <?php
-// request_reset_password.php
+// forgot_password.php
 
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/config.php';
@@ -153,7 +153,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <i class="fa fa-arrow-left"></i> Back to Login</a>
                     </div>
                     <h4 class="text-start">Lupa Password</h4>
-                    <form action="request_reset_password.php" method="POST">
+                    <form action="forgot_password.php" method="POST">
                         <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                         <div class="form-group">
                             <div class="mb-3">
