@@ -37,74 +37,13 @@ $httpClient = HttpClient::create();
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email_or_username = sanitize_input($_POST['email_or_username'] ?? '');
     $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+    $csrf_token = $_POST['csrf_token'] ?? '';
 
-    // Validate CSRF token and reCAPTCHA
-    if (validateCsrfAndRecaptcha(['csrf_token' => $_POST['csrf_token'] ?? '', 'g-recaptcha-response' => $recaptcha_response], $httpClient)) {
-        // Validate email or username input
-        $isEmail = filter_var($email_or_username, FILTER_VALIDATE_EMAIL);
-        $violations = $isEmail ? validateEmail($email_or_username) : validateUsername($email_or_username);
+    // Process the password reset request
+    $result = processPasswordResetRequest($email_or_username, $recaptcha_response, $csrf_token, $httpClient);
 
-        if (count($violations) === 0) {
-            // Input is valid, proceed with database check
-            $pdo = getPDOConnection();
-            if ($pdo) {
-                // Query untuk memeriksa apakah input cocok dengan email ATAU username
-                $stmt = $pdo->prepare("SELECT user_id, email FROM users WHERE email = :input OR username = :input");
-                $stmt->execute(['input' => $email_or_username]);
-                $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-                if ($user) {
-                    // User found, proceed with password reset
-                    $userId = $user['user_id']; // Menggunakan 'user_id' bukan 'id'
-                    $userEmail = $user['email'];
-
-                    // Generate a unique hash for password reset
-                    $resetHash = generateActivationCode($userEmail);
-
-                    // Set expiration time for the reset link (e.g., 1 hour from now)
-                    $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
-
-                    // Insert the reset request into the password_resets table
-                    $stmt = $pdo->prepare("INSERT INTO password_resets (user_id, hash, expires_at) VALUES (:user_id, :hash, :expires_at)");
-                    $stmt->execute([
-                        'user_id' => $userId,
-                        'hash' => $resetHash,
-                        'expires_at' => $expiresAt
-                    ]);
-
-                    // Construct the reset password link
-                    $resetLink = rtrim($baseUrl, '/') . "/auth/reset_password.php?hash=$resetHash";
-
-                    // Send the reset password email
-                    $mail = getMailer();
-                    $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
-                    $mail->addAddress($userEmail);
-                    $mail->Subject = 'Password Reset Request';
-                    $mail->Body = "Click the link to reset your password: $resetLink";
-
-                    if ($mail->send()) {
-                        echo '<div class="alert alert-success">Password reset instructions have been sent to your email.</div>';
-                    } else {
-                        echo '<div class="alert alert-danger">Failed to send password reset email.</div>';
-                    }
-                } else {
-                    // User not found, show error message
-                    echo '<div class="alert alert-danger">Email or username not found.</div>';
-                }
-            } else {
-                echo '<div class="alert alert-danger">Database connection error.</div>';
-            }
-        } else {
-            // Input is invalid, show validation errors
-            $errorMessages = [];
-            foreach ($violations as $violation) {
-                $errorMessages[] = $violation->getMessage();
-            }
-            echo '<div class="alert alert-danger">' . implode('<br>', $errorMessages) . '</div>';
-        }
-    } else {
-        echo '<div class="alert alert-danger">Invalid CSRF token or reCAPTCHA.</div>';
-    }
+    // Display the result message
+    echo '<div class="alert alert-' . ($result['status'] === 'success' ? 'success' : 'danger') . '">' . $result['message'] . '</div>';
 }
 ?>
 
