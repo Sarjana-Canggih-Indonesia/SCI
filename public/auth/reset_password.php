@@ -1,3 +1,28 @@
+<?php
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/user_actions_config.php';
+
+// Start the session and generate a CSRF token
+startSession();
+
+// Load environment configuration
+$config = getEnvironmentConfig();
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+
+// Sanitize user input
+$user_input = $_GET['input'] ?? '';
+$sanitized_input = sanitize_input($user_input);
+
+// Perform auto login if applicable
+autoLogin();
+
+// Validate reCAPTCHA environment variables
+validateReCaptchaEnvVariables();
+
+// Redirect to the index page if the user is already logged in
+redirect_if_logged_in();
+?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -5,28 +30,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password - Sarjana Canggih</title>
-
     <!-- Favicon -->
-    <link rel="icon" href="../assets/images/logoscblue.png" type="image/x-icon">
+    <link rel="icon" type="image/x-icon" href="<?php echo $baseUrl; ?>favicon.ico" />
     <!-- Bootstrap css -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
-    <!-- Slick Slider css -->
-    <link rel="stylesheet" type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css" />
-    <link rel="stylesheet" type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/bootstrap.min.css" />
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <!-- Custom Styles CSS -->
-    <link rel="stylesheet" type="text/css" href="../assets/css/styles.css">
-    <!-- Font Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700&display=swap"
-        rel="stylesheet">
-    <!-- Memuat script reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css">
+    <!-- Google reCAPTCHA -->
+    <script type="text/javascript" src="https://www.google.com/recaptcha/api.js" async defer></script>
     <!-- Membuat konten rata tengah -->
     <style>
         html,
@@ -41,8 +55,8 @@
     <section class="h-100 d-flex justify-content-center align-items-center">
         <div class="card-wrapper text-center">
             <div class="brand">
-                <a href="../../SCI/">
-                    <img src="../assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia">
+                <a href="<?php echo $baseUrl; ?>">
+                    <img src="<?php echo $baseUrl; ?>assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia">
                 </a>
             </div>
 
@@ -83,18 +97,11 @@
             </div>
         </div>
     </section>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
 </body>
-
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script type="text/javascript" src="../assets/js/jquery-3.5.1.min.js"></script>
-<script type="text/javascript" src="../assets/js/popper.min.js"></script>
-<!--Bootstrap bundle min js-->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-    crossorigin="anonymous"></script>
-<!-- Slick Slider JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
-<!-- Custom JS -->
-<script type="text/javascript" src="../assets/js/custom.js"></script>
 
 </html>
