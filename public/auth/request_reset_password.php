@@ -7,6 +7,8 @@ require_once __DIR__ . '/../../config/user_actions_config.php';
 
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\HttpClient\HttpClient;
 
 // Start the session and generate a CSRF token
 startSession();
@@ -34,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
 
     // Validate CSRF token and reCAPTCHA
-    if (validateCsrfAndRecaptcha(['csrf_token' => $_POST['csrf_token'] ?? '', 'g-recaptcha-response' => $recaptcha_response], new HttpClient())) {
+    if (validateCsrfAndRecaptcha(['csrf_token' => $_POST['csrf_token'] ?? '', 'g-recaptcha-response' => $recaptcha_response], $httpClient)) {
         // Validate email or username input
         $isEmail = filter_var($email_or_username, FILTER_VALIDATE_EMAIL);
         $violations = $isEmail ? validateEmail($email_or_username) : validateUsername($email_or_username);
