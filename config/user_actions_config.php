@@ -751,6 +751,9 @@ function processPasswordResetRequest($email_or_username, $recaptcha_response, $c
 {
     global $config, $baseUrl;
 
+    // Set zona waktu PHP
+    date_default_timezone_set('Asia/Jakarta'); // Sesuaikan dengan zona waktu Anda
+
     // Validate CSRF token and reCAPTCHA
     if (!validateCsrfAndRecaptcha(['csrf_token' => $csrf_token, 'g-recaptcha-response' => $recaptcha_response], $httpClient)) {
         return ['status' => 'error', 'message' => 'Invalid CSRF token or reCAPTCHA.'];
@@ -793,13 +796,25 @@ function processPasswordResetRequest($email_or_username, $recaptcha_response, $c
     // Set expiration time for the reset link (e.g., 1 hour from now)
     $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
 
+    // Bersihkan token lama yang sudah kedaluwarsa
+    $stmt = $pdo->prepare("DELETE FROM password_resets WHERE user_id = :user_id OR expires_at <= NOW()");
+    $stmt->execute(['user_id' => $userId]);
+
     // Insert the reset request into the password_resets table
     $stmt = $pdo->prepare("INSERT INTO password_resets (user_id, hash, expires_at) VALUES (:user_id, :hash, :expires_at)");
-    $stmt->execute([
-        'user_id' => $userId,
-        'hash' => $resetHash,
-        'expires_at' => $expiresAt
-    ]);
+    if (
+        !$stmt->execute([
+            'user_id' => $userId,
+            'hash' => $resetHash,
+            'expires_at' => $expiresAt
+        ])
+    ) {
+        error_log("Failed to save reset token to database: " . implode(", ", $stmt->errorInfo()));
+        return ['status' => 'error', 'message' => 'Failed to process your request. Please try again later.'];
+    }
+
+    // Log the reset request
+    error_log("Reset password request for user ID: $userId, Email: $userEmail, Hash: $resetHash");
 
     // Construct the reset password link
     $resetLink = generateResetPasswordLink($resetHash);
