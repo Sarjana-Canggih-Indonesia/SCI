@@ -11,16 +11,10 @@ Repo untuk website Sarjana Canggih Indonesia
     - [x] register
     - [x] activate
     - [x] resend activation email
-    - [] reset password
+    - [x] forgot password
+    - [x] reset password
+      - [] rapikan function terkait forgot pasword, reset password
     - [] login
-- [] check
-  - [x] folder auth
-    - [x] activate.php
-    - [x] resend_activation_email.php
-    - []
-  - [] index.php utama
-- [] buatkan function untuk send password reset email
-- [x] library, filp/whoops
 
 ### LIVE
 
@@ -60,31 +54,6 @@ Repo untuk website Sarjana Canggih Indonesia
 ### MAJOR
 
 - [] AI Response (?)
-
-## done:
-
-- [x] ubah logika database
-  - [x] tabel customer_profiles mengakibatkan error saat register
-- [x] login tambahkan
-  - [x] dynamic base url
-  - [x] csrf
-  - [x] recaptchax
-  - [x] honeypot
-  - [x] antixss
-  - [x] symfony httpclient
-- [x] register
-  - [x] dynamic base url
-  - [x] csrf
-  - [x] recaptcha
-  - [x] honeypot
-  - [x] antixss
-  - [x] symfony httpclient
-- [x] activation page
-- [x] resend_activation_email
-- [x] Header
-  - [x] profile image muncul
-- [x] tambahkan recaptcha live dan local pada .env
-- [x] periksa value pada config, bagian define recaptcha
 
 ## Reminder:
 
