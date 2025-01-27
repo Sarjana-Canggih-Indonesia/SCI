@@ -86,7 +86,7 @@ redirect_if_logged_in();
             <div class="form-group">
               <div class="d-flex justify-content-between">
                 <label for="login_+password" class="form-label">Password <span style="color: red">*</span></label>
-                <a href="forgot_password.php" class="text-end text-decoration-none">Lupa Password?</a>
+                <a href="request_reset_password.php" class="text-end text-decoration-none">Lupa Password?</a>
               </div>
               <div style="position:relative" id="posisi-login-password-0">
                 <input id="password" type="password" class="form-control" name="password" required
