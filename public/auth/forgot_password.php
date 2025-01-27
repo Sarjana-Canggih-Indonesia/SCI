@@ -55,15 +55,15 @@ redirect_if_logged_in();
     <section class="h-100 d-flex justify-content-center align-items-center">
         <div class="card-wrapper text-center">
             <div class="brand">
-                <a href="../../SCI/">
-                    <img src="../assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia">
+                <a href="<?php echo $baseUrl; ?>">
+                    <img src="<?php echo $baseUrl; ?>assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia">
                 </a>
             </div>
 
             <div class="card fat">
                 <div class="card-body">
                     <div class="d-flex text-start mb-2">
-                        <a href="./login.php" class="btn btn-outline-primary"
+                        <a href="<?php echo $baseUrl; ?>auth/login.php" class="btn btn-outline-primary"
                             onclick="return confirm('Are you sure you want to go back?');">
                             <i class="fa fa-arrow-left"></i> Back to Login</a>
                     </div>
