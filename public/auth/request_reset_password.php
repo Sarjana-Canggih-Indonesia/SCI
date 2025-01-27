@@ -30,6 +30,9 @@ validateReCaptchaEnvVariables();
 // Redirect to the index page if the user is already logged in
 redirect_if_logged_in();
 
+// Initialize HttpClient
+$httpClient = HttpClient::create();
+
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email_or_username = sanitize_input($_POST['email_or_username'] ?? '');
@@ -46,14 +49,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo = getPDOConnection();
             if ($pdo) {
                 // Query untuk memeriksa apakah input cocok dengan email ATAU username
-                $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :input OR username = :input");
+                $stmt = $pdo->prepare("SELECT user_id, email FROM users WHERE email = :input OR username = :input");
                 $stmt->execute(['input' => $email_or_username]);
                 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
                 if ($user) {
                     // User found, proceed with password reset
-                    // Di sini Anda bisa menambahkan logika untuk mengirim email reset password
-                    echo '<div class="alert alert-success">Password reset instructions have been sent to your email.</div>';
+                    $userId = $user['user_id']; // Menggunakan 'user_id' bukan 'id'
+                    $userEmail = $user['email'];
+
+                    // Generate a unique hash for password reset
+                    $resetHash = generateActivationCode($userEmail);
+
+                    // Set expiration time for the reset link (e.g., 1 hour from now)
+                    $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
+
+                    // Insert the reset request into the password_resets table
+                    $stmt = $pdo->prepare("INSERT INTO password_resets (user_id, hash, expires_at) VALUES (:user_id, :hash, :expires_at)");
+                    $stmt->execute([
+                        'user_id' => $userId,
+                        'hash' => $resetHash,
+                        'expires_at' => $expiresAt
+                    ]);
+
+                    // Construct the reset password link
+                    $resetLink = rtrim($baseUrl, '/') . "/auth/reset_password.php?hash=$resetHash";
+
+                    // Send the reset password email
+                    $mail = getMailer();
+                    $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
+                    $mail->addAddress($userEmail);
+                    $mail->Subject = 'Password Reset Request';
+                    $mail->Body = "Click the link to reset your password: $resetLink";
+
+                    if ($mail->send()) {
+                        echo '<div class="alert alert-success">Password reset instructions have been sent to your email.</div>';
+                    } else {
+                        echo '<div class="alert alert-danger">Failed to send password reset email.</div>';
+                    }
                 } else {
                     // User not found, show error message
                     echo '<div class="alert alert-danger">Email or username not found.</div>';
