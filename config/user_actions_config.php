@@ -1,7 +1,12 @@
 <?php
+// user_actions_config.php
+
 require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/auth/validate.php';
+
+use Symfony\Contracts\HttpClient\HttpClientInterface;
+use Symfony\Component\Validator\ConstraintViolationList;
 
 /**
  * This function performs the task of loading environment variables from a .env file.
@@ -731,37 +736,118 @@ function activateAccount($activationCode)
 }
 
 /**
- * Send a password reset email to the user.
+ * Process password reset request.
  *
- * @param string $email The user's email address.
- * @param string $resetCode The password reset code.
- * @return string A message indicating the result of the operation.
+ * This function handles the logic for resetting a user's password, including validation,
+ * generating a reset hash, saving it to the database, and sending a reset email.
+ *
+ * @param string $email_or_username The email or username provided by the user.
+ * @param string $recaptcha_response The reCAPTCHA response from the form.
+ * @param string $csrf_token The CSRF token from the form.
+ * @param HttpClientInterface $httpClient The HTTP client for reCAPTCHA validation.
+ * @return array Returns an array with 'status' (success/error) and 'message'.
  */
-// buatkan function untuk send password reset email
+function processPasswordResetRequest($email_or_username, $recaptcha_response, $csrf_token, HttpClientInterface $httpClient)
+{
+    global $config, $baseUrl;
+
+    // Validate CSRF token and reCAPTCHA
+    if (!validateCsrfAndRecaptcha(['csrf_token' => $csrf_token, 'g-recaptcha-response' => $recaptcha_response], $httpClient)) {
+        return ['status' => 'error', 'message' => 'Invalid CSRF token or reCAPTCHA.'];
+    }
+
+    // Validate email or username input
+    $isEmail = filter_var($email_or_username, FILTER_VALIDATE_EMAIL);
+    $violations = $isEmail ? validateEmail($email_or_username) : validateUsername($email_or_username);
+
+    if (count($violations) > 0) {
+        $errorMessages = [];
+        foreach ($violations as $violation) {
+            $errorMessages[] = $violation->getMessage();
+        }
+        return ['status' => 'error', 'message' => implode('<br>', $errorMessages)];
+    }
+
+    // Input is valid, proceed with database check
+    $pdo = getPDOConnection();
+    if (!$pdo) {
+        return ['status' => 'error', 'message' => 'Database connection error.'];
+    }
+
+    // Query untuk memeriksa apakah input cocok dengan email ATAU username
+    $stmt = $pdo->prepare("SELECT user_id, email FROM users WHERE email = :input OR username = :input");
+    $stmt->execute(['input' => $email_or_username]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if (!$user) {
+        return ['status' => 'error', 'message' => 'Email or username not found.'];
+    }
+
+    // User found, proceed with password reset
+    $userId = $user['user_id'];
+    $userEmail = $user['email'];
+
+    // Generate a unique hash for password reset
+    $resetHash = generateActivationCode($userEmail);
+
+    // Set expiration time for the reset link (e.g., 1 hour from now)
+    $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
+
+    // Insert the reset request into the password_resets table
+    $stmt = $pdo->prepare("INSERT INTO password_resets (user_id, hash, expires_at) VALUES (:user_id, :hash, :expires_at)");
+    $stmt->execute([
+        'user_id' => $userId,
+        'hash' => $resetHash,
+        'expires_at' => $expiresAt
+    ]);
+
+    // Construct the reset password link
+    $resetLink = generateResetPasswordLink($resetHash);
+
+    // Send the reset password email
+    $emailSent = sendResetPasswordEmail($userEmail, $resetLink);
+
+    if ($emailSent) {
+        return ['status' => 'success', 'message' => 'Password reset instructions have been sent to your email.'];
+    } else {
+        return ['status' => 'error', 'message' => 'Failed to send password reset email.'];
+    }
+}
 
 /**
- * Change the user's password.
+ * Generate a reset password link.
  *
- * @param int $userId The user ID.
- * @param string $newPassword The new password to set.
- * @return string A message indicating the result of the operation.
+ * @param string $resetHash The unique hash for the reset request.
+ * @return string The full reset password link.
  */
-function changePassword($userId, $newPassword)
+function generateResetPasswordLink($resetHash)
 {
-    $pdo = getPDOConnection();
-    if (!$pdo)
-        return 'Database connection failed';
+    global $baseUrl;
+    return rtrim($baseUrl, '/') . "/auth/reset_password.php?hash=$resetHash";
+}
+
+/**
+ * Send a reset password email to the user.
+ *
+ * @param string $userEmail The email address of the user.
+ * @param string $resetLink The reset password link.
+ * @return bool Returns true if the email was sent successfully, false otherwise.
+ */
+function sendResetPasswordEmail($userEmail, $resetLink)
+{
+    global $config;
 
     try {
-        $query = "UPDATE users SET password = :password WHERE user_id = :user_id";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute([
-            'password' => password_hash($newPassword, PASSWORD_BCRYPT),
-            'user_id' => $userId
-        ]);
-        return 'Password changed successfully.';
-    } catch (PDOException $e) {
-        return 'Error: ' . $e->getMessage();
+        $mail = getMailer();
+        $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
+        $mail->addAddress($userEmail);
+        $mail->Subject = 'Password Reset Request';
+        $mail->Body = "Click the link to reset your password: $resetLink";
+
+        return $mail->send();
+    } catch (Exception $e) {
+        error_log("Failed to send reset password email: " . $e->getMessage());
+        return false;
     }
 }
 
