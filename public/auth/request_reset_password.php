@@ -1,6 +1,12 @@
 <?php
+// request_reset_password.php
+
+require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
+
+use Symfony\Component\Validator\Validation;
+use Symfony\Component\Validator\Constraints as Assert;
 
 // Start the session and generate a CSRF token
 startSession();
@@ -29,24 +35,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Validate CSRF token and reCAPTCHA
     if (validateCsrfAndRecaptcha(['csrf_token' => $_POST['csrf_token'] ?? '', 'g-recaptcha-response' => $recaptcha_response], new HttpClient())) {
-        // Check if email or username exists in the database
-        $pdo = getPDOConnection();
-        if ($pdo) {
-            // Query untuk memeriksa apakah input cocok dengan email ATAU username
-            $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :input OR username = :input");
-            $stmt->execute(['input' => $email_or_username]);
-            $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        // Validate email or username input
+        $isEmail = filter_var($email_or_username, FILTER_VALIDATE_EMAIL);
+        $violations = $isEmail ? validateEmail($email_or_username) : validateUsername($email_or_username);
 
-            if ($user) {
-                // User found, proceed with password reset
-                // Di sini Anda bisa menambahkan logika untuk mengirim email reset password
-                echo '<div class="alert alert-success">Password reset instructions have been sent to your email.</div>';
+        if (count($violations) === 0) {
+            // Input is valid, proceed with database check
+            $pdo = getPDOConnection();
+            if ($pdo) {
+                // Query untuk memeriksa apakah input cocok dengan email ATAU username
+                $stmt = $pdo->prepare("SELECT id FROM users WHERE email = :input OR username = :input");
+                $stmt->execute(['input' => $email_or_username]);
+                $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
+                if ($user) {
+                    // User found, proceed with password reset
+                    // Di sini Anda bisa menambahkan logika untuk mengirim email reset password
+                    echo '<div class="alert alert-success">Password reset instructions have been sent to your email.</div>';
+                } else {
+                    // User not found, show error message
+                    echo '<div class="alert alert-danger">Email or username not found.</div>';
+                }
             } else {
-                // User not found, show error message
-                echo '<div class="alert alert-danger">Email or username not found.</div>';
+                echo '<div class="alert alert-danger">Database connection error.</div>';
             }
         } else {
-            echo '<div class="alert alert-danger">Database connection error.</div>';
+            // Input is invalid, show validation errors
+            $errorMessages = [];
+            foreach ($violations as $violation) {
+                $errorMessages[] = $violation->getMessage();
+            }
+            echo '<div class="alert alert-danger">' . implode('<br>', $errorMessages) . '</div>';
         }
     } else {
         echo '<div class="alert alert-danger">Invalid CSRF token or reCAPTCHA.</div>';
