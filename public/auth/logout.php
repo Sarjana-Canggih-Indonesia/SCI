@@ -1,0 +1,91 @@
+<?php
+// Include the user actions configuration file
+require_once __DIR__ . '/../../config/user_actions_config.php';
+
+// Call the logout function
+$logoutMessage = logoutUser();
+
+// Set success or failure message based on logout outcome
+$isLogoutSuccessful = $logoutMessage === 'Logged out successfully.';
+
+// Determine the modal message
+$modalTitle = $isLogoutSuccessful ? 'Logged Out' : 'Logout Failed';
+$modalMessage = $isLogoutSuccessful ? htmlspecialchars($logoutMessage) : 'An error occurred while logging out. Please try again later.';
+
+$config = getEnvironmentConfig();
+?>
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logout - Sarjana Canggih Indonesia</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="../favicon.ico" />
+    <!-- Bootstrap css -->
+    <link rel="stylesheet" type="text/css"
+        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <!-- Custom Styles CSS -->
+    <link rel="stylesheet" type="text/css" href="../assets/css/styles.css">
+    </style>
+    <!--  -->
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body class="login-page">
+    <!-- Success Modal -->
+    <div class="modal fade" id="logoutModalSuccess" tabindex="-1" aria-labelledby="logoutModalLabelSuccess"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="logoutModalLabelSuccess"><?php echo $modalTitle; ?></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <?php echo $modalMessage; ?>
+                </div>
+                <div class="modal-footer">
+                    <a href="<?php echo $config['BASE_URL']; ?>public/auth/login.php" type="button"
+                        class="btn btn-secondary">
+                        <i class="fa fa-user"></i> Login
+                    </a>
+                    <?php if ($isLogoutSuccessful): ?>
+                        <a href="<?php echo $config['BASE_URL']; ?>public/" class="btn btn-primary">
+                            <i class="fa fa-home"></i> Homepage
+                        </a>
+                    <?php else: ?>
+                        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Try Again</button>
+                    <?php endif; ?>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Bootstrap JS and Popper.js -->
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
+
+    <script>
+        // Show the modal once the page has loaded
+        window.onload = function () {
+            var modalId = '<?php echo $isLogoutSuccessful ? "logoutModalSuccess" : "logoutModalFailed"; ?>';
+            var myModal = new bootstrap.Modal(document.getElementById(modalId));
+            myModal.show();
+        }
+    </script>
+
+</body>
+
+</html>
