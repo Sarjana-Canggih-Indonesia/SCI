@@ -69,7 +69,7 @@ redirect_if_logged_in();
                         <div class="alert alert-info"><?php echo htmlspecialchars($_GET['message']); ?></div>
                     <?php endif; ?>
 
-                    <form action="../../config/auth/reset_password_process.php" method="POST">
+                    <form action="../../config/auth/process_reset_password.php" method="POST">
                         <div class="form-group">
                             <input type="hidden" name="token"
                                 value="<?php echo htmlspecialchars($_GET['token'] ?? ''); ?>" />
