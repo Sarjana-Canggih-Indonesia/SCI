@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <i class="fa fa-arrow-left"></i> Back to Login</a>
                     </div>
                     <h4 class="text-start">Lupa Password</h4>
-                    <form action="forgot_password.php" method="POST">
+                    <form action="forgot_password.php" method="POST" class="my-forgot-password-validation">
                         <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                         <div class="form-group">
                             <div class="mb-3">
@@ -103,9 +103,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     Username</label>
                                 <input type="text" name="email_or_username" id="email_or_username"
                                     class="form-control mb-3" required autofocus>
-                                <div class="invalid-feedback">
-                                    Email or Username is not valid
-                                </div>
+                                <div class="invalid-feedback">Email or Username is not valid</div>
                                 <div class="form-text text-muted text-start">
                                     By clicking "Reset Password", we will send an email to reset your password.
                                 </div>
@@ -119,48 +117,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </section>
 
-    <section class="modal-informasi">
-        <!-- Modal -->
-        <div class="modal fade" id="forgotPassword-resultModal" tabindex="-1"
-            aria-labelledby="forgotPassword-resultModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="forgotPassword-resultModalLabel">Result</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div id="resultMessage"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- BAGIAN SCRIPT -->
-    <script type="text/javascript">
-        document.addEventListener('DOMContentLoaded', function () {
-            if (typeof resultStatus !== 'undefined' && typeof resultMessage !== 'undefined') {
-                var resultModal = new bootstrap.Modal(document.getElementById('forgotPassword-resultModal'));
-                var resultMessageElement = document.getElementById('resultMessage');
-
-                // Set the message and style based on the result status
-                resultMessageElement.textContent = resultMessage;
-                resultMessageElement.className = 'alert alert-' + (resultStatus === 'success' ? 'success' : 'danger');
-
-                // Show the modal
-                resultModal.show();
-            }
-        });
-    </script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/forgotpassword.js"></script>
 </body>
 
 </html>
