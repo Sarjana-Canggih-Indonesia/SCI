@@ -75,26 +75,24 @@ handlePasswordReset($token, $pdo);
                         <div class="alert alert-info"><?php echo htmlspecialchars($_GET['message']); ?></div>
                     <?php endif; ?>
 
-                    <form action="" method="POST">
+                    <form class="my-reset-password-validation" action="" method="POST">
                         <div class="form-group">
                             <input type="hidden" name="token"
                                 value="<?php echo htmlspecialchars($_GET['hash'] ?? ''); ?>" />
                             <input type="hidden" name="csrf_token"
                                 value="<?php echo htmlspecialchars($_SESSION['csrf_token'] ?? ''); ?>" />
                             <label for="password" class="mb-3 text-start d-block">New Password</label>
-                            <div style="position:relative" id="eye-password-0">
+                            <div style="position:relative" id="reset-password-eye-password-0">
                                 <input id="new-password" type="password" name="password" class="form-control" required
                                     autofocus style="padding-right: 60px;" />
                                 <div class="invalid-feedback">Password is required</div>
-                                <div class="btn btn-sm" id="passeye-toggle-0"
+                                <div class="btn btn-sm" id="reset-password-passeye-toggle-0"
                                     style="position: absolute; right: 10px; top: 7px; padding: 2px 7px; font-size: 16px; cursor: pointer;">
                                     <i class="fas fa-eye"></i>
                                 </div>
                             </div>
                         </div>
-                        <div class="form-text text-muted text-start mb-3">
-                            Pastikan menggunakan password yang kuat dan mudah untuk diingat
-                        </div>
+                        <br>
                         <div class="g-recaptcha mb-3" data-sitekey="<?php echo RECAPTCHA_SITE_KEY; ?>"></div>
                         <button type="submit" class="btn btn-primary btn-lg w-100">Reset Password</button>
                     </form>
@@ -107,6 +105,7 @@ handlePasswordReset($token, $pdo);
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/resetpassword.js"></script>
 </body>
 
 </html>
