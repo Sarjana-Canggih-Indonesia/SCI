@@ -12,8 +12,9 @@ Repo untuk website Sarjana Canggih Indonesia
     - [x] activate
     - [x] resend activation email
     - [x] forgot password
+      - [x] forgot password js
     - [x] reset password
-      - [] rapikan function terkait forgot pasword, reset password
+      - [] reset password js
     - [] login
 
 ### LIVE
