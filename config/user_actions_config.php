@@ -936,6 +936,39 @@ function markTokenAsUsed($token, $pdo)
  * @return string A message indicating the result of the operation.
  */
 
+function handlePasswordReset($token, $pdo): void
+{
+    $user = validateResetToken($token, $pdo);
+
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $token = $_POST['token'] ?? '';
+        $csrf_token = $_POST['csrf_token'] ?? '';
+        $new_password = $_POST['password'] ?? '';
+
+        validateCSRFToken($csrf_token);
+
+        $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
+        $recaptcha_secret = RECAPTCHA_SECRET_KEY;
+        $recaptcha_url = "https://www.google.com/recaptcha/api/siteverify?secret=$recaptcha_secret&response=$recaptcha_response";
+        $recaptcha_data = json_decode(file_get_contents($recaptcha_url));
+
+        if (!$recaptcha_data->success) {
+            die('reCAPTCHA validation failed.');
+        }
+
+        if ($user) {
+            $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
+            updateUserPassword($user['user_id'], $hashed_password, $pdo);
+            markTokenAsUsed($token, $pdo);
+
+            header("Location: login.php?message=Password+reset+successfully.");
+            exit();
+        } else {
+            die('Invalid or expired token.');
+        }
+    }
+}
+
 function changeEmail($userId, $newEmail)
 {
     $pdo = getPDOConnection();
