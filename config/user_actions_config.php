@@ -736,96 +736,94 @@ function activateAccount($activationCode)
 }
 
 /**
- * Process password reset request.
+ * Handles the password reset process for users.
  *
- * This function handles the logic for resetting a user's password, including validation,
- * generating a reset hash, saving it to the database, and sending a reset email.
+ * This function validates the input, checks the database for the user,
+ * generates a password reset hash, and sends a reset link via email.
  *
  * @param string $email_or_username The email or username provided by the user.
- * @param string $recaptcha_response The reCAPTCHA response from the form.
- * @param string $csrf_token The CSRF token from the form.
- * @param HttpClientInterface $httpClient The HTTP client for reCAPTCHA validation.
+ * @param string $recaptcha_response The reCAPTCHA response token.
+ * @param string $csrf_token The CSRF token for form protection.
+ * @param HttpClientInterface $httpClient An HTTP client instance for validating reCAPTCHA.
  * @return array Returns an array with 'status' (success/error) and 'message'.
  */
 function processPasswordResetRequest($email_or_username, $recaptcha_response, $csrf_token, HttpClientInterface $httpClient)
 {
     global $config, $baseUrl;
 
-    // Set zona waktu PHP
-    date_default_timezone_set('Asia/Jakarta'); // Sesuaikan dengan zona waktu Anda
+    // Set the default timezone to Asia/Jakarta
+    date_default_timezone_set('Asia/Jakarta');
 
-    // Validate CSRF token and reCAPTCHA
+    // Load environment configuration and set environment type based on host
+    $config = getEnvironmentConfig();
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+
+    // Validate CSRF token and reCAPTCHA response using a helper function
     if (!validateCsrfAndRecaptcha(['csrf_token' => $csrf_token, 'g-recaptcha-response' => $recaptcha_response], $httpClient)) {
-        return ['status' => 'error', 'message' => 'Invalid CSRF token or reCAPTCHA.'];
+        handleError('Invalid CSRF token or reCAPTCHA.', $env); // Handle error if validation fails
+        return ['status' => 'error', 'message' => 'Invalid CSRF token or reCAPTCHA.']; // Return error response
     }
 
-    // Validate email or username input
-    $isEmail = filter_var($email_or_username, FILTER_VALIDATE_EMAIL);
-    $violations = $isEmail ? validateEmail($email_or_username) : validateUsername($email_or_username);
+    // Check if the provided input is an email or username and validate accordingly
+    $isEmail = filter_var($email_or_username, FILTER_VALIDATE_EMAIL); // Check if input is a valid email
+    $violations = $isEmail ? validateEmail($email_or_username) : validateUsername($email_or_username); // Validate either email or username
 
     if (count($violations) > 0) {
         $errorMessages = [];
         foreach ($violations as $violation) {
-            $errorMessages[] = $violation->getMessage();
+            $errorMessages[] = $violation->getMessage(); // Collect validation error messages
         }
-        return ['status' => 'error', 'message' => implode('<br>', $errorMessages)];
+        handleError(implode('<br>', $errorMessages), $env); // Handle error if validation fails
+        return ['status' => 'error', 'message' => implode('<br>', $errorMessages)]; // Return error response
     }
 
-    // Input is valid, proceed with database check
+    // Establish a database connection
     $pdo = getPDOConnection();
     if (!$pdo) {
-        return ['status' => 'error', 'message' => 'Database connection error.'];
+        handleError('Database connection error.', $env); // Handle error if database connection fails
+        return ['status' => 'error', 'message' => 'Database connection error.']; // Return error response
     }
 
-    // Query untuk memeriksa apakah input cocok dengan email ATAU username
+    // Check if the email or username exists in the database
     $stmt = $pdo->prepare("SELECT user_id, email FROM users WHERE email = :input OR username = :input");
-    $stmt->execute(['input' => $email_or_username]);
-    $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt->execute(['input' => $email_or_username]); // Execute the query to find the user
+    $user = $stmt->fetch(PDO::FETCH_ASSOC); // Fetch the user data
 
     if (!$user) {
-        return ['status' => 'error', 'message' => 'Email or username not found.'];
+        handleError('Email or username not found.', $env); // Handle error if user is not found
+        return ['status' => 'error', 'message' => 'Email or username not found.']; // Return error response
     }
 
-    // User found, proceed with password reset
-    $userId = $user['user_id'];
-    $userEmail = $user['email'];
+    // Generate a unique hash for the password reset token
+    $userId = $user['user_id']; // Get the user ID
+    $userEmail = $user['email']; // Get the user email
+    $resetHash = generateActivationCode($userEmail); // Generate a unique hash for password reset
+    $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour')); // Set expiration time for reset token
 
-    // Generate a unique hash for password reset
-    $resetHash = generateActivationCode($userEmail);
-
-    // Set expiration time for the reset link (e.g., 1 hour from now)
-    $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour'));
-
-    // Bersihkan token lama yang sudah kedaluwarsa
+    // Clear expired reset tokens for the user
     $stmt = $pdo->prepare("DELETE FROM password_resets WHERE user_id = :user_id OR expires_at <= NOW()");
-    $stmt->execute(['user_id' => $userId]);
+    $stmt->execute(['user_id' => $userId]); // Delete expired reset tokens from the database
 
-    // Insert the reset request into the password_resets table
+    // Save the new reset token in the database
     $stmt = $pdo->prepare("INSERT INTO password_resets (user_id, hash, expires_at) VALUES (:user_id, :hash, :expires_at)");
-    if (
-        !$stmt->execute([
-            'user_id' => $userId,
-            'hash' => $resetHash,
-            'expires_at' => $expiresAt
-        ])
-    ) {
-        error_log("Failed to save reset token to database: " . implode(", ", $stmt->errorInfo()));
-        return ['status' => 'error', 'message' => 'Failed to process your request. Please try again later.'];
+    if (!$stmt->execute(['user_id' => $userId, 'hash' => $resetHash, 'expires_at' => $expiresAt])) {
+        $errorMessage = "Failed to save reset token to database for user ID: $userId"; // Error message if insertion fails
+        handleError($errorMessage, $env); // Handle the error
+        return ['status' => 'error', 'message' => 'Failed to process your request. Please try again later.']; // Return error response
     }
 
-    // Log the reset request
-    error_log("Reset password request for user ID: $userId, Email: $userEmail, Hash: $resetHash");
+    // Generate the password reset link
+    $resetLink = generateResetPasswordLink($resetHash); // Create the reset password link
 
-    // Construct the reset password link
-    $resetLink = generateResetPasswordLink($resetHash);
-
-    // Send the reset password email
-    $emailSent = sendResetPasswordEmail($userEmail, $resetLink);
+    // Send the password reset email
+    $emailSent = sendResetPasswordEmail($userEmail, $resetLink); // Send the email with the reset link
 
     if ($emailSent) {
-        return ['status' => 'success', 'message' => 'Password reset instructions have been sent to your email.'];
+        return ['status' => 'success', 'message' => 'Password reset instructions have been sent to your email.']; // Return success if email is sent
     } else {
-        return ['status' => 'error', 'message' => 'Failed to send password reset email.'];
+        $errorMessage = "Failed to send reset password email for user ID: $userId"; // Error message if email fails to send
+        handleError($errorMessage, $env); // Handle the error
+        return ['status' => 'error', 'message' => 'Failed to send password reset email.']; // Return error response
     }
 }
 
