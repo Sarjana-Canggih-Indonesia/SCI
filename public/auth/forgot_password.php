@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $csrf_token = $_POST['csrf_token'] ?? '';
 
     // Process the password reset request
-    $result = processPasswordResetRequest($email_or_username, $recaptcha_response, $csrf_token, $httpClient);
+    $result = processPasswordResetRequest($email_or_username, $recaptcha_response, $csrf_token, $httpClient, $config, $baseUrl);
 
     // Display the result message
     echo '<div class="alert alert-' . ($result['status'] === 'success' ? 'success' : 'danger') . '">' . $result['message'] . '</div>';

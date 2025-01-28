@@ -747,10 +747,8 @@ function activateAccount($activationCode)
  * @param HttpClientInterface $httpClient An HTTP client instance for validating reCAPTCHA.
  * @return array Returns an array with 'status' (success/error) and 'message'.
  */
-function processPasswordResetRequest($email_or_username, $recaptcha_response, $csrf_token, HttpClientInterface $httpClient)
+function processPasswordResetRequest($email_or_username, $recaptcha_response, $csrf_token, HttpClientInterface $httpClient, $config, $baseUrl)
 {
-    global $config, $baseUrl;
-
     // Set the default timezone to Asia/Jakarta
     date_default_timezone_set('Asia/Jakarta');
 
@@ -857,7 +855,8 @@ function sendResetPasswordEmail($userEmail, $resetLink)
         $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
         $mail->addAddress($userEmail);
         $mail->Subject = 'Password Reset Request';
-        $mail->Body = "Click the link to reset your password: $resetLink";
+        $mail->Body = "Click the link to reset your password: <a href='$resetLink'>Reset Password</a>";
+        $mail->isHTML(true);
         return $mail->send();
     } catch (Exception $e) {
         $envConfig = getEnvironmentConfig();
