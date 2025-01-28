@@ -13,11 +13,11 @@ document.addEventListener("DOMContentLoaded", function () {
       clearErrors();
 
       // Validasi password baru
-      if (!newPassword.value.trim()) {
-        showError(newPassword, "New Password is required");
-        isValid = false;
-      } else if (newPassword.value.length < 6) {
-        showError(newPassword, "Password must be at least 6 characters long");
+      var passwordValidationResult = validatePassword(newPassword.value);
+      if (passwordValidationResult.length > 0) {
+        passwordValidationResult.forEach(function (error) {
+          showError(newPassword, error);
+        });
         isValid = false;
       }
 
@@ -96,4 +96,31 @@ document.addEventListener("DOMContentLoaded", function () {
     alert(resultMessage); // Ganti modal dengan alert
   }
 });
+
+// Fungsi untuk validasi password
+function validatePassword(password) {
+  var errors = [];
+
+  // Validasi panjang password
+  if (password.length < 6 || password.length > 20) {
+    errors.push("Password must be between 6 and 20 characters long.");
+  }
+
+  // Validasi huruf besar
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Password must contain at least one uppercase letter.");
+  }
+
+  // Validasi huruf kecil
+  if (!/[a-z]/.test(password)) {
+    errors.push("Password must contain at least one lowercase letter.");
+  }
+
+  // Validasi angka
+  if (!/\d/.test(password)) {
+    errors.push("Password must contain at least one number.");
+  }
+
+  return errors;
+}
 // ==================== Akhir JS untuk Halaman Reset Password ==================== //
