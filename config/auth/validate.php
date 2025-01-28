@@ -82,55 +82,37 @@ function validateUsername($username)
 
 /**
  * Validates the password based on a set of constraints.
- * 
- * Task:
- * 1. Validates that the password is not blank.
- * 2. Ensures that the password is between 8 and 20 characters in length.
- * 3. Ensures that the password contains at least one uppercase letter.
- * 4. Ensures that the password contains at least one lowercase letter.
- * 5. Ensures that the password contains at least one number.
- * 
+ *
+ * This function ensures that the password is not blank, is between 6 and 20 characters in length,
+ * contains at least one uppercase letter, one lowercase letter, and one number.
+ *
  * @param string $password The password to be validated.
- * 
  * @return \Symfony\Component\Validator\ConstraintViolationList The list of validation violations.
  */
 function validatePassword($password)
 {
-    // Create a new validator instance
-    $validator = Validation::createValidator();
+    $validator = Validation::createValidator(); // Create a new validator instance
 
-    // Define the validation constraints for the password
+    // Define validation constraints for the password
     $passwordConstraint = new Assert\Collection([
         'fields' => [
             'password' => [
                 new Assert\NotBlank(['message' => 'Password cannot be blank.']), // Ensure password is not blank
                 new Assert\Length([
-                    'min' => 8,
-                    'max' => 20,
+                    'min' => 6,
+                    'max' => 20, // Minimum length changed to 6 characters
                     'minMessage' => 'Password must be at least {{ limit }} characters long.',
                     'maxMessage' => 'Password can be a maximum of {{ limit }} characters long.',
-                ]), // Check the length of the password
-                new Assert\Regex([
-                    'pattern' => '/[A-Z]/', // Ensure the password contains at least one uppercase letter
-                    'message' => 'Password must contain at least one uppercase letter.',
-                ]), // Uppercase letter check
-                new Assert\Regex([
-                    'pattern' => '/[a-z]/', // Ensure the password contains at least one lowercase letter
-                    'message' => 'Password must contain at least one lowercase letter.',
-                ]), // Lowercase letter check
-                new Assert\Regex([
-                    'pattern' => '/\d/', // Ensure the password contains at least one number
-                    'message' => 'Password must contain at least one number.',
-                ]), // Number check
+                ]), // Validate password length
+                new Assert\Regex(['pattern' => '/[A-Z]/', 'message' => 'Password must contain at least one uppercase letter.']), // Uppercase check
+                new Assert\Regex(['pattern' => '/[a-z]/', 'message' => 'Password must contain at least one lowercase letter.']), // Lowercase check
+                new Assert\Regex(['pattern' => '/\d/', 'message' => 'Password must contain at least one number.']), // Number check
             ]
         ]
     ]);
 
-    // Validate the password using the defined constraints
-    $violations = $validator->validate(['password' => $password], $passwordConstraint);
-
-    // Return the list of violations, if any
-    return $violations;
+    $violations = $validator->validate(['password' => $password], $passwordConstraint); // Validate password
+    return $violations; // Return validation violations
 }
 
 /**
