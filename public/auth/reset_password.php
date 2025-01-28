@@ -61,38 +61,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         die('Invalid or expired token.');
     }
 }
-
-// Function to validate the reset token
-function validateResetToken($token, $pdo)
-{
-    $sql = "SELECT pr.user_id, u.email 
-            FROM password_resets pr
-            JOIN users u ON pr.user_id = u.user_id
-            WHERE pr.hash = :hash 
-              AND pr.completed = 0 
-              AND pr.expires_at > NOW()";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['hash' => $token]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
-}
-
-// Function to update the user's password
-function updateUserPassword($user_id, $hashed_password, $pdo)
-{
-    $sql = "UPDATE users SET password = :password WHERE user_id = :user_id";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['password' => $hashed_password, 'user_id' => $user_id]);
-}
-
-// Function to mark the token as used
-function markTokenAsUsed($token, $pdo)
-{
-    $sql = "UPDATE password_resets 
-            SET completed = 1, completed_at = NOW() 
-            WHERE hash = :hash";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['hash' => $token]);
-}
 ?>
 
 <!DOCTYPE html>
