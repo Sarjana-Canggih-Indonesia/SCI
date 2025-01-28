@@ -507,23 +507,18 @@ function resendActivationEmail($username)
 
 /**
  * Registers a new user.
- * 
- * Task:
- * 1. Validates the username, email, and password.
- * 2. Checks if the username or email already exists in the database.
- * 3. Hashes the password before storing it.
- * 4. Generates an activation code and inserts the user into the database.
- * 
+ *
+ * This function validates the username, email, and password, checks if the username or email already exists,
+ * hashes the password, generates an activation code, and inserts the user into the database.
+ *
  * @param string $username The username of the user.
  * @param string $email The email of the user.
  * @param string $password The password of the user.
  * @param string $env The environment setting for error handling.
- * 
  * @return string A message indicating the result of the registration process.
  */
 function registerUser($username, $email, $password, $env)
 {
-    // Step 1: Get PDO connection
     $pdo = getPDOConnection();
     if (!$pdo) {
         handleError('Database connection failed.', $env);
@@ -531,65 +526,52 @@ function registerUser($username, $email, $password, $env)
     }
 
     try {
-        // Step 2: Validate Username using validate.php function
+        // Validate username, email, and password
         $usernameViolations = validateUsername($username);
-        if (count($usernameViolations) > 0) {
-            return $usernameViolations[0]->getMessage(); // Return the first violation message
-        }
-
-        // Step 3: Validate Email using validate.php function
+        if (count($usernameViolations) > 0)
+            return $usernameViolations[0]->getMessage();
         $emailViolations = validateEmail($email);
-        if (count($emailViolations) > 0) {
-            return $emailViolations[0]->getMessage(); // Return the first violation message
-        }
-
-        // Step 4: Validate Password using validate.php function
+        if (count($emailViolations) > 0)
+            return $emailViolations[0]->getMessage();
         $passwordViolations = validatePassword($password);
-        if (count($passwordViolations) > 0) {
-            return $passwordViolations[0]->getMessage(); // Return the first violation message
-        }
+        if (count($passwordViolations) > 0)
+            return $passwordViolations[0]->getMessage();
 
-        // Step 5: Check if the username or email already exists
+        // Check if username or email already exists
         $checkQuery = "SELECT 1 FROM users WHERE username = :username OR email = :email";
         $stmt = $pdo->prepare($checkQuery);
         $stmt->execute(['username' => $username, 'email' => $email]);
-        if ($stmt->fetch()) {
+        if ($stmt->fetch())
             return 'Username or email already exists.';
-        }
 
-        // Step 6: Hash the password
+        // Hash the password
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
         if ($hashedPassword === false) {
             handleError('Password hashing failed.', $env);
             return 'Internal server error. Please try again later.';
         }
 
-        // Step 7: Generate an activation code
+        // Generate activation code and insert user into the database
         $activationCode = generateActivationCode($email);
-
-        // Step 8: Insert the user into the database
-        $insertQuery = "
-            INSERT INTO users (username, email, password, isactive, activation_code, created_at) 
-            VALUES (:username, :email, :password, 0, :activation_code, NOW())
-        ";
+        $currentTime = Carbon::now()->toDateTimeString();
+        $insertQuery = "INSERT INTO users (username, email, password, isactive, activation_code, created_at) VALUES (:username, :email, :password, 0, :activation_code, :created_at)";
         $stmt = $pdo->prepare($insertQuery);
         $stmt->execute([
             'username' => $username,
             'email' => $email,
             'password' => $hashedPassword,
-            'activation_code' => $activationCode
+            'activation_code' => $activationCode,
+            'created_at' => $currentTime
         ]);
 
-        // Step 9: Check if insertion was successful
+        // Check if insertion was successful and return activation code
         if ($stmt->rowCount() > 0) {
-            // Ambil kode aktivasi dari hasil query
             $stmt = $pdo->prepare("SELECT activation_code FROM users WHERE email = :email");
             $stmt->execute(['email' => $email]);
             $activationCode = $stmt->fetchColumn();
             return 'Registration successful. Please activate your account via email. Activation Code: ' . $activationCode;
         }
     } catch (PDOException $e) {
-        // Step 10: Handle database-related exceptions
         handleError('Database error: ' . $e->getMessage(), $env);
         return 'Internal server error. Please try again later.';
     }
