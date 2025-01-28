@@ -1,4 +1,4 @@
-// ==================== JS untuk Halaman Lupa Password ==================== //
+// ==================== JS untuk Halaman Forgot Password ==================== //
 document.addEventListener("DOMContentLoaded", function () {
   // Cek apakah elemen-elemen yang dibutuhkan ada pada halaman
   if (document.querySelector("form.my-forgot-password-validation")) {
@@ -76,4 +76,4 @@ document.addEventListener("DOMContentLoaded", function () {
     alert(resultMessage); // Ganti modal dengan alert
   }
 });
-// ==================== Akhir JS untuk Halaman Lupa Password ==================== //
+// ==================== Akhir JS untuk Halaman Forgot Password ==================== //
