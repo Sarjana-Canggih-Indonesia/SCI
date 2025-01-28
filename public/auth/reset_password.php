@@ -25,42 +25,8 @@ if (!$pdo) {
     die('Database connection failed.');
 }
 
-// Validasi token dan ambil data user
-$user = validateResetToken($token, $pdo);
-
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $token = $_POST['token'] ?? '';
-    $csrf_token = $_POST['csrf_token'] ?? '';
-    $new_password = $_POST['password'] ?? '';
-
-    // Validate CSRF token
-    if (!isset($_SESSION['csrf_token']) || $_SESSION['csrf_token'] !== $csrf_token) {
-        die('CSRF token validation failed.');
-    }
-
-    // Validate reCAPTCHA
-    $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
-    $recaptcha_secret = RECAPTCHA_SECRET_KEY;
-    $recaptcha_url = "https://www.google.com/recaptcha/api/siteverify?secret=$recaptcha_secret&response=$recaptcha_response";
-    $recaptcha_data = json_decode(file_get_contents($recaptcha_url));
-
-    if (!$recaptcha_data->success) {
-        die('reCAPTCHA validation failed.');
-    }
-
-    // Update password jika token valid
-    if ($user) {
-        $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
-        updateUserPassword($user['user_id'], $hashed_password, $pdo); // Pass PDO connection to the function
-        markTokenAsUsed($token, $pdo); // Pass PDO connection to the function
-
-        // Redirect to login page with success message
-        header("Location: login.php?message=Password+reset+successfully.");
-        exit();
-    } else {
-        die('Invalid or expired token.');
-    }
-}
+// Handle password reset logic
+handlePasswordReset($token, $pdo);
 ?>
 
 <!DOCTYPE html>
