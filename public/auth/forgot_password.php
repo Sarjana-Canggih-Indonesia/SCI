@@ -42,8 +42,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Process the password reset request
     $result = processPasswordResetRequest($email_or_username, $recaptcha_response, $csrf_token, $httpClient, $config, $baseUrl);
 
-    // Display the result message
-    echo '<div class="alert alert-' . ($result['status'] === 'success' ? 'success' : 'danger') . '">' . $result['message'] . '</div>';
+    // Store the result message in a JavaScript variable
+    echo '<script type="text/javascript">';
+    echo 'var resultStatus = "' . $result['status'] . '";';
+    echo 'var resultMessage = "' . $result['message'] . '";';
+    echo '</script>';
 }
 ?>
 
@@ -116,6 +119,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </div>
     </section>
 
+    <section class="modal-informasi">
+        <!-- Modal -->
+        <div class="modal fade" id="forgotPassword-resultModal" tabindex="-1"
+            aria-labelledby="forgotPassword-resultModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="forgotPassword-resultModalLabel">Result</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div id="resultMessage"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BAGIAN SCRIPT -->
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function () {
+            if (typeof resultStatus !== 'undefined' && typeof resultMessage !== 'undefined') {
+                var resultModal = new bootstrap.Modal(document.getElementById('forgotPassword-resultModal'));
+                var resultMessageElement = document.getElementById('resultMessage');
+
+                // Set the message and style based on the result status
+                resultMessageElement.textContent = resultMessage;
+                resultMessageElement.className = 'alert alert-' + (resultStatus === 'success' ? 'success' : 'danger');
+
+                // Show the modal
+                resultModal.show();
+            }
+        });
+    </script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
