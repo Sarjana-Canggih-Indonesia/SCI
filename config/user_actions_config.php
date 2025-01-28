@@ -840,26 +840,28 @@ function generateResetPasswordLink($resetHash)
 }
 
 /**
- * Send a reset password email to the user.
+ * Sends a reset password email to the user.
  *
- * @param string $userEmail The email address of the user.
- * @param string $resetLink The reset password link.
+ * This function creates a mailer instance, sets up the email content including the reset password link,
+ * and attempts to send the email. If the sending fails, it handles the error according to the environment configuration.
+ *
+ * @param string $userEmail The email address of the user to whom the reset password email will be sent.
+ * @param string $resetLink The reset password link that the user can click to reset their password.
  * @return bool Returns true if the email was sent successfully, false otherwise.
  */
 function sendResetPasswordEmail($userEmail, $resetLink)
 {
     global $config;
-
     try {
         $mail = getMailer();
         $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
         $mail->addAddress($userEmail);
         $mail->Subject = 'Password Reset Request';
         $mail->Body = "Click the link to reset your password: $resetLink";
-
         return $mail->send();
     } catch (Exception $e) {
-        error_log("Failed to send reset password email: " . $e->getMessage());
+        $envConfig = getEnvironmentConfig();
+        handleError("Failed to send reset password email: " . $e->getMessage(), $envConfig['BASE_URL']);
         return false;
     }
 }
