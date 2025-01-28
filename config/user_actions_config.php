@@ -10,30 +10,24 @@ use Symfony\Component\Validator\ConstraintViolationList;
 use Carbon\Carbon;
 
 /**
- * This function performs the task of loading environment variables from a .env file.
- * 1. Checks if the .env file has been loaded previously.
- * 2. If not loaded, attempts to load the .env file and set environment variables.
- * 3. If successful, marks the .env file as loaded to avoid reloading in future requests.
+ * Load environment variables from a .env file.
+ * This script checks if the .env file has already been loaded. If not, it attempts to load the .env file
+ * and set the environment variables. If successful, it marks the .env file as loaded to avoid reloading
+ * in future requests.
  */
 $rootDir = __DIR__ . '/../';
 $dotenvFile = $rootDir . '.env';
 
-// Step 1: Check if the .env file has already been loaded
 if (getenv('ENV_LOADED')) {
     error_log('.env file already loaded, skipping...');
 } else {
-    // Step 2: Load the .env file if not loaded
     $dotenv = Dotenv\Dotenv::createImmutable($rootDir);
-
     if (!file_exists($dotenvFile) || !$dotenv->load()) {
-        $errorMessage = '.env file not found or failed to load';
-        error_log($errorMessage);
+        error_log('.env file not found or failed to load');
         exit;
     } else {
-        // Step 3: Mark that the .env file is loaded by setting ENV_LOADED environment variable
         putenv('ENV_LOADED=true');
-        $successMessage = '.env file loaded successfully';
-        error_log($successMessage);
+        error_log('.env file loaded successfully');
     }
 }
 
@@ -49,93 +43,79 @@ $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
 /**
  * Get a PDO connection to the database.
- *
- * This function performs the following tasks:
- * 1. Retrieves the environment-specific configuration settings (database credentials).
- * 2. Establishes a connection to a MySQL database using PDO.
- * 3. Sets the error mode to exceptions for better error handling.
- * 
- * @return PDO|null PDO instance for database interaction or null if an error occurs.
+ * This function retrieves environment-specific configuration settings, establishes a connection
+ * to a MySQL database using PDO, and sets the error mode to exceptions for better error handling.
+ * @return PDO|null Returns a PDO instance for database interaction or null if an error occurs.
  */
 function getPDOConnection()
 {
     try {
-        // 1. Retrieve environment-specific configuration settings
+        // Retrieve environment-specific configuration settings
         $config = getEnvironmentConfig();
-
-        // 2. Create a new PDO instance with the database credentials from the configuration
+        // Create a new PDO instance with the database credentials from the configuration
         $pdo = new PDO(
             "mysql:host={$config['DB_HOST']};dbname={$config['DB_NAME']}",
             $config['DB_USER'],
             $config['DB_PASS']
         );
-
-        // 3. Set the error mode to exceptions to catch any potential issues
+        // Set the error mode to exceptions to catch any potential issues
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-
-        // 4. Return the PDO instance for further database interaction
+        // Return the PDO instance for further database interaction
         return $pdo;
     } catch (PDOException $e) {
-        // 5. Log the error message for debugging purposes
+        // Log the error message for debugging purposes
         handleError("Database Error: " . $e->getMessage(), ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live');
-
-        // 6. Inform the user that an error occurred without revealing sensitive details
+        // Inform the user that an error occurred without revealing sensitive details
         echo 'Database Error: An error occurred. Please try again later.';
-
-        // 7. Return null if the connection fails
+        // Return null if the connection fails
         return null;
     }
 }
 
 /**
  * Get a configured instance of PHPMailer.
- * 
- * This function initializes a new PHPMailer object and configures it with SMTP settings
- * fetched from environment variables. The configured PHPMailer object is then returned
- * for sending emails.
- * 
+ * Initializes and configures PHPMailer using SMTP settings from environment variables.
+ * Returns the configured PHPMailer instance for sending emails.
  * @return PHPMailer Configured PHPMailer instance.
  * @throws Exception If PHPMailer encounters an error during setup.
  */
 function getMailer()
 {
-    $mail = new PHPMailer(true);
+    $mail = new PHPMailer(true); // Create a new PHPMailer instance
 
-    $mail->isSMTP();
-    $mail->Host = $_ENV['MAIL_HOST'];
-    $mail->SMTPAuth = true;
-    $mail->Username = $_ENV['MAIL_USERNAME'];
-    $mail->Password = $_ENV['MAIL_PASSWORD'];
-    $mail->SMTPSecure = $_ENV['MAIL_ENCRYPTION'];
-    $mail->Port = $_ENV['MAIL_PORT'];
+    $mail->isSMTP(); // Set mailer to use SMTP
+    $mail->Host = $_ENV['MAIL_HOST']; // Set the SMTP server to send through
+    $mail->SMTPAuth = true; // Enable SMTP authentication
+    $mail->Username = $_ENV['MAIL_USERNAME']; // SMTP username from environment
+    $mail->Password = $_ENV['MAIL_PASSWORD']; // SMTP password from environment
+    $mail->SMTPSecure = $_ENV['MAIL_ENCRYPTION']; // Enable encryption (e.g., SSL/TLS)
+    $mail->Port = $_ENV['MAIL_PORT']; // Set the SMTP port
 
-    return $mail;
+    return $mail; // Return the configured PHPMailer instance
 }
 
 /**
  * Start a secure session and generate a CSRF token.
- * 
- * This function checks if the session has started and sets up the session with secure
- * parameters. It also generates a CSRF token if it does not already exist in the session.
- * 
+ * Checks if the session is started and sets up secure session parameters.
+ * Generates a CSRF token if it does not exist in the session.
  * @return void
  */
 function startSecureSession()
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_set_cookie_params([
+    if (session_status() === PHP_SESSION_NONE) { // Check if session has not started
+        session_set_cookie_params([ // Set secure session cookie parameters
             'path' => '/SCI/',
             'domain' => '',
-            'secure' => false,
-            'httponly' => true,
-            'samesite' => 'Strict'
+            'secure' => false, // Not using secure connection (for local testing)
+            'httponly' => true, // Restrict access to session cookie via JavaScript
+            'samesite' => 'Strict' // Enforce strict SameSite policy
         ]);
-        session_start();
-        session_regenerate_id(true);
+        session_start(); // Start the session
+        session_regenerate_id(true); // Regenerate session ID for security
     }
 
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+    if (empty($_SESSION['csrf_token'])) { // Check if CSRF token does not exist in session
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); // Generate and store CSRF token
     }
 }
 
@@ -243,11 +223,9 @@ function loginUser($username, $password)
 /**
  * Process user login.
  *
- * This function performs the following tasks:
- * 1. Attempts to log in the user using the provided username and password.
- * 2. Starts a session if one is not already active.
- * 3. Sets session variables if the login is successful.
- * 4. Returns the result of the login attempt.
+ * Tries to log in the user with the provided username and password.
+ * Starts a session if not already started, sets session variables, 
+ * and returns the result of the login attempt.
  *
  * @param string $username The username provided by the user.
  * @param string $password The password provided by the user.
@@ -255,26 +233,18 @@ function loginUser($username, $password)
  */
 function processLogin($username, $password)
 {
-    // Step 1: Attempt to log in the user
-    $login_result = loginUser($username, $password);
+    $login_result = loginUser($username, $password); // Attempt to log in the user
 
-    // Step 2: Check if the login was successful
-    if (trim($login_result) === 'Login successful.') {
-        // Step 3: Start a session if one is not already active
-        if (session_status() === PHP_SESSION_NONE) {
+    if (trim($login_result) === 'Login successful.') { // Check if login was successful
+        if (session_status() === PHP_SESSION_NONE) { // Start a session if none exists
             session_start();
         }
-
-        // Step 4: Set session variables for the logged-in user
-        $_SESSION['user_logged_in'] = true;
-        $_SESSION['username'] = $username;
-
-        // Step 5: Return the login result
-        return $login_result;
+        $_SESSION['user_logged_in'] = true; // Set session variable for login status
+        $_SESSION['username'] = $username; // Set session variable for username
+        return $login_result; // Return login result if successful
     }
 
-    // Step 6: Return the login result if unsuccessful
-    return $login_result;
+    return $login_result; // Return login result if unsuccessful
 }
 
 /**
@@ -326,36 +296,25 @@ function autoLogin()
 /**
  * Generate an activation code using the user's email.
  *
- * This function performs the following tasks:
- * 1. Combines the user's email, current timestamp, and a unique ID to create a unique string.
- * 2. Hashes the combined string using the SHA-256 algorithm to generate the activation code.
- * 3. Returns the generated activation code.
+ * Combines the user's email, current timestamp, and a unique ID, 
+ * then hashes the result using the SHA-256 algorithm to create an activation code.
  *
  * @param string $email The user's email address.
  * @return string The generated activation code.
  */
 function generateActivationCode($email)
 {
-    // Step 1: Combine the email, current timestamp, and a unique ID
-    $uniqueString = $email . time() . uniqid();
-
-    // Step 2: Hash the combined string using SHA-256
-    $activationCode = hash('sha256', $uniqueString);
-
-    // Step 3: Return the generated activation code
-    return $activationCode;
+    $salt = bin2hex(random_bytes(32)); // Generate a random salt
+    $uniqueString = $email . time() . uniqid() . $salt; // Add salt to unique string
+    return hash('sha256', $uniqueString); // Return the hash
 }
 
 /**
  * Send an activation email to the user.
  *
- * This function performs the following tasks:
- * 1. Loads environment configuration and determines the base URL.
- * 2. Establishes a database connection.
- * 3. Retrieves user data and validates activation status if a username is provided.
- * 4. Generates or retrieves an activation code if necessary.
- * 5. Constructs the activation link and sends the activation email.
- * 6. Handles errors and logs them based on the environment.
+ * Loads configuration, connects to the database, retrieves user data, 
+ * generates or retrieves an activation code, constructs the activation link, 
+ * and sends the activation email to the user.
  *
  * @param string $userEmail The email address to send the activation email to.
  * @param string $activationCode The activation code to include in the email.
@@ -364,69 +323,56 @@ function generateActivationCode($email)
  */
 function sendActivationEmail($userEmail, $activationCode, $username = null)
 {
-    // Step 1: Load environment configuration and determine the base URL
-    $config = getEnvironmentConfig();
-    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
-    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+    $config = getEnvironmentConfig(); // Load environment configuration
+    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'; // Determine the environment (local/live)
 
-    // Step 2: Establish a database connection
-    $pdo = getPDOConnection();
-    if (!$pdo) {
+    $pdo = getPDOConnection(); // Establish database connection
+    if (!$pdo) { // Check if database connection is successful
         handleError("Database connection failed while sending activation email.", $env);
         return 'Database connection failed';
     }
 
     try {
-        // Step 3: Retrieve user data and validate activation status if username is provided
-        if ($username) {
+        if ($username) { // If username is provided, retrieve user data
             $query = "SELECT activation_code, isactive, email FROM users WHERE username = :username";
             $stmt = $pdo->prepare($query);
             $stmt->execute(['username' => $username]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($user) {
-                // Step 4: Check if the user is already active
-                if ($user['isactive'] == 1) {
+            if ($user) { // If user exists, check activation status
+                if ($user['isactive'] == 1) { // Check if the user is already active
                     return 'User is already active.';
                 }
-
-                // Step 5: Generate or retrieve the activation code
-                if (empty($user['activation_code'])) {
+                if (empty($user['activation_code'])) { // If no activation code, generate one
                     $activationCode = generateActivationCode($user['email']);
                     $updateQuery = "UPDATE users SET activation_code = :activation_code WHERE username = :username";
                     $stmt = $pdo->prepare($updateQuery);
                     $stmt->execute(['activation_code' => $activationCode, 'username' => $username]);
                 } else {
-                    $activationCode = $user['activation_code'];
+                    $activationCode = $user['activation_code']; // Use existing activation code
                 }
             } else {
-                handleError("User {$username} does not exist.", $env);
+                handleError("User {$username} does not exist.", $env); // Log error if user doesn't exist
                 return 'User does not exist.';
             }
         }
 
-        // Step 6: Construct the activation link
-        $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode";
+        $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode"; // Construct activation link
 
-        // Step 7: Initialize the mailer and send the activation email
-        $mail = getMailer();
-        $mail->SMTPDebug = 2;
-        $mail->Debugoutput = 'error_log';
+        $mail = getMailer(); // Initialize the mailer
+        $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia'); // Set sender
+        $mail->addAddress($userEmail); // Add recipient
+        $mail->Subject = 'Activate your account'; // Set email subject
+        $mail->Body = "Click the link to activate your account: $activationLink"; // Set email body
 
-        $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
-        $mail->addAddress($userEmail);
-        $mail->Subject = 'Activate your account';
-        $mail->Body = "Click the link to activate your account: $activationLink";
-
-        // Step 8: Check if the email was sent successfully
-        if (!$mail->send()) {
+        if (!$mail->send()) { // Check if email was sent successfully
             handleError('Mailer Error: ' . $mail->ErrorInfo, $env);
             return 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
         }
 
-        return true;
-    } catch (PDOException $e) {
-        // Step 9: Handle database errors
+        return true; // Return true if email sent successfully
+    } catch (PDOException $e) { // Catch database exceptions
         handleError("PDOException occurred while sending activation email: " . $e->getMessage(), $env);
         return 'Error: ' . $e->getMessage();
     }
@@ -435,81 +381,67 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
 /**
  * Resend an activation email to the user.
  *
- * This function performs the following tasks:
- * 1. Loads environment configuration and determines the base URL.
- * 2. Establishes a database connection.
- * 3. Retrieves user data and validates activation status.
- * 4. Generates or retrieves an activation code if necessary.
- * 5. Constructs the activation link and sends the activation email.
- * 6. Handles errors and logs them based on the environment.
+ * Loads configuration, connects to the database, retrieves user data, 
+ * generates or retrieves the activation code, constructs the activation link, 
+ * and resends the activation email to the user.
  *
  * @param string $username The username of the user to resend the activation email to.
  * @return string A message indicating the result of the operation.
  */
 function resendActivationEmail($username)
 {
-    // Step 1: Load environment configuration and determine the base URL
-    $config = getEnvironmentConfig();
-    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
-    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+    $config = getEnvironmentConfig(); // Load environment configuration
+    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'; // Determine the environment (local/live)
 
-    // Step 2: Establish a database connection
-    $pdo = getPDOConnection();
-    if (!$pdo) {
+    $pdo = getPDOConnection(); // Establish database connection
+    if (!$pdo) { // Check if database connection is successful
         handleError("Database connection failed when trying to resend activation email.", $env);
         return 'Database connection failed';
     }
 
     try {
-        // Step 3: Retrieve user data and validate activation status
-        $query = "SELECT email, activation_code, isactive FROM users WHERE username = :username";
+        $query = "SELECT email, activation_code, isactive FROM users WHERE username = :username"; // Retrieve user data
         $stmt = $pdo->prepare($query);
         $stmt->execute(['username' => $username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($user) {
-            // Step 4: Check if the user is already active
-            if ($user['isactive'] == 1) {
+        if ($user) { // If user exists, proceed
+            if ($user['isactive'] == 1) { // Check if the user is already active
                 return 'User is already active.';
             }
-
-            // Step 5: Generate or retrieve the activation code
-            if (empty($user['activation_code'])) {
+            if (empty($user['activation_code'])) { // Generate activation code if not present
                 $activationCode = generateActivationCode($user['email']);
                 $updateQuery = "UPDATE users SET activation_code = :activation_code WHERE username = :username";
                 $stmt = $pdo->prepare($updateQuery);
                 $stmt->execute(['activation_code' => $activationCode, 'username' => $username]);
             } else {
-                $activationCode = $user['activation_code'];
+                $activationCode = $user['activation_code']; // Use existing activation code
             }
 
-            // Step 6: Construct the activation link and send the activation email
-            $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode";
-            $emailSent = sendActivationEmail($user['email'], $activationCode, $username);
+            $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode"; // Construct activation link
+            $emailSent = sendActivationEmail($user['email'], $activationCode, $username); // Send activation email
 
-            // Step 7: Check if the email was sent successfully
-            if ($emailSent === true) {
+            if ($emailSent === true) { // Check if email was sent successfully
                 return 'Activation email resent successfully.';
             } else {
                 handleError("Failed to send activation email to {$user['email']} with error: $emailSent", $env);
                 return 'Error: ' . $emailSent;
             }
         } else {
-            // Step 8: Handle case where user does not exist
-            return 'User does not exist.';
+            return 'User does not exist.'; // Return error if user does not exist
         }
-    } catch (PDOException $e) {
-        // Step 9: Handle database errors
+    } catch (PDOException $e) { // Catch database exceptions
         handleError("PDOException occurred while resending activation email: " . $e->getMessage(), $env);
         return 'Error: ' . $e->getMessage();
     }
 }
 
 /**
- * Registers a new user.
+ * Registers a new user by validating input and inserting them into the database.
  *
- * This function validates the username, email, and password, checks if the username or email already exists,
- * hashes the password, generates an activation code, and inserts the user into the database.
+ * Validates username, email, and password. Checks if username or email already exists.
+ * Hashes the password, generates an activation code, and inserts the user into the database.
  *
  * @param string $username The username of the user.
  * @param string $email The email of the user.
@@ -519,42 +451,36 @@ function resendActivationEmail($username)
  */
 function registerUser($username, $email, $password, $env)
 {
-    $pdo = getPDOConnection();
-    if (!$pdo) {
+    $pdo = getPDOConnection(); // Establish database connection
+    if (!$pdo) { // Check if database connection failed
         handleError('Database connection failed.', $env);
         return 'Internal server error. Please try again later.';
     }
-
     try {
-        // Validate username, email, and password
-        $usernameViolations = validateUsername($username);
+        $usernameViolations = validateUsername($username); // Validate username
         if (count($usernameViolations) > 0)
             return $usernameViolations[0]->getMessage();
-        $emailViolations = validateEmail($email);
+        $emailViolations = validateEmail($email); // Validate email
         if (count($emailViolations) > 0)
             return $emailViolations[0]->getMessage();
-        $passwordViolations = validatePassword($password);
+        $passwordViolations = validatePassword($password); // Validate password
         if (count($passwordViolations) > 0)
             return $passwordViolations[0]->getMessage();
 
-        // Check if username or email already exists
-        $checkQuery = "SELECT 1 FROM users WHERE username = :username OR email = :email";
+        $checkQuery = "SELECT 1 FROM users WHERE username = :username OR email = :email"; // Check if username or email exists
         $stmt = $pdo->prepare($checkQuery);
         $stmt->execute(['username' => $username, 'email' => $email]);
         if ($stmt->fetch())
             return 'Username or email already exists.';
 
-        // Hash the password
-        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
-        if ($hashedPassword === false) {
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT); // Hash password
+        if ($hashedPassword === false) { // Check if password hashing failed
             handleError('Password hashing failed.', $env);
             return 'Internal server error. Please try again later.';
         }
-
-        // Generate activation code and insert user into the database
-        $activationCode = generateActivationCode($email);
-        $currentTime = Carbon::now()->toDateTimeString();
-        $insertQuery = "INSERT INTO users (username, email, password, isactive, activation_code, created_at) VALUES (:username, :email, :password, 0, :activation_code, :created_at)";
+        $activationCode = generateActivationCode($email); // Generate activation code
+        $currentTime = Carbon::now()->toDateTimeString(); // Get current timestamp
+        $insertQuery = "INSERT INTO users (username, email, password, isactive, activation_code, created_at) VALUES (:username, :email, :password, 0, :activation_code, :created_at)"; // Insert user into database
         $stmt = $pdo->prepare($insertQuery);
         $stmt->execute([
             'username' => $username,
@@ -564,38 +490,30 @@ function registerUser($username, $email, $password, $env)
             'created_at' => $currentTime
         ]);
 
-        // Check if insertion was successful and return activation code
-        if ($stmt->rowCount() > 0) {
+        if ($stmt->rowCount() > 0) { // Check if insertion was successful
             $stmt = $pdo->prepare("SELECT activation_code FROM users WHERE email = :email");
             $stmt->execute(['email' => $email]);
             $activationCode = $stmt->fetchColumn();
             return 'Registration successful. Please activate your account via email. Activation Code: ' . $activationCode;
         }
-    } catch (PDOException $e) {
+    } catch (PDOException $e) { // Catch database exceptions
         handleError('Database error: ' . $e->getMessage(), $env);
         return 'Internal server error. Please try again later.';
     }
-
     return 'Registration failed. Please try again later.';
 }
 
 /**
  * Retrieves user information from the database.
  *
- * This function performs the following tasks:
- * 1. Establishes a PDO connection to the database.
- * 2. Prepares and executes a SQL query to retrieve user details (username, email, role, and profile).
- * 3. Returns an associative array of user information or null if the user does not exist or an error occurs.
- *
  * @param int $userId The ID of the user whose information is to be retrieved.
  * @return array|null An associative array of user information or null if the user does not exist or an error occurs.
  */
 function getUserInfo($userId)
 {
-    $pdo = getPDOConnection(); // Step 1: Establish PDO connection to the database
-    if (!$pdo) {
-        return null; // Step 2: Return null if the connection fails
-    }
+    $pdo = getPDOConnection(); // Establish PDO connection to the database
+    if (!$pdo)
+        return null; // Return null if connection fails
 
     try {
         $query = "SELECT u.user_id, u.username, u.email, u.role, 
@@ -603,65 +521,49 @@ function getUserInfo($userId)
                   FROM users u
                   LEFT JOIN user_profiles up ON u.user_id = up.user_id
                   WHERE u.user_id = :user_id";
-        $stmt = $pdo->prepare($query); // Step 3: Prepare the SQL query
-        $stmt->execute(['user_id' => $userId]); // Step 4: Execute the query with the provided user ID
-        $userInfo = $stmt->fetch(PDO::FETCH_ASSOC); // Step 5: Fetch the user information
+        $stmt = $pdo->prepare($query); // Prepare the SQL query
+        $stmt->execute(['user_id' => $userId]); // Execute query with user ID parameter
+        $userInfo = $stmt->fetch(PDO::FETCH_ASSOC); // Fetch user information
 
-        return $userInfo ?: null; // Step 6: Return user information or null if not found
+        return $userInfo ?: null; // Return user info or null if not found
     } catch (PDOException $e) {
-        handleError('Error: ' . $e->getMessage(), 'live'); // Step 7: Handle error by logging it
-        return null;
+        handleError('Error: ' . $e->getMessage(), 'live'); // Log error in case of exception
+        return null; // Return null on error
     }
 }
 
 /**
  * Returns the URL of the user's profile image.
  *
- * This function performs the following tasks:
- * 1. Retrieves the environment configuration for the base URL.
- * 2. Constructs the URL for the user's profile image or returns the default profile image URL if no filename is provided.
- *
  * @param string|null $imageFilename The filename of the user's profile image. If null or empty, the default image is returned.
- * 
  * @return string The URL of the user's profile image or the default profile image if no filename is provided.
  */
 function default_profile_image($imageFilename)
 {
-    $pdo = getPDOConnection(); // Step 1: Establish PDO connection to the database
-    if (!$pdo) {
-        return null; // Step 2: Return null if the connection fails
-    }
+    $pdo = getPDOConnection(); // Establish PDO connection to the database
+    if (!$pdo)
+        return null; // Return null if connection fails
 
     try {
-        $config = getEnvironmentConfig(); // Step 3: Get the environment configuration
+        $config = getEnvironmentConfig(); // Get the environment configuration
 
-        $baseUrl = $config['BASE_URL'] . '/uploads/user_images/'; // Step 4: Define the base URL for user images
+        $baseUrl = $config['BASE_URL'] . '/uploads/user_images/'; // Define the base URL for user images
 
-        if ($_SERVER['HTTP_HOST'] !== 'localhost') { // Step 5: Modify the base URL for live environment
-            $baseUrl = dirname($baseUrl); // Step 6: Go one folder up for live environments
-        }
+        if ($_SERVER['HTTP_HOST'] !== 'localhost') // Modify the base URL for live environments
+            $baseUrl = dirname($baseUrl); // Go one folder up for live environments
 
-        if (empty($imageFilename)) { // Step 7: Check if the image filename is empty
-            return $baseUrl . 'default-profile.svg'; // Step 8: Return the default profile image URL
-        }
+        if (empty($imageFilename)) // Check if image filename is empty
+            return $baseUrl . 'default-profile.svg'; // Return the default profile image URL
 
-        return $baseUrl . $imageFilename; // Step 9: Return the constructed URL for the user's profile image
+        return $baseUrl . $imageFilename; // Return the constructed URL for the user's profile image
     } catch (PDOException $e) {
-        handleError('Error: ' . $e->getMessage(), 'live'); // Step 10: Handle error by logging it
-        return null;
+        handleError('Error: ' . $e->getMessage(), 'live'); // Log error in case of exception
+        return null; // Return null on error
     }
 }
 
 /**
- * Activate a user account using the activation code.
- *
- * This function performs the following tasks:
- * 1. Validates the activation code format.
- * 2. Loads environment configuration and determines the environment (local or live).
- * 3. Establishes a database connection.
- * 4. Updates the user's activation status in the database.
- * 5. Handles errors and logs them based on the environment.
- * 6. Returns a message indicating the result of the activation process.
+ * Activates a user account using the activation code.
  *
  * @param string $activationCode The activation code sent to the user.
  * @return string A message indicating the result of the activation process.
@@ -673,46 +575,37 @@ function activateAccount($activationCode)
     define('INVALID_ACTIVATION_CODE', 'Invalid activation code.');
     define('ERROR_OCCURED', 'Error: ');
 
-    // Step 1: Load environment configuration and determine the environment
-    $config = getEnvironmentConfig();
-    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+    $config = getEnvironmentConfig(); // Load environment configuration
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'; // Determine the environment
 
-    // Step 2: Sanitize and validate the activation code format
-    $activationCode = sanitize_input($activationCode);
-    if (strlen($activationCode) !== 64 || !ctype_xdigit($activationCode)) {
+    $activationCode = sanitize_input($activationCode); // Sanitize the input
+    if (strlen($activationCode) !== 64 || !ctype_xdigit($activationCode)) { // Validate activation code format
         handleError('Invalid activation code format: ' . $activationCode, $env);
         return INVALID_ACTIVATION_CODE;
     }
 
-    // Step 3: Establish a database connection
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection(); // Establish database connection
     if (!$pdo) {
         handleError(DB_CONNECTION_FAILED, $env);
         return DB_CONNECTION_FAILED;
     }
 
     try {
-        // Step 4: Begin a database transaction
-        $pdo->beginTransaction();
-
-        // Step 5: Update the user's activation status
-        $query = "UPDATE users SET isactive = 1 WHERE activation_code = :activation_code";
+        $pdo->beginTransaction(); // Begin database transaction
+        $query = "UPDATE users SET isactive = 1 WHERE activation_code = :activation_code"; // Update query
         $stmt = $pdo->prepare($query);
-        $stmt->execute(['activation_code' => $activationCode]);
+        $stmt->execute(['activation_code' => $activationCode]); // Execute the query
 
-        // Step 6: Check if the activation was successful
-        if ($stmt->rowCount() === 0) {
+        if ($stmt->rowCount() === 0) { // Check if activation code is valid
             handleError('No rows affected, invalid activation code: ' . $activationCode, $env);
-            $pdo->rollBack();
+            $pdo->rollBack(); // Rollback transaction
             return INVALID_ACTIVATION_CODE;
         }
 
-        // Step 7: Commit the transaction if activation is successful
-        $pdo->commit();
+        $pdo->commit(); // Commit transaction
         return ACCOUNT_ACTIVATED_SUCCESS;
-    } catch (PDOException $e) {
-        // Step 8: Rollback the transaction and log the database error
-        $pdo->rollBack();
+    } catch (PDOException $e) { // Handle database errors
+        $pdo->rollBack(); // Rollback on error
         handleError('Database error: ' . $e->getMessage(), $env);
         return ERROR_OCCURED . $e->getMessage();
     }
