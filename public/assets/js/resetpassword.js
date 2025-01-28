@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", function () {
     document.querySelector("form.my-reset-password-validation").addEventListener("submit", function (e) {
       var isValid = true;
       var newPassword = document.getElementById("new-password");
+      var confirmPassword = document.getElementById("confirm-password");
       var csrfToken = document.querySelector("input[name='csrf_token']");
       var recaptchaResponse = grecaptcha.getResponse();
 
@@ -18,6 +19,15 @@ document.addEventListener("DOMContentLoaded", function () {
         passwordValidationResult.forEach(function (error) {
           showError(newPassword, error);
         });
+        isValid = false;
+      }
+
+      // Validasi konfirmasi password
+      if (!confirmPassword.value.trim()) {
+        showError(confirmPassword, "Confirm Password is required");
+        isValid = false;
+      } else if (confirmPassword.value !== newPassword.value) {
+        showError(confirmPassword, "Passwords do not match");
         isValid = false;
       }
 
@@ -85,6 +95,23 @@ document.addEventListener("DOMContentLoaded", function () {
         icon.classList.add("fa-eye-slash");
       } else {
         passwordField.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
+      }
+    });
+  }
+
+  // Toggle confirm password visibility
+  if (document.getElementById("reset-password-passeye-toggle-1")) {
+    document.getElementById("reset-password-passeye-toggle-1").addEventListener("click", function () {
+      var confirmPasswordField = document.getElementById("confirm-password");
+      var icon = this.querySelector("i");
+      if (confirmPasswordField.type === "password") {
+        confirmPasswordField.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
+      } else {
+        confirmPasswordField.type = "password";
         icon.classList.remove("fa-eye-slash");
         icon.classList.add("fa-eye");
       }

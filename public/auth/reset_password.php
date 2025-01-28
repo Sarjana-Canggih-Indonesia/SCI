@@ -91,6 +91,16 @@ handlePasswordReset($token, $pdo);
                                     <i class="fas fa-eye"></i>
                                 </div>
                             </div>
+                            <label for="confirm-password" class="mb-3 text-start d-block">Confirm Password</label>
+                            <div style="position:relative" id="reset-password-eye-password-1">
+                                <input id="confirm-password" type="password" name="confirm_password"
+                                    class="form-control" required style="padding-right: 60px;" />
+                                <div class="invalid-feedback">Confirm Password is required</div>
+                                <div class="btn btn-sm" id="reset-password-passeye-toggle-1"
+                                    style="position: absolute; right: 10px; top: 7px; padding: 2px 7px; font-size: 16px; cursor: pointer;">
+                                    <i class="fas fa-eye"></i>
+                                </div>
+                            </div>
                         </div>
                         <br>
                         <div class="g-recaptcha mb-3" data-sitekey="<?php echo RECAPTCHA_SITE_KEY; ?>"></div>
