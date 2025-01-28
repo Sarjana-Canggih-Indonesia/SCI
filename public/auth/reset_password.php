@@ -18,7 +18,6 @@ redirect_if_logged_in();
 
 // Ambil token dari URL
 $token = $_GET['hash'] ?? '';
-var_dump($token); // Debugging: Cek nilai token
 
 // Get PDO connection
 $pdo = getPDOConnection();
@@ -28,7 +27,6 @@ if (!$pdo) {
 
 // Validasi token dan ambil data user
 $user = validateResetToken($token, $pdo);
-var_dump($user); // Debugging: Cek nilai $user
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $token = $_POST['token'] ?? '';
@@ -164,7 +162,6 @@ function markTokenAsUsed($token, $pdo)
                             Pastikan menggunakan password yang kuat dan mudah untuk diingat
                         </div>
                         <div class="g-recaptcha mb-3" data-sitekey="<?php echo RECAPTCHA_SITE_KEY; ?>"></div>
-                        <!-- Ganti dengan kunci situs reCAPTCHA Anda -->
                         <button type="submit" class="btn btn-primary btn-lg w-100">Reset Password</button>
                     </form>
                 </div>
