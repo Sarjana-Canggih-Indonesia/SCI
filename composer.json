@@ -10,7 +10,8 @@
         "symfony/http-client": "^7.2",
         "filp/whoops": "^2.16",
         "symfony/validator": "^7.2",
-        "symfony/property-access": "^7.2"
+        "symfony/property-access": "^7.2",
+        "nesbot/carbon": "^3.8"
     },
     "require-dev": {
         "vimeo/psalm": "^5.26",
