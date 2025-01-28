@@ -855,8 +855,19 @@ function sendResetPasswordEmail($userEmail, $resetLink)
         $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
         $mail->addAddress($userEmail);
         $mail->Subject = 'Password Reset Request';
-        $mail->Body = "Click the link to reset your password: <a href='$resetLink'>Reset Password</a>";
-        $mail->isHTML(true);
+
+        // Email body dengan pesan tambahan
+        $mail->Body = "
+            <p>Anda menerima email ini karena ada permintaan reset password untuk akun Anda.</p>
+            <p>Silakan klik tautan di bawah ini untuk mereset password Anda:</p>
+            <p><a href='$resetLink'>Reset Password</a></p>
+            <p>Jika Anda tidak melakukan permintaan ini, abaikan email ini.</p>
+            <p>Tautan ini akan kedaluwarsa dalam 1 jam.</p>
+            <p>Terima kasih,</p>
+            <p>Tim Sarjana Canggih Indonesia</p>
+        ";
+        $mail->isHTML(true); // Mengaktifkan format HTML untuk email
+
         return $mail->send();
     } catch (Exception $e) {
         $envConfig = getEnvironmentConfig();
