@@ -16,8 +16,8 @@ document.addEventListener("DOMContentLoaded", function () {
       if (!newPassword.value.trim()) {
         showError(newPassword, "New Password is required");
         isValid = false;
-      } else if (newPassword.value.length < 8) {
-        showError(newPassword, "Password must be at least 8 characters long");
+      } else if (newPassword.value.length < 6) {
+        showError(newPassword, "Password must be at least 6 characters long");
         isValid = false;
       }
 
