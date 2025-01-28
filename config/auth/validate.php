@@ -2,30 +2,22 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 /**
- * This function performs the task of loading environment variables from a .env file.
- * 1. Checks if the .env file has been loaded previously.
- * 2. If not loaded, attempts to load the .env file and set environment variables.
- * 3. If successful, marks the .env file as loaded to avoid reloading in future requests.
+ * Loads environment variables from a .env file.
+ * 
+ * @return void
  */
 $rootDir = __DIR__ . '/../../';
 $dotenvFile = $rootDir . '.env';
-
-// Step 1: Check if the .env file has already been loaded
 if (getenv('ENV_LOADED')) {
     error_log('.env file already loaded, skipping...');
 } else {
-    // Step 2: Load the .env file if not loaded
     $dotenv = Dotenv\Dotenv::createImmutable($rootDir);
-
     if (!file_exists($dotenvFile) || !$dotenv->load()) {
-        $errorMessage = '.env file not found or failed to load';
-        error_log($errorMessage);
+        error_log('.env file not found or failed to load');
         exit;
     } else {
-        // Step 3: Mark that the .env file is loaded by setting ENV_LOADED environment variable
         putenv('ENV_LOADED=true');
-        $successMessage = '.env file loaded successfully';
-        error_log($successMessage);
+        error_log('.env file loaded successfully');
     }
 }
 
@@ -34,24 +26,14 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 /**
  * Validates the username based on a set of constraints.
- * 
- * Task:
- * 1. Validates that the username is not blank.
- * 2. Ensures that the username is between 3 and 20 characters in length.
- * 3. Validates that the username contains only alphanumeric characters and hyphens.
- * 4. Ensures the username does not start or end with a hyphen or space.
- * 
+ *
  * @param string $username The username to be validated.
- * 
  * @return \Symfony\Component\Validator\ConstraintViolationList The list of validation violations.
  */
 function validateUsername($username)
 {
-    // Create a new validator instance
-    $validator = Validation::createValidator();
-
-    // Define the validation constraints for the username
-    $usernameConstraint = new Assert\Collection([
+    $validator = Validation::createValidator(); // Create a new validator instance
+    $usernameConstraint = new Assert\Collection([ // Define validation constraints
         'fields' => [
             'username' => [
                 new Assert\NotBlank(['message' => 'Username cannot be blank.']), // Ensure username is not blank
@@ -72,12 +54,8 @@ function validateUsername($username)
             ]
         ]
     ]);
-
-    // Validate the username using the defined constraints
-    $violations = $validator->validate(['username' => $username], $usernameConstraint);
-
-    // Return the list of violations, if any
-    return $violations;
+    $violations = $validator->validate(['username' => $username], $usernameConstraint); // Validate the username
+    return $violations; // Return validation violations if any
 }
 
 /**
@@ -117,33 +95,21 @@ function validatePassword($password)
 
 /**
  * Validates the email address based on a set of constraints.
- * 
- * Task:
- * 1. Validates that the email is not blank.
- * 2. Validates that the email follows the correct email format.
- * 
+ *
  * @param string $email The email address to be validated.
- * 
  * @return \Symfony\Component\Validator\ConstraintViolationList The list of validation violations.
  */
 function validateEmail($email)
 {
-    // Create a new validator instance
-    $validator = Validation::createValidator();
-
-    // Define the validation constraints for the email
-    $emailConstraint = new Assert\Collection([
+    $validator = Validation::createValidator(); // Create a new validator instance
+    $emailConstraint = new Assert\Collection([ // Define validation constraints
         'fields' => [
             'email' => [
                 new Assert\NotBlank(['message' => 'Email cannot be blank.']), // Ensure email is not blank
-                new Assert\Email(['message' => 'Invalid email format.']), // Validate the email format
+                new Assert\Email(['message' => 'Invalid email format.']), // Validate email format
             ]
         ]
     ]);
-
-    // Validate the email using the defined constraints
-    $violations = $validator->validate(['email' => $email], $emailConstraint);
-
-    // Return the list of violations, if any
-    return $violations;
+    $violations = $validator->validate(['email' => $email], $emailConstraint); // Validate email
+    return $violations; // Return validation violations if any
 }
