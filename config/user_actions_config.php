@@ -7,6 +7,7 @@ require_once __DIR__ . '/auth/validate.php';
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\Validator\ConstraintViolationList;
+use Carbon\Carbon;
 
 /**
  * This function performs the task of loading environment variables from a .env file.
@@ -758,70 +759,72 @@ function processPasswordResetRequest($email_or_username, $recaptcha_response, $c
 
     // Validate CSRF token and reCAPTCHA response using a helper function
     if (!validateCsrfAndRecaptcha(['csrf_token' => $csrf_token, 'g-recaptcha-response' => $recaptcha_response], $httpClient)) {
-        handleError('Invalid CSRF token or reCAPTCHA.', $env); // Handle error if validation fails
-        return ['status' => 'error', 'message' => 'Invalid CSRF token or reCAPTCHA.']; // Return error response
+        handleError('Invalid CSRF token or reCAPTCHA.', $env);
+        return ['status' => 'error', 'message' => 'Invalid CSRF token or reCAPTCHA.'];
     }
 
     // Check if the provided input is an email or username and validate accordingly
-    $isEmail = filter_var($email_or_username, FILTER_VALIDATE_EMAIL); // Check if input is a valid email
-    $violations = $isEmail ? validateEmail($email_or_username) : validateUsername($email_or_username); // Validate either email or username
+    $isEmail = filter_var($email_or_username, FILTER_VALIDATE_EMAIL);
+    $violations = $isEmail ? validateEmail($email_or_username) : validateUsername($email_or_username);
 
     if (count($violations) > 0) {
         $errorMessages = [];
         foreach ($violations as $violation) {
-            $errorMessages[] = $violation->getMessage(); // Collect validation error messages
+            $errorMessages[] = $violation->getMessage();
         }
-        handleError(implode('<br>', $errorMessages), $env); // Handle error if validation fails
-        return ['status' => 'error', 'message' => implode('<br>', $errorMessages)]; // Return error response
+        handleError(implode('<br>', $errorMessages), $env);
+        return ['status' => 'error', 'message' => implode('<br>', $errorMessages)];
     }
 
     // Establish a database connection
     $pdo = getPDOConnection();
     if (!$pdo) {
-        handleError('Database connection error.', $env); // Handle error if database connection fails
-        return ['status' => 'error', 'message' => 'Database connection error.']; // Return error response
+        handleError('Database connection error.', $env);
+        return ['status' => 'error', 'message' => 'Database connection error.'];
     }
 
     // Check if the email or username exists in the database
     $stmt = $pdo->prepare("SELECT user_id, email FROM users WHERE email = :input OR username = :input");
-    $stmt->execute(['input' => $email_or_username]); // Execute the query to find the user
-    $user = $stmt->fetch(PDO::FETCH_ASSOC); // Fetch the user data
+    $stmt->execute(['input' => $email_or_username]);
+    $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$user) {
-        handleError('Email or username not found.', $env); // Handle error if user is not found
-        return ['status' => 'error', 'message' => 'Email or username not found.']; // Return error response
+        handleError('Email or username not found.', $env);
+        return ['status' => 'error', 'message' => 'Email or username not found.'];
     }
 
     // Generate a unique hash for the password reset token
-    $userId = $user['user_id']; // Get the user ID
-    $userEmail = $user['email']; // Get the user email
-    $resetHash = generateActivationCode($userEmail); // Generate a unique hash for password reset
-    $expiresAt = date('Y-m-d H:i:s', strtotime('+1 hour')); // Set expiration time for reset token
+    $userId = $user['user_id'];
+    $userEmail = $user['email'];
+    $resetHash = generateActivationCode($userEmail);
+
+    // Set expiration time using Carbon
+    $expiresAt = Carbon::now()->addHour()->toDateTimeString();
 
     // Clear expired reset tokens for the user
     $stmt = $pdo->prepare("DELETE FROM password_resets WHERE user_id = :user_id OR expires_at <= NOW()");
-    $stmt->execute(['user_id' => $userId]); // Delete expired reset tokens from the database
+    $stmt->execute(['user_id' => $userId]);
 
     // Save the new reset token in the database
     $stmt = $pdo->prepare("INSERT INTO password_resets (user_id, hash, expires_at) VALUES (:user_id, :hash, :expires_at)");
     if (!$stmt->execute(['user_id' => $userId, 'hash' => $resetHash, 'expires_at' => $expiresAt])) {
-        $errorMessage = "Failed to save reset token to database for user ID: $userId"; // Error message if insertion fails
-        handleError($errorMessage, $env); // Handle the error
-        return ['status' => 'error', 'message' => 'Failed to process your request. Please try again later.']; // Return error response
+        $errorMessage = "Failed to save reset token to database for user ID: $userId";
+        handleError($errorMessage, $env);
+        return ['status' => 'error', 'message' => 'Failed to process your request. Please try again later.'];
     }
 
     // Generate the password reset link
-    $resetLink = generateResetPasswordLink($resetHash); // Create the reset password link
+    $resetLink = generateResetPasswordLink($resetHash);
 
     // Send the password reset email
-    $emailSent = sendResetPasswordEmail($userEmail, $resetLink); // Send the email with the reset link
+    $emailSent = sendResetPasswordEmail($userEmail, $resetLink);
 
     if ($emailSent) {
-        return ['status' => 'success', 'message' => 'Password reset instructions have been sent to your email.']; // Return success if email is sent
+        return ['status' => 'success', 'message' => 'Password reset instructions have been sent to your email.'];
     } else {
-        $errorMessage = "Failed to send reset password email for user ID: $userId"; // Error message if email fails to send
-        handleError($errorMessage, $env); // Handle the error
-        return ['status' => 'error', 'message' => 'Failed to send password reset email.']; // Return error response
+        $errorMessage = "Failed to send reset password email for user ID: $userId";
+        handleError($errorMessage, $env);
+        return ['status' => 'error', 'message' => 'Failed to send password reset email.'];
     }
 }
 
