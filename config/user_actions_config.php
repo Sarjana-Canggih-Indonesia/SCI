@@ -876,33 +876,56 @@ function sendResetPasswordEmail($userEmail, $resetLink)
     }
 }
 
+/**
+ * Validates the reset token and retrieves user information if the token is valid.
+ *
+ * @param string $token The reset token to validate.
+ * @param PDO $pdo The PDO database connection object.
+ * @return array|null Returns an associative array containing user_id and email if the token is valid, otherwise null.
+ */
 function validateResetToken($token, $pdo)
 {
+    // SQL query to select user_id and email from password_resets and users tables
     $sql = "SELECT pr.user_id, u.email 
             FROM password_resets pr
             JOIN users u ON pr.user_id = u.user_id
             WHERE pr.hash = :hash 
               AND pr.completed = 0 
               AND pr.expires_at > NOW()";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['hash' => $token]);
-    return $stmt->fetch(PDO::FETCH_ASSOC);
+    $stmt = $pdo->prepare($sql); // Prepare the SQL statement
+    $stmt->execute(['hash' => $token]); // Execute the statement with the provided token
+    return $stmt->fetch(PDO::FETCH_ASSOC); // Fetch the result as an associative array
 }
 
+/**
+ * Updates the user's password in the database.
+ *
+ * @param int $user_id The ID of the user whose password is to be updated.
+ * @param string $hashed_password The new hashed password.
+ * @param PDO $pdo The PDO database connection object.
+ */
 function updateUserPassword($user_id, $hashed_password, $pdo)
 {
+    // SQL query to update the user's password
     $sql = "UPDATE users SET password = :password WHERE user_id = :user_id";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['password' => $hashed_password, 'user_id' => $user_id]);
+    $stmt = $pdo->prepare($sql); // Prepare the SQL statement
+    $stmt->execute(['password' => $hashed_password, 'user_id' => $user_id]); // Execute the statement with the new password and user_id
 }
 
+/**
+ * Marks the reset token as used in the database.
+ *
+ * @param string $token The reset token to mark as used.
+ * @param PDO $pdo The PDO database connection object.
+ */
 function markTokenAsUsed($token, $pdo)
 {
+    // SQL query to mark the token as used by setting completed to 1 and updating completed_at
     $sql = "UPDATE password_resets 
             SET completed = 1, completed_at = NOW() 
             WHERE hash = :hash";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute(['hash' => $token]);
+    $stmt = $pdo->prepare($sql); // Prepare the SQL statement
+    $stmt->execute(['hash' => $token]); // Execute the statement with the provided token
 }
 
 /**
@@ -912,6 +935,7 @@ function markTokenAsUsed($token, $pdo)
  * @param string $newEmail The new email address to set.
  * @return string A message indicating the result of the operation.
  */
+
 function changeEmail($userId, $newEmail)
 {
     $pdo = getPDOConnection();
