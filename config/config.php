@@ -29,6 +29,9 @@ if (getenv('ENV_LOADED')) {
     }
 }
 
+// set default timezone set
+date_default_timezone_set('Asia/Jakarta');
+
 use voku\helper\AntiXSS;
 $antiXSS = new AntiXSS();
 use Jenssegers\Optimus\Optimus;
