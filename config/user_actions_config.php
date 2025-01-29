@@ -120,64 +120,50 @@ function startSecureSession()
 }
 
 /**
- * Start a session and generate a CSRF token.
- * 
- * This function starts a session if it is not already started and generates a CSRF token
- * if it is not present in the session.
- * 
+ * Starts a session and generates a CSRF token if not already present.
+ *
  * @return void
  */
 function startSession()
 {
-    if (session_status() === PHP_SESSION_NONE) {
-        session_start();
-    }
-
-    if (empty($_SESSION['csrf_token'])) {
-        $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-    }
+    if (session_status() === PHP_SESSION_NONE)
+        session_start(); // Starts session if none exists
+    if (empty($_SESSION['csrf_token']))
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(32)); // Generate CSRF token if not present
 }
 
 /**
- * Regenerate the session ID for security purposes.
- * 
- * This function regenerates the session ID to prevent session fixation attacks.
- * 
+ * Regenerates the session ID to prevent session fixation attacks.
+ *
  * @return void
  */
 function regenerateSessionId()
 {
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        session_regenerate_id(true);
-    }
+    if (session_status() === PHP_SESSION_ACTIVE)
+        session_regenerate_id(true); // Regenerate session ID
 }
 
 /**
- * Check if the user is logged in.
- * 
- * This function checks if the user ID is stored in the session, indicating that the user is logged in.
- * 
- * @return mixed The user ID if the user is logged in, false otherwise.
+ * Checks if the user is logged in by verifying the session for a user ID.
+ *
+ * @return mixed Returns the user ID if logged in, otherwise false.
  */
 function is_useronline()
 {
-    if (isset($_SESSION['user_id'])) {
-        return $_SESSION['user_id'];
-    }
-    return false;
+    return isset($_SESSION['user_id']) ? $_SESSION['user_id'] : false; // Return user ID or false
 }
 
 /**
- * Log out the current user by destroying the session.
+ * Logs out the current user by destroying the session.
  *
- * @return string A message indicating the result of the operation.
+ * @return string Message indicating the result of logout.
  */
 function logoutUser()
 {
-    startSession();
-    session_unset();
-    session_destroy();
-    return 'Logged out successfully.';
+    startSession(); // Start session if not already started
+    session_unset(); // Unset all session variables
+    session_destroy(); // Destroy session
+    return 'Logged out successfully.'; // Return logout message
 }
 
 /**
@@ -889,28 +875,22 @@ function deleteAccount($userId)
 }
 
 /**
+ * Redirects the user to the homepage if logged in.
+ * 
  * This function performs the following tasks:
  * 1. Starts the session if not already started.
  * 2. Checks if the user is logged in by verifying the session.
- * 3. Redirects the user to the homepage based on the environment configuration if they are logged in.
+ * 3. Redirects the user to the homepage based on the environment configuration.
  *
  * @return void
  */
 function redirect_if_logged_in()
 {
-    // Step 1: Start the session if not already started
-    startSession();
-
-    // Step 2: Check if the user is already logged in
-    if (is_useronline()) {
-        // Step 3: Get the environment configuration
-        $config = getEnvironmentConfig();
-
-        // Step 4: Get the appropriate base URL for the environment
-        $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
-
-        // Step 5: Redirect to the homepage based on the environment's base URL
-        header("Location: {$baseUrl}");
+    startSession(); // Step 1: Start the session if not already started
+    if (is_useronline()) { // Step 2: Check if the user is logged in
+        $config = getEnvironmentConfig(); // Step 3: Get environment configuration
+        $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Step 4: Get base URL based on environment
+        header("Location: {$baseUrl}"); // Step 5: Redirect to homepage
         exit();
     }
 }
