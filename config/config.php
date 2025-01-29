@@ -23,9 +23,6 @@ if (getenv('ENV_LOADED')) {
     }
 }
 
-// set default timezone set
-date_default_timezone_set('Asia/Jakarta');
-
 use voku\helper\AntiXSS;
 $antiXSS = new AntiXSS();
 use Jenssegers\Optimus\Optimus;
@@ -33,6 +30,9 @@ use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\HttpClient\HttpClient;
 use Whoops\Run;
 use Whoops\Handler\PrettyPageHandler;
+use Carbon\Carbon;
+
+date_default_timezone_set('Asia/Jakarta'); // Set zona waktu
 
 $whoops = new Run;
 $whoops->pushHandler(new PrettyPageHandler);
