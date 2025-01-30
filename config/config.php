@@ -103,6 +103,11 @@ function getEnvironmentConfig()
     ][$env];
 }
 
+function isLiveEnvironment()
+{
+    return ($_SERVER['HTTP_HOST'] !== 'localhost' && $_SERVER['HTTP_HOST'] !== '127.0.0.1');
+}
+
 /**
  * Handles error logging and script termination based on the environment.
  *
