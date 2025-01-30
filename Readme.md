@@ -14,8 +14,8 @@ Repo untuk website Sarjana Canggih Indonesia
     - [x] forgot password
       - [x] forgot password js
     - [x] reset password
-      - [] reset password js
-    - [] login
+      - [x] reset password js
+    - [x] login
 
 ### LIVE
 
