@@ -26,6 +26,7 @@ header('Expires: ' . ($isLiveEnvironment
   ? Carbon::now()->addHour()->toRfc7231String()
   : Carbon::now()->subYear()->toRfc7231String()));
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -447,18 +448,18 @@ header('Expires: ' . ($isLiveEnvironment
   <!--========== INSERT TESTIMONI.PHP ==========-->
   <?php include __DIR__ . '/includes/testimoni.php'; ?>
   <!--========== AKHIR INSERT TESTIMONI.PHP ==========-->
+
+  <!--================ AREA FOOTER =================-->
+  <?php include __DIR__ . '/includes/footer.php'; ?>
+  <!--================ AKHIR AREA FOOTER =================-->
+
+  <!-- External JS libraries -->
+  <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
+  <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
+  <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
+  <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/slick.min.js"></script>
+  <!-- Custom JS -->
+  <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
 </body>
-
-<!--================ AREA FOOTER =================-->
-<?php include __DIR__ . '/includes/footer.php'; ?>
-<!--================ AKHIR AREA FOOTER =================-->
-
-
-<script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
-<script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
-<script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
-<script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/slick.min.js"></script>
-<!-- Custom JS -->
-<script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
 
 </html>
