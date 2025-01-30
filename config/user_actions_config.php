@@ -310,54 +310,59 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
     $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
     $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
-    $pdo = getPDOConnection(); // Establish database connection
-    if (!$pdo) { // Check if database connection is successful
+    $pdo = getPDOConnection();
+    if (!$pdo) {
         handleError("Database connection failed while sending activation email.", $env);
         return 'Database connection failed';
     }
 
     try {
-        if ($username) { // If username is provided, retrieve user data
+        if ($username) {
             $query = "SELECT activation_code, isactive, email FROM users WHERE username = :username";
             $stmt = $pdo->prepare($query);
             $stmt->execute(['username' => $username]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-            if ($user) { // If user exists, check activation status
-                if ($user['isactive'] == 1) { // Check if the user is already active
-                    return 'User is already active.';
-                }
-                if (empty($user['activation_code'])) { // If no activation code, generate one
-                    $activationCode = generateActivationCode($user['email']);
-                    $updateQuery = "UPDATE users SET activation_code = :activation_code WHERE username = :username";
-                    $stmt = $pdo->prepare($updateQuery);
-                    $stmt->execute(['activation_code' => $activationCode, 'username' => $username]);
-                } else {
-                    $activationCode = $user['activation_code']; // Use existing activation code
-                }
-            } else {
-                handleError("User {$username} does not exist.", $env); // Log error if user doesn't exist
+            if (!$user) {
+                handleError("User {$username} does not exist.", $env);
                 return 'User does not exist.';
+            }
+
+            if ($user['isactive'] == 1) {
+                return 'User is already active.';
+            }
+
+            if (empty($user['activation_code'])) {
+                $activationCode = generateActivationCode($user['email']);
+                $updateQuery = "UPDATE users SET activation_code = :activation_code WHERE username = :username";
+                $stmt = $pdo->prepare($updateQuery);
+                $stmt->execute(['activation_code' => $activationCode, 'username' => $username]);
+            } else {
+                $activationCode = $user['activation_code'];
             }
         }
 
-        $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode"; // Construct activation link
+        $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode";
 
-        $mail = getMailer(); // Initialize the mailer
+        $mail = getMailer();
         $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
-        $mail->addAddress($userEmail); // Add recipient
-        $mail->Subject = 'Activate your account'; // Set email subject
-        $mail->Body = "Click the link to activate your account: $activationLink"; // Set email body
+        $mail->addAddress($userEmail);
+        $mail->Subject = 'Activate your account';
+        $mail->isHTML(true); // Mengaktifkan format HTML dalam email
+        $mail->Body = "<p>Klik link berikut untuk mengaktifkan akun Anda:</p><p><a href='$activationLink'>$activationLink</a></p>";
 
-        if (!$mail->send()) { // Check if email was sent successfully
+        if (!$mail->send()) {
             handleError('Mailer Error: ' . $mail->ErrorInfo, $env);
             return 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
         }
 
-        return true; // Return true if email sent successfully
-    } catch (PDOException $e) { // Catch database exceptions
-        handleError("PDOException occurred while sending activation email: " . $e->getMessage(), $env);
-        return 'Error: ' . $e->getMessage();
+        return true;
+    } catch (Exception $e) {
+        handleError("Mailer Exception: " . $e->getMessage(), $env);
+        return 'Mailer Error: ' . $e->getMessage();
+    } catch (PDOException $e) {
+        handleError("PDOException: " . $e->getMessage(), $env);
+        return 'Database Error: ' . $e->getMessage();
     }
 }
 
@@ -418,7 +423,7 @@ function resendActivationEmail($username)
             return 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
         }
 
-        return true;
+        return 'Activation email has been resent. Please check your inbox.';
     } catch (PDOException $e) {
         handleError("PDOException: " . $e->getMessage(), $env);
         return 'Error: ' . $e->getMessage();
