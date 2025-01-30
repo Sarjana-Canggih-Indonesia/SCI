@@ -50,25 +50,18 @@ $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
  */
 function getPDOConnection()
 {
+    $config = getEnvironmentConfig();
     try {
-        // Retrieve environment-specific configuration settings
-        $config = getEnvironmentConfig();
-        // Create a new PDO instance with the database credentials from the configuration
         $pdo = new PDO(
             "mysql:host={$config['DB_HOST']};dbname={$config['DB_NAME']}",
             $config['DB_USER'],
             $config['DB_PASS']
         );
-        // Set the error mode to exceptions to catch any potential issues
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        // Return the PDO instance for further database interaction
         return $pdo;
     } catch (PDOException $e) {
-        // Log the error message for debugging purposes
         handleError("Database Error: " . $e->getMessage(), ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live');
-        // Inform the user that an error occurred without revealing sensitive details
         echo 'Database Error: An error occurred. Please try again later.';
-        // Return null if the connection fails
         return null;
     }
 }
@@ -381,7 +374,7 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
 function resendActivationEmail($username)
 {
     $config = getEnvironmentConfig(); // Load environment configuration
-    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL
+    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
     $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'; // Determine the environment (local/live)
 
     $pdo = getPDOConnection(); // Establish database connection
@@ -391,38 +384,43 @@ function resendActivationEmail($username)
     }
 
     try {
-        $query = "SELECT email, activation_code, isactive FROM users WHERE username = :username"; // Retrieve user data
+        // Ambil data pengguna
+        $query = "SELECT email, activation_code, isactive FROM users WHERE username = :username";
         $stmt = $pdo->prepare($query);
         $stmt->execute(['username' => $username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if ($user) { // If user exists, proceed
-            if ($user['isactive'] == 1) { // Check if the user is already active
-                return 'User is already active.';
-            }
-            if (empty($user['activation_code'])) { // Generate activation code if not present
-                $activationCode = generateActivationCode($user['email']);
-                $updateQuery = "UPDATE users SET activation_code = :activation_code WHERE username = :username";
-                $stmt = $pdo->prepare($updateQuery);
-                $stmt->execute(['activation_code' => $activationCode, 'username' => $username]);
-            } else {
-                $activationCode = $user['activation_code']; // Use existing activation code
-            }
-
-            $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode"; // Construct activation link
-            $emailSent = sendActivationEmail($user['email'], $activationCode, $username); // Send activation email
-
-            if ($emailSent === true) { // Check if email was sent successfully
-                return 'Activation email resent successfully.';
-            } else {
-                handleError("Failed to send activation email to {$user['email']} with error: $emailSent", $env);
-                return 'Error: ' . $emailSent;
-            }
-        } else {
-            return 'User does not exist.'; // Return error if user does not exist
+        if (!$user) {
+            return 'User does not exist.';
         }
-    } catch (PDOException $e) { // Catch database exceptions
-        handleError("PDOException occurred while resending activation email: " . $e->getMessage(), $env);
+
+        if ($user['isactive'] == 1) {
+            return 'User is already active.';
+        }
+
+        // Generate atau gunakan kode aktivasi yang ada
+        $activationCode = $user['activation_code'] ?? generateActivationCode($user['email']);
+        if (empty($user['activation_code'])) {
+            $updateQuery = "UPDATE users SET activation_code = :activation_code WHERE username = :username";
+            $stmt = $pdo->prepare($updateQuery);
+            $stmt->execute(['activation_code' => $activationCode, 'username' => $username]);
+        }
+
+        // Kirim email
+        $mail = getMailer();
+        $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
+        $mail->addAddress($user['email']);
+        $mail->Subject = 'Activate your account';
+        $mail->Body = "Click the link to activate your account: " . rtrim(getBaseUrl($config, $_ENV['LIVE_URL']), '/') . "/auth/activate.php?code=$activationCode";
+
+        if (!$mail->send()) {
+            handleError('Mailer Error: ' . $mail->ErrorInfo, $env);
+            return 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
+        }
+
+        return true;
+    } catch (PDOException $e) {
+        handleError("PDOException: " . $e->getMessage(), $env);
         return 'Error: ' . $e->getMessage();
     }
 }
