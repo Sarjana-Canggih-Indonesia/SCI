@@ -82,17 +82,20 @@ function getPDOConnection()
  */
 function getMailer()
 {
-    $mail = new PHPMailer(true); // Create a new PHPMailer instance
+    $config = getEnvironmentConfig(); // Ambil config sesuai environment
 
-    $mail->isSMTP(); // Set mailer to use SMTP
-    $mail->Host = $_ENV['MAIL_HOST']; // Set the SMTP server to send through
-    $mail->SMTPAuth = true; // Enable SMTP authentication
-    $mail->Username = $_ENV['MAIL_USERNAME']; // SMTP username from environment
-    $mail->Password = $_ENV['MAIL_PASSWORD']; // SMTP password from environment
-    $mail->SMTPSecure = $_ENV['MAIL_ENCRYPTION']; // Enable encryption (e.g., SSL/TLS)
-    $mail->Port = $_ENV['MAIL_PORT']; // Set the SMTP port
+    $mail = new PHPMailer(true);
+    $mail->isSMTP();
 
-    return $mail; // Return the configured PHPMailer instance
+    // Gunakan config dari environment yang sesuai
+    $mail->Host = $config['MAIL_HOST'];
+    $mail->SMTPAuth = true;
+    $mail->Username = $config['MAIL_USERNAME'];
+    $mail->Password = $config['MAIL_PASSWORD'];
+    $mail->SMTPSecure = $config['MAIL_ENCRYPTION'];
+    $mail->Port = $config['MAIL_PORT'];
+
+    return $mail;
 }
 
 /**
@@ -310,7 +313,7 @@ function generateActivationCode($email)
  */
 function sendActivationEmail($userEmail, $activationCode, $username = null)
 {
-    $config = getEnvironmentConfig(); // Load environment configuration
+    $config = getEnvironmentConfig(); 
     $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
     $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
@@ -348,7 +351,7 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
         $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode"; // Construct activation link
 
         $mail = getMailer(); // Initialize the mailer
-        $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia'); // Set sender
+        $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
         $mail->addAddress($userEmail); // Add recipient
         $mail->Subject = 'Activate your account'; // Set email subject
         $mail->Body = "Click the link to activate your account: $activationLink"; // Set email body
