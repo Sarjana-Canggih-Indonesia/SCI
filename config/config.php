@@ -117,109 +117,105 @@ function isLiveEnvironment()
 function handleError($message, $env)
 {
     if ($env === 'local') {
-        // Initialize Whoops error handler for local environment
         $whoops = new Whoops\Run;
         $whoops->pushHandler(new Whoops\Handler\PrettyPageHandler);
         $whoops->register();
-        throw new Exception($message); // Throw an exception to stop execution and display error
+        throw new Exception($message);
     } else {
-        error_log($message); // Log the error for later review in live environment
+        error_log($message);
+        exit;
     }
 }
 
 /**
- * Validates and defines reCAPTCHA environment variables as constants if not already set.
+ * Validates and defines reCAPTCHA environment variables as constants.
+ * 
+ * Checks for existing constants first. Auto-detects environment based on HTTP_HOST.
+ * Uses LIVE_ prefixed env variables in production. Throws detailed errors in local
+ * development while logging securely in production.
+ * 
+ * @throws Exception In local environment if variables are missing
+ * @return void
  */
 function validateReCaptchaEnvVariables()
 {
-    if (!defined('RECAPTCHA_SITE_KEY') && !defined('RECAPTCHA_SECRET_KEY')) {
-        // Deteksi environment terlebih dahulu
-        $environment = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
-        $prefix = ($environment === 'live') ? 'LIVE_' : '';
+    $environment = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
-        // Ambil key dengan prefix yang sesuai
+    if (!defined('RECAPTCHA_SITE_KEY') && !defined('RECAPTCHA_SECRET_KEY')) {
+        $prefix = ($environment === 'live') ? 'LIVE_' : '';
+        // Get environment variables with appropriate prefix
         $recaptchaSiteKey = $_ENV[$prefix . 'RECAPTCHA_SITE_KEY'] ?? null;
         $recaptchaSecretKey = $_ENV[$prefix . 'RECAPTCHA_SECRET_KEY'] ?? null;
 
+        // Validate both keys exist
         if (!$recaptchaSiteKey || !$recaptchaSecretKey) {
-            handleError(
-                'reCAPTCHA environment variables are missing or incomplete. Environment: ' . $environment,
-                $environment
-            );
+            handleError('reCAPTCHA environment variables are missing or incomplete.', $environment);
         }
 
         define('RECAPTCHA_SITE_KEY', $recaptchaSiteKey);
         define('RECAPTCHA_SECRET_KEY', $recaptchaSecretKey);
 
-        error_log('reCAPTCHA variables loaded for ' . $environment . ' environment');
+        // Local environment debugging
+        if ($environment === 'local') {
+            error_log('reCAPTCHA variables loaded for local environment');
+        }
     } else {
-        error_log('reCAPTCHA constants already defined');
+        // Prevent duplicate definitions
+        if ($environment === 'local') {
+            error_log('reCAPTCHA constants already defined');
+        }
     }
 }
 
 /**
- * Validate the CSRF token by comparing the session token with the received token.
- *
- * @param string $token The CSRF token to validate.
- * @return bool True if the token is valid, false otherwise.
+ * Validates CSRF token against session storage.
+ * 
+ * @param string $token Token received from client form submission
+ * @return bool True if token matches session storage, false otherwise
+ * @throws Exception If session cannot be started
  */
 function validateCsrfToken($token)
 {
-    if (session_status() !== PHP_SESSION_ACTIVE) {
+    if (session_status() !== PHP_SESSION_ACTIVE)
         session_start();
-    }
-    if (isset($_SESSION['csrf_token']) && $_SESSION['csrf_token'] === $token) {
-        return true;
-    }
-    return false;
+    return isset($_SESSION['csrf_token']) && $_SESSION['csrf_token'] === $token;
 }
 
 /**
- * Validates CSRF token and reCAPTCHA response.
- *
- * This function checks if the provided CSRF token is valid and verifies the reCAPTCHA response 
- * by sending a request to the Google reCAPTCHA API. If either validation fails, an error message 
- * is logged or displayed depending on the environment.
- *
- * @param array $data Contains the CSRF token and reCAPTCHA response.
- * @param HttpClientInterface $client HTTP client for sending the reCAPTCHA verification request.
- * @return mixed Returns true if both CSRF and reCAPTCHA validation succeed, or an empty string if any validation fails.
+ * Combined validation for CSRF token and reCAPTCHA v2 verification.
+ * 
+ * @param array $data Form submission data containing csrf_token and g-recaptcha-response
+ * @param HttpClientInterface $client HTTP client for reCAPTCHA API communication
+ * @return mixed True on success, empty string on failure with environment-appropriate error handling
+ * @throws Exception Detailed error in local environment, silent fail in production
  */
 function validateCsrfAndRecaptcha($data, HttpClientInterface $client)
 {
-    $config = getEnvironmentConfig(); // Retrieve environment configuration
-    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'; // Determine environment type
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+    validateReCaptchaEnvVariables();
 
-    validateReCaptchaEnvVariables(); // Ensure reCAPTCHA environment variables are set
-
-    $receivedCsrfToken = $data['csrf_token'] ?? null; // Extract CSRF token from request
-    if (!validateCsrfToken($receivedCsrfToken)) { // Validate CSRF token
-        handleError('Invalid CSRF token. Please try again.', $env);
+    // CSRF token validation
+    if (!validateCsrfToken($data['csrf_token'] ?? '')) {
+        handleError('Invalid CSRF token', $env);
         return '';
     }
 
-    $recaptchaSecret = RECAPTCHA_SECRET_KEY; // Get reCAPTCHA secret key
-    $recaptchaResponse = $data['g-recaptcha-response'] ?? ''; // Extract reCAPTCHA response
-
-    if (empty($recaptchaResponse)) { // Ensure reCAPTCHA response is provided
-        handleError('Please verify you are not a robot by completing the reCAPTCHA.', $env);
-        return '';
-    }
-
-    // Send reCAPTCHA verification request to Google's API
+    // reCAPTCHA response handling
     $response = $client->request('POST', 'https://www.google.com/recaptcha/api/siteverify', [
         'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
-        'body' => ['secret' => $recaptchaSecret, 'response' => $recaptchaResponse],
+        'body' => [
+            'secret' => RECAPTCHA_SECRET_KEY,
+            'response' => $data['g-recaptcha-response'] ?? ''
+        ]
     ]);
 
-    $data = $response->toArray(); // Convert response to an array
-
-    if (empty($data['success']) || $data['success'] !== true) { // Check if reCAPTCHA verification succeeded
-        handleError('Invalid reCAPTCHA. Please try again.', $env);
+    $result = $response->toArray();
+    if (!($result['success'] ?? false)) {
+        handleError('reCAPTCHA verification failed', $env);
         return '';
     }
 
-    return true; // Return success if both CSRF and reCAPTCHA validation pass
+    return true;
 }
 
 /**
