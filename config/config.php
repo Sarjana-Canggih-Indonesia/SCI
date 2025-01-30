@@ -194,24 +194,28 @@ function validateCsrfAndRecaptcha($data, HttpClientInterface $client)
     $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
     validateReCaptchaEnvVariables();
 
-    // CSRF token validation
+    // Validasi CSRF token
     if (!validateCsrfToken($data['csrf_token'] ?? '')) {
-        handleError('Invalid CSRF token', $env);
+        handleError('Invalid CSRF token.', $env);
         return '';
     }
 
-    // reCAPTCHA response handling
+    // Validasi reCAPTCHA
+    $recaptchaResponse = $data['g-recaptcha-response'] ?? '';
+    if (empty($recaptchaResponse)) {
+        handleError('Please complete the reCAPTCHA.', $env);
+        return '';
+    }
+
+    // Kirim permintaan ke Google reCAPTCHA API
     $response = $client->request('POST', 'https://www.google.com/recaptcha/api/siteverify', [
         'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
-        'body' => [
-            'secret' => RECAPTCHA_SECRET_KEY,
-            'response' => $data['g-recaptcha-response'] ?? ''
-        ]
+        'body' => ['secret' => RECAPTCHA_SECRET_KEY, 'response' => $recaptchaResponse],
     ]);
 
     $result = $response->toArray();
     if (!($result['success'] ?? false)) {
-        handleError('reCAPTCHA verification failed', $env);
+        handleError('reCAPTCHA verification failed.', $env);
         return '';
     }
 
