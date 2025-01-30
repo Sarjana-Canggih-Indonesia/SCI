@@ -133,19 +133,27 @@ function handleError($message, $env)
 function validateReCaptchaEnvVariables()
 {
     if (!defined('RECAPTCHA_SITE_KEY') && !defined('RECAPTCHA_SECRET_KEY')) {
-        $recaptchaSiteKey = $_ENV['RECAPTCHA_SITE_KEY'] ?? null; // Get site key from environment
-        $recaptchaSecretKey = $_ENV['RECAPTCHA_SECRET_KEY'] ?? null; // Get secret key from environment
+        // Deteksi environment terlebih dahulu
+        $environment = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+        $prefix = ($environment === 'live') ? 'LIVE_' : '';
+
+        // Ambil key dengan prefix yang sesuai
+        $recaptchaSiteKey = $_ENV[$prefix . 'RECAPTCHA_SITE_KEY'] ?? null;
+        $recaptchaSecretKey = $_ENV[$prefix . 'RECAPTCHA_SECRET_KEY'] ?? null;
 
         if (!$recaptchaSiteKey || !$recaptchaSecretKey) {
-            handleError('reCAPTCHA environment variables are missing or incomplete.', ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live');
+            handleError(
+                'reCAPTCHA environment variables are missing or incomplete. Environment: ' . $environment,
+                $environment
+            );
         }
 
-        define('RECAPTCHA_SITE_KEY', $recaptchaSiteKey); // Define site key constant
-        define('RECAPTCHA_SECRET_KEY', $recaptchaSecretKey); // Define secret key constant
+        define('RECAPTCHA_SITE_KEY', $recaptchaSiteKey);
+        define('RECAPTCHA_SECRET_KEY', $recaptchaSecretKey);
 
-        error_log('reCAPTCHA environment variables validated and constants defined successfully.');
+        error_log('reCAPTCHA variables loaded for ' . $environment . ' environment');
     } else {
-        error_log('reCAPTCHA constants are already defined.');
+        error_log('reCAPTCHA constants already defined');
     }
 }
 
