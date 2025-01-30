@@ -311,8 +311,8 @@ function generateActivationCode($email)
 function sendActivationEmail($userEmail, $activationCode, $username = null)
 {
     $config = getEnvironmentConfig(); // Load environment configuration
-    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL
-    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'; // Determine the environment (local/live)
+    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
     $pdo = getPDOConnection(); // Establish database connection
     if (!$pdo) { // Check if database connection is successful
