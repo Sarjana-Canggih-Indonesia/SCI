@@ -4,51 +4,46 @@
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
 use Symfony\Component\HttpClient\HttpClient;
+use voku\helper\AntiXSS;
 
-// Start the session and generate a CSRF token
+// Start session and load environment config
 startSession();
-
-// Load environment configuration
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+$env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
 // Validate reCAPTCHA environment variables
 validateReCaptchaEnvVariables();
 
 $client = HttpClient::create();
-
 $message = '';
 
-// Proses pengiriman ulang email aktivasi jika nama pengguna disediakan
-$pdo = getPDOConnection();
-if (!$pdo) {
-    $message = 'Database connection failed. Please try again later.';
-} else {
-    // Menangani permintaan kirim ulang email aktivasi
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['username'])) {
-        // Cek token CSRF yang dikirimkan
-        $receivedCsrfToken = $_POST['csrf_token'] ?? null;
-        $sessionCsrfToken = $_SESSION['csrf_token'] ?? null;
+// Redirect if user is already logged in
+if (is_useronline()) {
+    header("Location: " . $baseUrl);
+    exit();
+}
 
-        // Validasi CSRF token
-        if (!validateCsrfToken($receivedCsrfToken)) {
-            $message = 'Invalid CSRF token. Please try again.';
+// Handle POST request
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Honeypot Field Check
+    if (!empty($_POST['honeypot'])) {
+        handleError('Bot detected. Submission rejected.', $env);
+    } else {
+        // Validate CSRF and reCAPTCHA
+        $validationResult = validateCsrfAndRecaptcha($_POST, $client);
+
+        if ($validationResult !== true) {
+            $message = 'Invalid CSRF token or reCAPTCHA. Please try again.';
         } else {
-            // Validasi reCAPTCHA setelah CSRF token valid
-            $validationResult = validateCsrfAndRecaptcha($_POST, $client);
-
-            if ($validationResult !== true) {
-                $message = $validationResult;
-            } else {
-                // Lanjutkan dengan proses jika validasi berhasil
-                $username = trim($_POST['username']);
-                $message = resendActivationEmail($username);
-            }
+            // Sanitize and process username
+            $username = sanitize_input(trim($_POST['username']));
+            $message = resendActivationEmail($username);
         }
     }
 }
 
-// Jika CSRF token belum ada di session, buat token baru
+// Generate CSRF token if not exists
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
 }
@@ -63,9 +58,8 @@ if (empty($_SESSION['csrf_token'])) {
     <title>Resend Activation Email - Sarjana Canggih Indonesia</title>
     <link rel="icon" href="<?php echo $baseUrl; ?>assets/images/logoscblue.png" type="image/x-icon">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom Styles CSS -->
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css">
-    <script src="https://www.google.com/recaptcha/api.js" defer></script>
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
     <style>
         html,
         body {
@@ -92,15 +86,16 @@ if (empty($_SESSION['csrf_token'])) {
                     <?php endif; ?>
 
                     <form action="" method="POST">
+                        <!-- Honeypot Field -->
+                        <input type="text" name="honeypot" class="honeypot" style="display: none;">
+
                         <!-- CSRF Token -->
                         <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
 
                         <div class="form-group mb-3">
                             <label for="username">Username</label>
                             <input type="text" id="username" name="username" class="form-control" required>
-                            <div class="invalid-feedback">
-                                Username diperlukan.
-                            </div>
+                            <div class="invalid-feedback">Username diperlukan.</div>
                         </div>
 
                         <!-- reCAPTCHA -->
