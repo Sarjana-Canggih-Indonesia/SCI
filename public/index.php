@@ -2,8 +2,11 @@
 // index.php
 
 // Memuat config dan dependensi
+require_once __DIR__ . '/../vendor/autoload.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/user_actions_config.php';
+
+use Carbon\Carbon;
 
 // Memulai sesi apabila tidak ada
 startSession();
@@ -12,6 +15,16 @@ startSession();
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 
+// Deteksi environment
+$isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
+
+// Set header no cache saat local environment
+header('Cache-Control: ' . ($isLiveEnvironment
+  ? 'public, max-age=3600, must-revalidate'
+  : 'no-cache, must-revalidate'));
+header('Expires: ' . ($isLiveEnvironment
+  ? Carbon::now()->addHour()->toRfc7231String()
+  : Carbon::now()->subYear()->toRfc7231String()));
 ?>
 <!DOCTYPE html>
 <html lang="en">
