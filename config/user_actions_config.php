@@ -313,7 +313,7 @@ function generateActivationCode($email)
  */
 function sendActivationEmail($userEmail, $activationCode, $username = null)
 {
-    $config = getEnvironmentConfig(); 
+    $config = getEnvironmentConfig();
     $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
     $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
