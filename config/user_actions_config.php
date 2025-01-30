@@ -412,12 +412,62 @@ function resendActivationEmail($username)
         }
 
         // Kirim email
+        $activationLink = rtrim(getBaseUrl($config, $_ENV['LIVE_URL']), '/') . "/auth/activate.php?code=$activationCode";
         $mail = getMailer();
         $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
         $mail->addAddress($user['email']);
-        $mail->Subject = 'Activate your account';
-        $mail->Body = "Click the link to activate your account: " . rtrim(getBaseUrl($config, $_ENV['LIVE_URL']), '/') . "/auth/activate.php?code=$activationCode";
+        // HTML Email Body
+        $mail->isHTML(true);
+        $mail->Subject = 'Aktivasi Akun Anda - Sarjana Canggih Indonesia';
+        $mail->Body = '
+        <div style="font-family: Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+            <img src="https://sarjanacanggihindonesia.com/assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia" style="max-width: 90px; height: auto;">
+            </div>
+    
+            <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px;">
+                <h2 style="color: #2c3e50; margin-top: 0;">Aktifkan Akun Anda</h2>
+        
+                <p style="color: #4a5568;">Halo,</p>
+        
+                <p style="color: #4a5568;">Anda menerima email ini karena anda meminta link aktivasi baru untuk akun Sarjana Canggih Indonesia.</p>
+        
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="' . $activationLink . '" style="background-color: #3182ce; color: white; padding: 12px 25px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: bold;">
+                Aktifkan Akun
+                    </a>
+                </div>
+        
+                <p style="color: #4a5568;">Jika tombol tidak berfungsi, salin dan tempel link ini di browser Anda:</p>
+                <p style="word-break: break-all; color: #3182ce;">' . $activationLink . '</p>
+        
+                <p style="color: #4a5568; margin-top: 25px;">
+                Butuh bantuan? Hubungi tim support kami di 
+                    <a href="mailto:admin@sarjanacanggihindonesia.com" style="color: #3182ce;">admin@sarjanacanggihindonesia.com</a>
+                </p>
+            </div>
+    
+            <div style="text-align: center; margin-top: 30px; color: #718096; font-size: 12px;">
+            <p>Email ini dikirim ke ' . htmlspecialchars($user['email']) . '</p>
+            </div>
+        </div>';
+        // Plain Text Body
+        $mail->AltBody = "Aktivasi Akun Anda - Sarjana Canggih Indonesia
 
+        Halo,
+
+        Anda menerima email ini karena meminta link aktivasi baru untuk akun Sarjana Canggih Indonesia.
+
+        Silakan klik link berikut untuk mengaktifkan akun Anda:
+        $activationLink
+
+        Jika tidak bisa mengklik link, salin dan tempel ke address bar browser Anda.
+
+        Butuh bantuan? Hubungi tim support kami di support@example.com
+
+        Email ini dikirim ke " . $user['email'];
+
+        // Apabila Error
         if (!$mail->send()) {
             handleError('Mailer Error: ' . $mail->ErrorInfo, $env);
             return 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
