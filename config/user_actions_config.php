@@ -390,7 +390,7 @@ function resendActivationEmail($username)
 
     try {
         // Ambil data pengguna
-        $query = "SELECT email, activation_code, isactive FROM users WHERE username = :username";
+        $query = "SELECT email, activation_code, activation_expires_at, isactive FROM users WHERE username = :username";
         $stmt = $pdo->prepare($query);
         $stmt->execute(['username' => $username]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -405,10 +405,19 @@ function resendActivationEmail($username)
 
         // Generate atau gunakan kode aktivasi yang ada
         $activationCode = $user['activation_code'] ?? generateActivationCode($user['email']);
+        $activationExpires = $user['activation_expires_at'] ?? Carbon::now()->addHours(24);
+
         if (empty($user['activation_code'])) {
-            $updateQuery = "UPDATE users SET activation_code = :activation_code WHERE username = :username";
+            $updateQuery = "UPDATE users SET 
+                    activation_code = :activation_code, 
+                    activation_expires_at = :activation_expires_at 
+                    WHERE username = :username";
             $stmt = $pdo->prepare($updateQuery);
-            $stmt->execute(['activation_code' => $activationCode, 'username' => $username]);
+            $stmt->execute([
+                'activation_code' => $activationCode,
+                'activation_expires_at' => $activationExpires->format('Y-m-d H:i:s'),
+                'username' => $username
+            ]);
         }
 
         // Kirim email
@@ -437,13 +446,17 @@ function resendActivationEmail($username)
                 Aktifkan Akun
                     </a>
                 </div>
+
+                <p style="color: #4a5568; margin-top: 15px;">
+                    <strong>Link ini akan kadaluarsa pada:</strong><br>
+                    ' . $activationExpires->locale('id')->isoFormat('dddd, D MMMM YYYY [pukul] HH:mm') . '
+                </p>
         
                 <p style="color: #4a5568;">Jika tombol tidak berfungsi, salin dan tempel link ini di browser Anda:</p>
                 <p style="word-break: break-all; color: #3182ce;">' . $activationLink . '</p>
         
                 <p style="color: #4a5568; margin-top: 25px;">
-                Butuh bantuan? Hubungi tim support kami di 
-                    <a href="mailto:admin@sarjanacanggihindonesia.com" style="color: #3182ce;">admin@sarjanacanggihindonesia.com</a>
+                    Butuh bantuan? Hubungi tim support kami di <a href="mailto:admin@sarjanacanggihindonesia.com" style="color: #3182ce;">admin@sarjanacanggihindonesia.com</a>
                 </p>
             </div>
     
@@ -461,9 +474,11 @@ function resendActivationEmail($username)
         Silakan klik link berikut untuk mengaktifkan akun Anda:
         $activationLink
 
+        Link aktivasi akan kadaluarsa pada: " . $activationExpires->format('d-m-Y H:i') . "
+
         Jika tidak bisa mengklik link, salin dan tempel ke address bar browser Anda.
 
-        Butuh bantuan? Hubungi tim support kami di support@example.com
+        Butuh bantuan? Hubungi tim support kami di admin@sarjanacanggihindonesia.com
 
         Email ini dikirim ke " . $user['email'];
 
