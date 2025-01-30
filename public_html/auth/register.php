@@ -1,4 +1,6 @@
 <?php
+// register.php
+
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
 require_once __DIR__ . '/../../config/auth/validate.php';
