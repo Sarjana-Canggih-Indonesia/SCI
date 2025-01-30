@@ -7,6 +7,7 @@ require_once __DIR__ . '/auth/validate.php';
 
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\Validator\ConstraintViolationList;
+use Symfony\Component\HttpClient\HttpClient;
 use Carbon\Carbon;
 
 /**
@@ -487,6 +488,63 @@ function registerUser($username, $email, $password, $env)
         return 'Internal server error. Please try again later.';
     }
     return 'Registration failed. Please try again later.';
+}
+
+/**
+ * Validates and processes the login form submission.
+ * 
+ * This function checks for honeypot field, validates CSRF token and reCAPTCHA response,
+ * sanitizes and validates username and password, and processes the login.
+ * 
+ * @param array $_POST The POST data from the login form.
+ * @param string $env The environment configuration.
+ * @param string $baseUrl The base URL for redirection after successful login.
+ * @return void
+ */
+function processLoginForm($env, $baseUrl)
+{
+    if (!empty($_POST['honeypot'])) {
+        $error_message = 'Bot detected. Submission rejected.';
+        handleError($error_message, $env);
+        return;
+    }
+
+    $client = HttpClient::create();
+    $error_message = validateCsrfAndRecaptcha($_POST, $client);
+
+    if ($error_message === true) {
+        $username = isset($_POST['username']) ? sanitize_input($_POST['username']) : '';
+        $password = isset($_POST['password']) ? sanitize_input($_POST['password']) : '';
+
+        $usernameViolations = validateUsername($username);
+        if (count($usernameViolations) > 0) {
+            $error_message = 'Username tidak sesuai atau tidak ditemukan.';
+            handleError($error_message, $env);
+            return;
+        }
+
+        $passwordViolations = validatePassword($password);
+        if (count($passwordViolations) > 0) {
+            $error_message = 'Password tidak sesuai atau tidak ditemukan.';
+            handleError($error_message, $env);
+            return;
+        }
+
+        $error_message = processLogin($username, $password);
+
+        if ($error_message === 'Login successful.') {
+            if (isset($_POST['rememberMe'])) {
+                rememberMe($username, $password);
+            }
+            header("Location: $baseUrl");
+            exit();
+        } else {
+            $error_message = 'Username / Password tidak sesuai atau tidak ditemukan. Silahkan coba lagi atau lakukan reset password.';
+            handleError($error_message, $env);
+        }
+    } else {
+        handleError($error_message, $env);
+    }
 }
 
 /**
