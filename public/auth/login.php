@@ -49,8 +49,8 @@ redirect_if_logged_in(); // Redirect to the index page if the user is already lo
     <div class="card-wrapper">
       <!-- Brand / Logo Section  -->
       <div class="brand">
-        <img href="<?php echo $baseUrl; ?>">
-        <img src="<?php echo $baseUrl; ?>assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia">
+        <a href="<?php echo $baseUrl; ?>">
+          <img src="<?php echo $baseUrl; ?>assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia">
         </a>
       </div>
       <div class="card fat">
