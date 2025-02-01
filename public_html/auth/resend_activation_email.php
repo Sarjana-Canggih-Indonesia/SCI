@@ -79,6 +79,13 @@ if (empty($_SESSION['csrf_token'])) {
             </div>
             <div class="card fat">
                 <div class="card-body">
+                    <!-- Kembali ke halaman login  -->
+                    <div class="d-flex text-start mb-2">
+                        <a href="<?php echo $baseUrl; ?>auth/login.php" class="btn btn-outline-primary"
+                            onclick="return confirm('Are you sure you want to go back?');">
+                            <i class="fa fa-arrow-left"></i> Back to Login</a>
+                    </div>
+
                     <h4 class="card-title">Kirim Ulang Email Aktivasi</h4>
 
                     <?php if (!empty($message)): ?>
@@ -103,9 +110,6 @@ if (empty($_SESSION['csrf_token'])) {
 
                         <div class="form-group m-0">
                             <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">Kirim Ulang Email</button>
-                        </div>
-                        <div class="mt-4 text-center">
-                            <a href="<?php echo $baseUrl; ?>auth/login.php">Kembali ke Halaman Masuk</a>
                         </div>
                     </form>
                 </div>
