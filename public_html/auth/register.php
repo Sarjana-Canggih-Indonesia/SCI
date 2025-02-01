@@ -20,12 +20,6 @@ startSession();
 
 $client = HttpClient::create();
 
-// Jika pengguna sudah login, redirect ke halaman index
-if (is_useronline()) {
-    header("Location: " . $baseUrl);
-    exit();
-}
-
 // Validate reCAPTCHA environment variables
 validateReCaptchaEnvVariables();
 
@@ -34,11 +28,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $validationResult = validateCsrfAndRecaptcha($_POST, $client);
 
     if ($validationResult !== true) {
-        handleError('Invalid CSRF token or reCAPTCHA. Please try again.', $env);
+        $_SESSION['error_message'] = 'Invalid CSRF token or reCAPTCHA. Please try again.';
+        header("Location: register.php");
+        exit();
     } else {
         // Honeypot Field Check
         if (!empty($_POST['honeypot'])) {
-            handleError('Bot detected. Submission rejected.', $env);
+            $_SESSION['error_message'] = 'Bot detected. Submission rejected.';
+            header("Location: register.php");
+            exit();
         } else {
             // Sanitize and validate form inputs
             $username = sanitize_input(trim($_POST['username']));
@@ -48,7 +46,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Validate password confirmation
             if ($password !== $confirm_password) {
-                handleError('Passwords do not match.', $env);
+                $_SESSION['error_message'] = 'Passwords do not match.';
+                header("Location: register.php");
+                exit();
             }
 
             // Register the user
@@ -65,15 +65,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $activationResult = sendActivationEmail($email, $activationCode, $username);
 
                 if ($activationResult === true) {
-                    $message = "Registration successful! Please check your email to activate your account.";
+                    $_SESSION['success_message'] = "Registration successful! Please check your email to activate your account.";
                 } else {
                     // Jika pengiriman email gagal, tangani kesalahan
-                    handleError($activationResult, $env);
+                    $_SESSION['error_message'] = $activationResult;
                 }
             } else {
                 // Jika registrasi gagal, tangani kesalahan
-                handleError($registrationResult, $env);
+                $_SESSION['error_message'] = $registrationResult;
             }
+
+            // Redirect ke halaman yang sama untuk menghindari resubmission
+            header("Location: register.php");
+            exit();
         }
     }
 }
@@ -121,9 +125,16 @@ redirect_if_logged_in();
                 <div class="card-body">
                     <h4 class="card-title">Buat Akun</h4>
 
-                    <?php if (!empty($message)): ?>
-                        <div class="alert alert-warning"><?php echo $message; ?></div>
+                    <?php if (isset($_SESSION['success_message'])): ?>
+                        <div class="alert alert-success"><?php echo $_SESSION['success_message']; ?></div>
+                        <?php unset($_SESSION['success_message']); ?>
                     <?php endif; ?>
+
+                    <?php if (isset($_SESSION['error_message'])): ?>
+                        <div class="alert alert-danger"><?php echo $_SESSION['error_message']; ?></div>
+                        <?php unset($_SESSION['error_message']); ?>
+                    <?php endif; ?>
+
                     <!-- Bagian Form -->
                     <form action="" method="POST" class="halaman-register" novalidate="">
                         <div class="form-group">
