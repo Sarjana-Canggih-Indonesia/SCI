@@ -2,12 +2,6 @@
 
 Repo untuk website Sarjana Canggih Indonesia
 
-## todo:
-
-- [] halaman produk
-- [] testimoni
-- [] AI Response (?)
-
 ## Reminder:
 
 - Optimus hanya digunakan pada
