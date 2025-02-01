@@ -177,6 +177,10 @@ function loginUser($username, $password)
 {
     $pdo = getPDOConnection();
     if (!$pdo) {
+        // Tambahkan logging untuk local
+        if (!isLiveEnvironment()) {
+            error_log("Local Debug: Gagal koneksi database di loginUser");
+        }
         return 'Database error, please try again later.';
     }
 
@@ -199,6 +203,10 @@ function loginUser($username, $password)
         }
         return 'Invalid credentials.';
     } catch (PDOException $e) {
+        // Tambahkan logging untuk local
+        if (!isLiveEnvironment()) {
+            error_log("Local Debug: PDO Error - " . $e->getMessage());
+        }
         return 'Internal error. Please contact support.';
     }
 }
@@ -317,8 +325,9 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
     }
 
     try {
+        // Jika username disediakan, periksa status aktivasi pengguna
         if ($username) {
-            $query = "SELECT activation_code, isactive, email FROM users WHERE username = :username";
+            $query = "SELECT isactive FROM users WHERE username = :username";
             $stmt = $pdo->prepare($query);
             $stmt->execute(['username' => $username]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -331,19 +340,12 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
             if ($user['isactive'] == 1) {
                 return 'User is already active.';
             }
-
-            if (empty($user['activation_code'])) {
-                $activationCode = generateActivationCode($user['email']);
-                $updateQuery = "UPDATE users SET activation_code = :activation_code WHERE username = :username";
-                $stmt = $pdo->prepare($updateQuery);
-                $stmt->execute(['activation_code' => $activationCode, 'username' => $username]);
-            } else {
-                $activationCode = $user['activation_code'];
-            }
         }
 
+        // Buat link aktivasi
         $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode";
 
+        // Kirim email
         $mail = getMailer();
         $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
         $mail->addAddress($userEmail);
@@ -509,56 +511,63 @@ function resendActivationEmail($username)
  */
 function registerUser($username, $email, $password, $env)
 {
-    $pdo = getPDOConnection(); // Establish database connection
-    if (!$pdo) { // Check if database connection failed
+    $pdo = getPDOConnection();
+    if (!$pdo) {
         handleError('Database connection failed.', $env);
         return 'Internal server error. Please try again later.';
     }
+
     try {
-        $usernameViolations = validateUsername($username); // Validate username
+        // Validasi input
+        $usernameViolations = validateUsername($username);
         if (count($usernameViolations) > 0)
             return $usernameViolations[0]->getMessage();
-        $emailViolations = validateEmail($email); // Validate email
+
+        $emailViolations = validateEmail($email);
         if (count($emailViolations) > 0)
             return $emailViolations[0]->getMessage();
-        $passwordViolations = validatePassword($password); // Validate password
+
+        $passwordViolations = validatePassword($password);
         if (count($passwordViolations) > 0)
             return $passwordViolations[0]->getMessage();
 
-        $checkQuery = "SELECT 1 FROM users WHERE username = :username OR email = :email"; // Check if username or email exists
+        // Periksa apakah username atau email sudah ada
+        $checkQuery = "SELECT 1 FROM users WHERE username = :username OR email = :email";
         $stmt = $pdo->prepare($checkQuery);
         $stmt->execute(['username' => $username, 'email' => $email]);
         if ($stmt->fetch())
             return 'Username or email already exists.';
 
-        $hashedPassword = password_hash($password, PASSWORD_BCRYPT); // Hash password
-        if ($hashedPassword === false) { // Check if password hashing failed
+        // Hash password
+        $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
+        if ($hashedPassword === false) {
             handleError('Password hashing failed.', $env);
             return 'Internal server error. Please try again later.';
         }
-        $activationCode = generateActivationCode($email); // Generate activation code
-        $currentTime = Carbon::now()->toDateTimeString(); // Get current timestamp
-        $insertQuery = "INSERT INTO users (username, email, password, isactive, activation_code, created_at) VALUES (:username, :email, :password, 0, :activation_code, :created_at)"; // Insert user into database
+
+        // Generate activation code
+        $activationCode = generateActivationCode($email);
+
+        // Insert user ke database
+        $insertQuery = "INSERT INTO users (username, email, password, isactive, activation_code, created_at) 
+                        VALUES (:username, :email, :password, 0, :activation_code, NOW())";
         $stmt = $pdo->prepare($insertQuery);
         $stmt->execute([
             'username' => $username,
             'email' => $email,
             'password' => $hashedPassword,
-            'activation_code' => $activationCode,
-            'created_at' => $currentTime
+            'activation_code' => $activationCode
         ]);
 
-        if ($stmt->rowCount() > 0) { // Check if insertion was successful
-            $stmt = $pdo->prepare("SELECT activation_code FROM users WHERE email = :email");
-            $stmt->execute(['email' => $email]);
-            $activationCode = $stmt->fetchColumn();
+        if ($stmt->rowCount() > 0) {
             return 'Registration successful. Please activate your account via email. Activation Code: ' . $activationCode;
         }
-    } catch (PDOException $e) { // Catch database exceptions
+
+        return 'Registration failed. Please try again later.';
+    } catch (PDOException $e) {
         handleError('Database error: ' . $e->getMessage(), $env);
         return 'Internal server error. Please try again later.';
     }
-    return 'Registration failed. Please try again later.';
 }
 
 /**
