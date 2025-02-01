@@ -2,6 +2,9 @@
 // Include the user actions configuration file
 require_once __DIR__ . '/../../config/user_actions_config.php';
 
+$config = getEnvironmentConfig(); // Load environment configuration
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
+
 // Call the logout function
 $logoutMessage = logoutUser();
 
@@ -23,17 +26,15 @@ $config = getEnvironmentConfig();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Logout - Sarjana Canggih Indonesia</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="../favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="<?php echo $baseUrl; ?>favicon.ico" />
     <!-- Bootstrap css -->
-    <link rel="stylesheet" type="text/css"
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/bootstrap.min.css" />
     <!-- Font Awesome -->
     <link rel="stylesheet" type="text/css"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
     <!-- Custom Styles CSS -->
-    <link rel="stylesheet" type="text/css" href="../assets/css/styles.css">
-    </style>
-    <!--  -->
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css">
+    <!-- Custom styles for auth pages -->
     <style>
         html,
         body {
@@ -57,12 +58,11 @@ $config = getEnvironmentConfig();
                     <?php echo $modalMessage; ?>
                 </div>
                 <div class="modal-footer">
-                    <a href="<?php echo $config['BASE_URL']; ?>public/auth/login.php" type="button"
-                        class="btn btn-secondary">
+                    <a href="<?php echo $baseUrl; ?>auth/login.php" type="button" class="btn btn-secondary">
                         <i class="fa fa-user"></i> Login
                     </a>
                     <?php if ($isLogoutSuccessful): ?>
-                        <a href="<?php echo $config['BASE_URL']; ?>public/" class="btn btn-primary">
+                        <a href="<?php echo $baseUrl; ?>" class="btn btn-primary">
                             <i class="fa fa-home"></i> Homepage
                         </a>
                     <?php else: ?>
