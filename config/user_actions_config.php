@@ -548,15 +548,19 @@ function registerUser($username, $email, $password, $env)
         // Generate activation code
         $activationCode = generateActivationCode($email);
 
+        // Gunakan Carbon untuk mencatat waktu
+        $createdAt = Carbon::now()->toDateTimeString();
+
         // Insert user ke database
         $insertQuery = "INSERT INTO users (username, email, password, isactive, activation_code, created_at) 
-                        VALUES (:username, :email, :password, 0, :activation_code, NOW())";
+                        VALUES (:username, :email, :password, 0, :activation_code, :created_at)";
         $stmt = $pdo->prepare($insertQuery);
         $stmt->execute([
             'username' => $username,
             'email' => $email,
             'password' => $hashedPassword,
-            'activation_code' => $activationCode
+            'activation_code' => $activationCode,
+            'created_at' => $createdAt
         ]);
 
         if ($stmt->rowCount() > 0) {
