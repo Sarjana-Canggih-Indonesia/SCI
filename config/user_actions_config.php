@@ -753,8 +753,9 @@ function activateAccount($activationCode)
  */
 function processPasswordResetRequest($email_or_username, $recaptcha_response, $csrf_token, HttpClientInterface $httpClient, $config, $baseUrl)
 {
-    // Set the default timezone to Asia/Jakarta
-    date_default_timezone_set('Asia/Jakarta');
+    // Set the default timezone to Asia/Jakarta using Carbon
+    Carbon::setToStringFormat('Y-m-d H:i:s');
+    Carbon::setTestNow(Carbon::now('Asia/Jakarta'));
 
     // Load environment configuration and set environment type based on host
     $config = getEnvironmentConfig();
@@ -802,7 +803,7 @@ function processPasswordResetRequest($email_or_username, $recaptcha_response, $c
     $resetHash = generateActivationCode($userEmail);
 
     // Set expiration time using Carbon
-    $expiresAt = Carbon::now()->addHour()->toDateTimeString();
+    $expiresAt = Carbon::now('Asia/Jakarta')->addHour();
 
     // Clear expired reset tokens for the user
     $stmt = $pdo->prepare("DELETE FROM password_resets WHERE user_id = :user_id OR expires_at <= NOW()");
@@ -926,12 +927,17 @@ function updateUserPassword($user_id, $hashed_password, $pdo)
  */
 function markTokenAsUsed($token, $pdo)
 {
+    $completedAt = Carbon::now('Asia/Jakarta')->toDateTimeString();
+
     // SQL query to mark the token as used by setting completed to 1 and updating completed_at
     $sql = "UPDATE password_resets 
-            SET completed = 1, completed_at = NOW() 
+            SET completed = 1, completed_at = :completed_at 
             WHERE hash = :hash";
     $stmt = $pdo->prepare($sql); // Prepare the SQL statement
-    $stmt->execute(['hash' => $token]); // Execute the statement with the provided token
+    $stmt->execute([
+        'hash' => $token,
+        'completed_at' => $completedAt,
+    ]);
 }
 
 /**
