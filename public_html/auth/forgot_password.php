@@ -89,6 +89,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             <div class="card fat">
                 <div class="card-body">
+                    <!-- Kembali ke halaman login  -->
                     <div class="d-flex text-start mb-2">
                         <a href="<?php echo $baseUrl; ?>auth/login.php" class="btn btn-outline-primary"
                             onclick="return confirm('Are you sure you want to go back?');">
