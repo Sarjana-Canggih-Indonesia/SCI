@@ -975,6 +975,13 @@ function handlePasswordReset($token, $pdo): void
     }
 }
 
+/**
+ * Updates the email address of a user in the database.
+ *
+ * @param int $userId The ID of the user whose email is to be updated.
+ * @param string $newEmail The new email address to set.
+ * @return string Returns a success message or an error message if the update fails.
+ */
 function changeEmail($userId, $newEmail)
 {
     $pdo = getPDOConnection();
