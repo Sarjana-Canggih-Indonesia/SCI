@@ -10,6 +10,8 @@ use Symfony\Component\Validator\ConstraintViolationList;
 use Symfony\Component\HttpClient\HttpClient;
 use Carbon\Carbon;
 
+date_default_timezone_set('Asia/Jakarta');
+
 /**
  * Load environment variables from a .env file.
  * This script checks if the .env file has already been loaded. If not, it attempts to load the .env file
@@ -50,18 +52,27 @@ $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
  */
 function getPDOConnection()
 {
+    // Retrieve environment-specific database configuration
     $config = getEnvironmentConfig();
     try {
+        // Create a PDO instance to connect to the MySQL database
         $pdo = new PDO(
-            "mysql:host={$config['DB_HOST']};dbname={$config['DB_NAME']}",
-            $config['DB_USER'],
-            $config['DB_PASS']
+            "mysql:host={$config['DB_HOST']};dbname={$config['DB_NAME']}", // DSN for MySQL connection
+            $config['DB_USER'], // Database username
+            $config['DB_PASS']  // Database password
         );
+        // Set PDO error mode to exceptions for better error handling
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        // Set MySQL session timezone to +07:00 (Asia/Jakarta)
+        $pdo->exec("SET time_zone = '+07:00';");
+        // Return the PDO connection instance
         return $pdo;
     } catch (PDOException $e) {
+        // Handle database connection errors
         handleError("Database Error: " . $e->getMessage(), ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live');
+        // Display a user-friendly error message
         echo 'Database Error: An error occurred. Please try again later.';
+        // Return null to indicate connection failure
         return null;
     }
 }

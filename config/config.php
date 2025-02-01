@@ -32,7 +32,7 @@ use Whoops\Run;
 use Whoops\Handler\PrettyPageHandler;
 use Carbon\Carbon;
 
-date_default_timezone_set('Asia/Jakarta'); // Set zona waktu
+date_default_timezone_set('Asia/Jakarta');
 
 $whoops = new Run;
 $whoops->pushHandler(new PrettyPageHandler);
