@@ -18,7 +18,12 @@ $user_input = $_GET['input'] ?? '';
 $sanitized_input = sanitize_input($user_input);
 
 // Validate reCAPTCHA environment variables
-validateReCaptchaEnvVariables();
+try {
+    validateReCaptchaEnvVariables();
+} catch (RuntimeException $e) {
+    // Jika terjadi error pada reCAPTCHA, hentikan eksekusi
+    exit;
+}
 
 // Process Login
 processLoginForm($env, $baseUrl);
