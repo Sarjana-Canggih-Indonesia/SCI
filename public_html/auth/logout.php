@@ -72,11 +72,9 @@ $config = getEnvironmentConfig();
             </div>
         </div>
     </div>
-
-    <!-- Include Bootstrap JS and Popper.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js"></script>
-
+    <!-- External JS libraries -->
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
     <script>
         // Show the modal once the page has loaded
         window.onload = function () {
@@ -85,7 +83,6 @@ $config = getEnvironmentConfig();
             myModal.show();
         }
     </script>
-
 </body>
 
 </html>
