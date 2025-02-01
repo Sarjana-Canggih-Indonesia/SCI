@@ -75,6 +75,7 @@ $config = getEnvironmentConfig();
     <!-- External JS libraries -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
     <script>
         // Show the modal once the page has loaded
         window.onload = function () {
