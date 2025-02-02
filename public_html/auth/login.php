@@ -5,6 +5,14 @@ require_once __DIR__ . '/../../config/config.php'; // Include configuration file
 require_once __DIR__ . '/../../config/user_actions_config.php'; // Include user actions configuration file
 
 startSession(); // Start the session and generate a CSRF token
+
+// Ambil error dari session (jika ada)
+$error_message = '';
+if (isset($_SESSION['error_message'])) {
+  $error_message = $_SESSION['error_message'];
+  unset($_SESSION['error_message']); // Hapus setelah ditampilkan
+}
+
 $config = getEnvironmentConfig(); // Load environment configuration
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
 
