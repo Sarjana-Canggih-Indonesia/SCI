@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
+
 use Symfony\Component\HttpClient\HttpClient;
 use voku\helper\AntiXSS;
 
@@ -32,13 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // Validate CSRF and reCAPTCHA
         $validationResult = validateCsrfAndRecaptcha($_POST, $client);
-
         if ($validationResult !== true) {
             $message = 'Invalid CSRF token or reCAPTCHA. Please try again.';
         } else {
-            // Sanitize and process username
-            $username = sanitize_input(trim($_POST['username']));
-            $message = resendActivationEmail($username);
+            // Validate and sanitize input
+            $identifier = sanitize_input(trim($_POST['identifier']));
+            $message = resendActivationEmail($identifier);
         }
     }
 }
@@ -100,9 +100,9 @@ if (empty($_SESSION['csrf_token'])) {
                         <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
 
                         <div class="form-group mb-3">
-                            <label for="username">Username</label>
-                            <input type="text" id="username" name="username" class="form-control" required>
-                            <div class="invalid-feedback">Username diperlukan.</div>
+                            <label for="identifier">Email atau Username</label>
+                            <input type="text" id="identifier" name="identifier" class="form-control" required>
+                            <div class="invalid-feedback">Field ini diperlukan.</div>
                         </div>
 
                         <!-- reCAPTCHA -->

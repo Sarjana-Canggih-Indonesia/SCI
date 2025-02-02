@@ -454,32 +454,36 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
 }
 
 /**
- * Resend an activation email to the user.
- *
- * Loads configuration, connects to the database, retrieves user data, 
- * generates or retrieves the activation code, constructs the activation link, 
- * and resends the activation email to the user.
- *
- * @param string $username The username of the user to resend the activation email to.
- * @return string A message indicating the result of the operation.
+ * Resends an activation email to a user based on their email or username.
+ * 
+ * This function retrieves the user's details from the database, generates or 
+ * retrieves an activation code, constructs an activation link, and sends 
+ * the activation email. It ensures that the activation code exists and updates 
+ * the expiration time if necessary.
+ * 
+ * @param string $identifier The email or username of the user requesting activation.
+ * @return string Message indicating the outcome of the process.
  */
-function resendActivationEmail($username)
+function resendActivationEmail($identifier)
 {
-    $config = getEnvironmentConfig(); // Load environment configuration
+    $config = getEnvironmentConfig();
     $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
-    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'; // Determine the environment (local/live)
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
-    $pdo = getPDOConnection(); // Establish database connection
-    if (!$pdo) { // Check if database connection is successful
+    $pdo = getPDOConnection();
+    if (!$pdo) {
         handleError("Database connection failed when trying to resend activation email.", $env);
-        return 'Database connection failed';
+        return 'An error occurred. Please try again later.';
     }
 
     try {
-        // Ambil data pengguna
-        $query = "SELECT email, activation_code, activation_expires_at, isactive FROM users WHERE username = :username";
+        // Determine if the identifier is an email or username
+        $query = filter_var($identifier, FILTER_VALIDATE_EMAIL)
+            ? "SELECT username, email, activation_code, activation_expires_at, isactive FROM users WHERE email = :identifier"
+            : "SELECT username, email, activation_code, activation_expires_at, isactive FROM users WHERE username = :identifier";
+
         $stmt = $pdo->prepare($query);
-        $stmt->execute(['username' => $username]);
+        $stmt->execute(['identifier' => $identifier]);
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$user) {
@@ -490,63 +494,57 @@ function resendActivationEmail($username)
             return 'User is already active.';
         }
 
-        // Generate atau gunakan kode aktivasi yang ada
+        // Retrieve existing activation code or generate a new one
         $activationCode = $user['activation_code'] ?? generateActivationCode($user['email']);
-        $activationExpires = $user['activation_expires_at'] ?? Carbon::now()->addHours(24);
+        $activationExpires = isset($user['activation_expires_at'])
+            ? Carbon::parse($user['activation_expires_at'])
+            : Carbon::now()->addHours(24);
 
         if (empty($user['activation_code'])) {
-            $updateQuery = "UPDATE users SET 
-                    activation_code = :activation_code, 
-                    activation_expires_at = :activation_expires_at 
-                    WHERE username = :username";
+            // Update activation code and expiration date
+            $updateQuery = "UPDATE users SET activation_code=:activation_code, activation_expires_at=:activation_expires_at WHERE " .
+                (filter_var($identifier, FILTER_VALIDATE_EMAIL) ? "email" : "username") . "=:identifier";
             $stmt = $pdo->prepare($updateQuery);
             $stmt->execute([
                 'activation_code' => $activationCode,
                 'activation_expires_at' => $activationExpires->format('Y-m-d H:i:s'),
-                'username' => $username
+                'identifier' => $identifier
             ]);
         }
 
-        // Kirim email
-        $activationLink = rtrim(getBaseUrl($config, $_ENV['LIVE_URL']), '/') . "/auth/activate.php?code=$activationCode";
+        // Construct activation link
+        $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode";
+
         $mail = getMailer();
         $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
         $mail->addAddress($user['email']);
-        // HTML Email Body
         $mail->isHTML(true);
         $mail->Subject = 'Aktivasi Akun Anda - Sarjana Canggih Indonesia';
         $mail->Body = '
         <div style="font-family: Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="text-align: center; margin-bottom: 30px;">
-            <img src="https://sarjanacanggihindonesia.com/assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia" style="max-width: 90px; height: auto;">
+                <img src="https://sarjanacanggihindonesia.com/assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia" style="max-width: 90px; height: auto;">
             </div>
-    
             <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px;">
                 <h2 style="color: #2c3e50; margin-top: 0;">Aktifkan Akun Anda</h2>
-        
                 <p style="color: #4a5568;">Halo,</p>
-        
-                <p style="color: #4a5568;">Anda menerima email ini karena anda meminta link aktivasi baru untuk akun Sarjana Canggih Indonesia.</p>
-        
+                <p style="color: #4a5568;">Anda menerima email ini karena Anda meminta link aktivasi baru untuk akun Sarjana Canggih Indonesia.</p>
                 <div style="text-align: center; margin: 30px 0;">
                     <a href="' . $activationLink . '" style="background-color: #3182ce; color: white; padding: 12px 25px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: bold;">
-                Aktifkan Akun
+                        Aktifkan Akun
                     </a>
-                </div>               
-        
+                </div>
                 <p style="color: #4a5568;">Jika tombol tidak berfungsi, salin dan tempel link ini di browser Anda:</p>
                 <p style="word-break: break-all; color: #3182ce;">' . $activationLink . '</p>
-        
                 <p style="color: #4a5568; margin-top: 25px;">
                     Butuh bantuan? Hubungi tim support kami di <a href="mailto:admin@sarjanacanggihindonesia.com" style="color: #3182ce;">admin@sarjanacanggihindonesia.com</a>
                 </p>
             </div>
-    
             <div style="text-align: center; margin-top: 30px; color: #718096; font-size: 12px;">
-            <p>Email ini dikirim ke ' . htmlspecialchars($user['email']) . '</p>
+                <p>Email ini dikirim ke ' . htmlspecialchars($user['email']) . '</p>
             </div>
         </div>';
-        // Plain Text Body
+
         $mail->AltBody = "Aktivasi Akun Anda - Sarjana Canggih Indonesia
 
         Halo,
@@ -562,16 +560,18 @@ function resendActivationEmail($username)
 
         Email ini dikirim ke " . $user['email'];
 
-        // Apabila Error
         if (!$mail->send()) {
             handleError('Mailer Error: ' . $mail->ErrorInfo, $env);
-            return 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
+            return 'An error occurred while sending the email. Please try again later.';
         }
 
         return 'Activation email has been resent. Please check your inbox.';
     } catch (PDOException $e) {
-        handleError("PDOException: " . $e->getMessage(), $env);
-        return 'Error: ' . $e->getMessage();
+        handleError("Database error: " . $e->getMessage(), $env);
+        return 'An error occurred. Please try again later.';
+    } catch (Exception $e) {
+        handleError("Unexpected error: " . $e->getMessage(), $env);
+        return 'An error occurred. Please try again later.';
     }
 }
 
