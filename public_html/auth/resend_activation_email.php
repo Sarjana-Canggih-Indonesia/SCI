@@ -91,7 +91,7 @@ if (empty($_SESSION['csrf_token'])) {
                         <div class="alert alert-warning"><?php echo htmlspecialchars($message); ?></div>
                     <?php endif; ?>
 
-                    <form id="resend-form" action="" method="POST">
+                    <form id="form-resend-activation-code" action="" method="POST">
                         <!-- Honeypot Field -->
                         <input type="text" name="honeypot" class="honeypot" style="display: none;">
 
@@ -125,14 +125,14 @@ if (empty($_SESSION['csrf_token'])) {
 <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
 <!-- Custom JavaScript untuk validasi -->
 <script>
-    document.getElementById('resend-form').addEventListener('submit', function (event) {
+    document.getElementById('form-resend-activation-code').addEventListener('submit', function (event) {
         let identifierField = document.getElementById('identifier');
         let identifierValue = identifierField.value.trim();
 
         if (identifierValue === '') {
             event.preventDefault(); // Mencegah submit
+            alert('Email atau Username tidak boleh kosong.');
             identifierField.classList.add('is-invalid');
-            identifierField.nextElementSibling.textContent = 'Email atau Username tidak boleh kosong.';
         } else {
             identifierField.classList.remove('is-invalid');
         }
