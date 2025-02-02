@@ -19,12 +19,6 @@ validateReCaptchaEnvVariables();
 $client = HttpClient::create();
 $message = '';
 
-// Redirect if user is already logged in
-if (is_useronline()) {
-    header("Location: " . $baseUrl);
-    exit();
-}
-
 // Handle POST request
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Honeypot Field Check
