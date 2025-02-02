@@ -12,7 +12,6 @@ $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $user_input = $_GET['input'] ?? '';
 $sanitized_input = sanitize_input($user_input);
 
-autoLogin();
 validateReCaptchaEnvVariables();
 redirect_if_logged_in();
 
