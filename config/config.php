@@ -60,7 +60,7 @@ $optimus = new Optimus($prime, $inverse, $random);
 function getBaseUrl($config, $liveUrl)
 {
     // If the base URL matches the live URL, return it as is; otherwise, append 'public/' for local environments
-    return ($config['BASE_URL'] === $liveUrl) ? $config['BASE_URL'] : $config['BASE_URL'] . 'public/';
+    return ($config['BASE_URL'] === $liveUrl) ? $config['BASE_URL'] : $config['BASE_URL'] . 'public_html/';
 }
 
 /**
