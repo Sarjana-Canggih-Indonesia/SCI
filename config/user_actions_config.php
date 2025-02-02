@@ -359,7 +359,7 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
         if ($user['isactive'] == 1)
             return 'User is already active.';
 
-        // Set new activation expiration time (e.g., 24 hours from now) using Carbon
+        // Set new activation expiration time (e.g., 2 hours from now) using Carbon
         $newActivationExpires = Carbon::now()->addHours(2);
 
         // Update the activation_expires_at column in the database
