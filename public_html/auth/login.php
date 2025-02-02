@@ -79,11 +79,18 @@ redirect_if_logged_in(); // Redirect to the index page if the user is already lo
             <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
             <!-- Input Username -->
             <div class="form-group">
-              <label for="username">Username <span style="color: red">*</span></label>
+              <label for="username">Username atau Email <span style="color: red">*</span></label>
               <input id="username" type="text" class="form-control" name="username"
                 value="<?php echo isset($_COOKIE['username']) ? $_COOKIE['username'] : ''; ?>" required autofocus>
-              <div class="invalid-feedback">Username is required</div>
+              <div class="invalid-feedback">Username atau Email diperlukan</div>
             </div>
+
+            <!-- Pesan error -->
+            <?php if (!empty($error_message)): ?>
+              <div class="alert alert-danger">
+                <?php echo $error_message; ?>
+              </div>
+            <?php endif; ?>
             <!-- Input Password -->
             <div class="form-group">
               <div class="d-flex justify-content-between">
