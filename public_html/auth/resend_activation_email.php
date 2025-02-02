@@ -25,14 +25,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['honeypot'])) {
         handleError('Bot detected. Submission rejected.', $env);
     } else {
-        // Validate CSRF and reCAPTCHA
+        // Validasi CSRF dan reCAPTCHA
         $validationResult = validateCsrfAndRecaptcha($_POST, $client);
         if ($validationResult !== true) {
             $message = 'Invalid CSRF token or reCAPTCHA. Please try again.';
         } else {
-            // Validate and sanitize input
-            $identifier = sanitize_input(trim($_POST['identifier']));
-            $message = resendActivationEmail($identifier);
+            // Validasi input kosong
+            if (empty(trim($_POST['identifier']))) {
+                $message = 'Email atau Username tidak boleh kosong.';
+            } else {
+                // Validasi dan sanitasi input
+                $identifier = sanitize_input(trim($_POST['identifier']));
+                $message = resendActivationEmail($identifier);
+            }
         }
     }
 }
@@ -73,7 +78,7 @@ if (empty($_SESSION['csrf_token'])) {
             </div>
             <div class="card fat">
                 <div class="card-body">
-                    <!-- Kembali ke halaman login  -->
+                    <!-- Kembali ke halaman login -->
                     <div class="d-flex text-start mb-2">
                         <a href="<?php echo $baseUrl; ?>auth/login.php" class="btn btn-outline-primary"
                             onclick="return confirm('Are you sure you want to go back?');">
@@ -86,7 +91,7 @@ if (empty($_SESSION['csrf_token'])) {
                         <div class="alert alert-warning"><?php echo htmlspecialchars($message); ?></div>
                     <?php endif; ?>
 
-                    <form action="" method="POST">
+                    <form id="resend-form" action="" method="POST">
                         <!-- Honeypot Field -->
                         <input type="text" name="honeypot" class="honeypot" style="display: none;">
 
@@ -111,10 +116,27 @@ if (empty($_SESSION['csrf_token'])) {
         </div>
     </section>
 </body>
+
+<!-- External JS -->
 <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
 <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
 <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
 <!-- Custom JS -->
 <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
+<!-- Custom JavaScript untuk validasi -->
+<script>
+    document.getElementById('resend-form').addEventListener('submit', function (event) {
+        let identifierField = document.getElementById('identifier');
+        let identifierValue = identifierField.value.trim();
+
+        if (identifierValue === '') {
+            event.preventDefault(); // Mencegah submit
+            identifierField.classList.add('is-invalid');
+            identifierField.nextElementSibling.textContent = 'Email atau Username tidak boleh kosong.';
+        } else {
+            identifierField.classList.remove('is-invalid');
+        }
+    });
+</script>
 
 </html>
