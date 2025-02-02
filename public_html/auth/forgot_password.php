@@ -21,9 +21,6 @@ $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $user_input = $_GET['input'] ?? '';
 $sanitized_input = sanitize_input($user_input);
 
-// Perform auto login if applicable
-autoLogin();
-
 // Validate reCAPTCHA environment variables
 validateReCaptchaEnvVariables();
 
