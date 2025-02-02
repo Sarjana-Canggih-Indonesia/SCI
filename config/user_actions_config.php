@@ -162,133 +162,251 @@ function is_useronline()
 }
 
 /**
- * Logs out the current user by destroying the session.
+ * Logs out the current user by destroying the session and clearing related cookies.
  *
+ * This function starts the session, clears session data, and removes cookies associated with the session 
+ * and "remember me" functionality. It also handles legacy cookies like 'username' and 'password'.
+ * 
  * @return string Message indicating the result of logout.
  */
 function logoutUser()
 {
-    startSession(); // Start session if not already started
-    session_unset(); // Unset all session variables
-    session_destroy(); // Destroy session
-    return 'Logged out successfully.'; // Return logout message
+    startSession();
+    $config = getEnvironmentConfig();
+    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+
+    $parsedUrl = parse_url($baseUrl); // Extract path from base URL
+    $cookiePath = $parsedUrl['path'] ?? '/'; // Default path if not available
+
+    $_SESSION = []; // Clear all session data
+
+    if (ini_get("session.use_cookies")) {
+        $params = session_get_cookie_params(); // Get current session cookie parameters
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params["path"],
+            $params["domain"],
+            $params["secure"],
+            $params["httponly"]
+        );
+    }
+
+    session_destroy(); // Destroy the session data
+
+    if (isset($_COOKIE['remember_me'])) {
+        setcookie(
+            'remember_me',
+            '',
+            [
+                'expires' => Carbon::now()->subYears(5)->timestamp, // Set an expiration far in the past to delete the cookie
+                'path' => $cookiePath,
+                'domain' => $_SERVER['HTTP_HOST'],
+                'secure' => true,
+                'httponly' => true,
+                'samesite' => 'Lax'
+            ]
+        );
+    }
+
+    $legacyCookies = ['username', 'password'];
+    foreach ($legacyCookies as $cookie) {
+        if (isset($_COOKIE[$cookie])) {
+            setcookie(
+                $cookie,
+                '',
+                [
+                    'expires' => Carbon::now()->subYears(5)->timestamp, // Set expiration for legacy cookies
+                    'path' => $cookiePath,
+                    'domain' => $_SERVER['HTTP_HOST'],
+                    'secure' => true,
+                    'httponly' => true
+                ]
+            );
+        }
+    }
+
+    return 'Logged out successfully.';
 }
 
 /**
- * Log the user in.
- * 
- * This function attempts to authenticate the user by comparing the provided credentials with the database.
- * If the credentials are valid and the account is active, a session is started, and the user is logged in.
- * 
- * @param string $username The username of the user attempting to log in.
+ * Authenticates a user using their username or email and password.
+ *
+ * This function checks the user's credentials against the database.
+ * If authentication is successful, it returns user data; otherwise, it returns an error status.
+ *
+ * @param string $login_id The username or email provided by the user.
  * @param string $password The password provided by the user.
- * @return string A message indicating the result of the login attempt.
+ * @return array Returns an array with:
+ *   - 'status' (string): 'success', 'account_not_activated', 'invalid_credentials', or 'error'.
+ *   - 'message' (string, optional): Additional information in case of an error.
+ *   - 'user' (array, optional): User data if authentication is successful.
  */
-function loginUser($username, $password)
+function loginUser($login_id, $password)
 {
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection(); // Establish database connection
     if (!$pdo) {
-        if (!isLiveEnvironment()) {
-            error_log("Local Debug: Gagal koneksi database di loginUser");
-        }
-        return 'Database error, please try again later.';
+        return ['status' => 'error', 'message' => 'Database error']; // Return error if the connection fails
     }
 
     try {
-        $query = "SELECT user_id, username, password, isactive FROM users WHERE username = :username";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute(['username' => $username]);
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        $query = "SELECT user_id,username,password,isactive FROM users WHERE username=:login_id OR email=:login_id";
+        $stmt = $pdo->prepare($query); // Prepare SQL query
+        $stmt->execute(['login_id' => $login_id]); // Execute query with user input
+        $user = $stmt->fetch(PDO::FETCH_ASSOC); // Fetch user data
 
-        if ($user) {
-            if (password_verify($password, $user['password'])) {
-                if ($user['isactive'] == 1) {
-                    return 'Login successful.'; // ✅ Login sukses
-                } else {
-                    return 'account_not_activated'; // ❌ Akun belum diaktifkan
-                }
+        if ($user && password_verify($password, $user['password'])) { // Verify password
+            if ($user['isactive'] == 1) {
+                return ['status' => 'success', 'user' => $user]; // User is active, return success
+            } else {
+                return ['status' => 'account_not_activated']; // User account is not activated
             }
         }
-        return 'invalid_credentials'; // ❌ Ganti pesan error umum
+        return ['status' => 'invalid_credentials']; // Return invalid credentials if authentication fails
     } catch (PDOException $e) {
-        if (!isLiveEnvironment()) {
-            error_log("Local Debug: PDO Error - " . $e->getMessage());
-        }
-        return 'Internal error. Please contact support.';
+        return ['status' => 'error', 'message' => 'Internal error']; // Handle database error
     }
 }
 
 /**
- * Process user login.
+ * Handles the user login process.
  *
- * Tries to log in the user with the provided username and password.
- * Starts a session if not already started, sets session variables, 
- * and returns the result of the login attempt.
+ * This function attempts to authenticate the user using the provided login credentials.
+ * If authentication is successful, it initializes the session (if not already started),
+ * stores user information in session variables, and returns a success message.
+ * Otherwise, it returns the corresponding error status.
  *
- * @param string $username The username provided by the user.
- * @param string $password The password provided by the user.
- * @return string The result of the login attempt.
+ * @param string $login_id The user's login identifier (username or email).
+ * @param string $password The user's password.
+ * @return string Returns 'Login successful.' if authentication succeeds; otherwise, returns an error message.
  */
-function processLogin($username, $password)
+function processLogin($login_id, $password)
 {
-    $login_result = loginUser($username, $password); // Attempt to log in the user
+    $login_result = loginUser($login_id, $password); // Authenticate the user
 
-    if (trim($login_result) === 'Login successful.') { // Check if login was successful
-        if (session_status() === PHP_SESSION_NONE) { // Start a session if none exists
-            session_start();
-        }
-        $_SESSION['user_logged_in'] = true; // Set session variable for login status
-        $_SESSION['username'] = $username; // Set session variable for username
-        return $login_result; // Return login result if successful
+    if ($login_result['status'] === 'success') {
+        $_SESSION['user_logged_in'] = true; // Set session flag indicating successful login
+        $_SESSION['username'] = $login_result['user']['username']; // Store the username in the session
+        return 'Login successful.';
+    } else {
+        return $login_result['status']; // Return the error status if login fails
     }
-
-    return $login_result; // Return login result if unsuccessful
 }
 
 /**
- * Remember the user by setting cookies for the username and encrypted password.
+ * Sets a secure "Remember Me" token-based cookie for user authentication.
  * 
- * This function sets a "remember me" cookie with the provided username and an encrypted password that lasts for 30 days.
+ * This function generates a cryptographically secure token, hashes it using bcrypt, 
+ * stores the hash in the database along with an expiration timestamp, and then 
+ * sets a secure HTTP-only cookie in the user's browser.
  * 
- * @param string $username The username to remember.
- * @param string $password The password to encrypt and store in a cookie.
+ * @param int $user_id The unique identifier of the user.
  * @return void
  */
-function rememberMe($username, $password)
+function rememberMe($user_id)
 {
-    $expiryTime = time() + 86400 * 30; // Cookie valid for 30 days
+    $token = bin2hex(random_bytes(32)); // Generate a cryptographically secure token.
 
-    $encryptedPassword = password_hash($password, PASSWORD_BCRYPT);
+    $hashedToken = password_hash($token, PASSWORD_BCRYPT); // Hash the token before storing it in the database.
 
-    setcookie('username', $username, $expiryTime, '/SCI/');
-    setcookie('password', $encryptedPassword, $expiryTime, '/SCI/');
+    $expiryTime = Carbon::now()->addDays(30); // Set expiry time (30 days) using Carbon.
+
+    $pdo = getPDOConnection(); // Get database connection.
+    try {
+        // Insert the hashed token and expiration time into the database.
+        $stmt = $pdo->prepare("
+            INSERT INTO remember_me_tokens 
+            (user_id, token_hash, expires_at) 
+            VALUES (:user_id, :token_hash, :expires_at)
+        ");
+        $stmt->execute([
+            ':user_id' => $user_id,
+            ':token_hash' => $hashedToken,
+            ':expires_at' => $expiryTime->toDateTimeString() // Convert Carbon object to datetime string.
+        ]);
+    } catch (PDOException $e) {
+        error_log("Database error: " . $e->getMessage()); // Log any database errors.
+        return;
+    }
+
+    // Encode the user_id and token to store in the cookie.
+    $cookieData = json_encode([
+        'user_id' => $user_id,
+        'token' => $token
+    ]);
+
+    // Set the "remember me" cookie with maximum security.
+    setcookie(
+        'remember_me',
+        $cookieData,
+        [
+            'expires' => $expiryTime->timestamp, // Use Carbon timestamp for cookie expiry.
+            'path' => '/',
+            'domain' => $_SERVER['HTTP_HOST'],
+            'secure' => true, // Ensures the cookie is sent over HTTPS.
+            'httponly' => true, // Ensures the cookie is accessible only via HTTP and not JavaScript.
+            'samesite' => 'Lax' // Limits cross-site cookie transmission to prevent CSRF attacks.
+        ]
+    );
 }
 
 /**
- * Attempt automatic login using cookies.
+ * Attempts to log in the user automatically using the "remember me" cookie.
  * 
- * This function checks if the user has valid cookies for the username and encrypted password. If both exist,
- * it attempts to log the user in using the provided credentials. If successful, the user is logged in and redirected.
+ * If a valid "remember_me" cookie is found, this function retrieves the stored token, 
+ * verifies it against the database, and logs the user in by setting the session. 
+ * If successful, it also refreshes the token for security and redirects the user.
  * 
- * @return string|null A message indicating the result of the login attempt or null if successful.
+ * @return string|null Returns an error message if the login attempt fails, or null if successful.
  */
 function autoLogin()
 {
-    if (isset($_COOKIE['username']) && isset($_COOKIE['password'])) {
-        $username = $_COOKIE['username'];
-        $encryptedPassword = $_COOKIE['password'];
+    if (isset($_COOKIE['remember_me'])) {
+        $cookieData = json_decode($_COOKIE['remember_me'], true);
 
-        $login_result = loginUser($username, $encryptedPassword);
+        // Validate cookie structure to ensure it contains the required fields.
+        if (!isset($cookieData['user_id']) || !isset($cookieData['token'])) {
+            return 'Invalid cookie structure.';
+        }
 
-        if ($login_result === 'Login successful.') {
-            $_SESSION['user_logged_in'] = true;
-            $_SESSION['username'] = $username;
-            header("Location: index.php");
+        $user_id = $cookieData['user_id'];
+        $token = $cookieData['token'];
+
+        $pdo = getPDOConnection(); // Get database connection.
+        try {
+            // Fetch the stored hashed token for the user from the database.
+            $stmt = $pdo->prepare("
+                SELECT users.user_id,users.username,remember_me_tokens.token_hash 
+                FROM remember_me_tokens
+                JOIN users ON remember_me_tokens.user_id=users.user_id
+                WHERE remember_me_tokens.user_id=:user_id 
+                AND remember_me_tokens.expires_at>:now
+            ");
+            $stmt->execute([
+                ':user_id' => $user_id,
+                ':now' => Carbon::now()->toDateTimeString() // Get current timestamp using Carbon.
+            ]);
+            $tokenData = $stmt->fetch(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            error_log("Database error: " . $e->getMessage()); // Log database errors for debugging.
+            return 'Database error during auto-login.';
+        }
+
+        // Verify the token by comparing the stored hash with the provided token.
+        if ($tokenData && password_verify($token, $tokenData['token_hash'])) {
+            $_SESSION['user_logged_in'] = true; // Set session variable to mark user as logged in.
+            $_SESSION['username'] = $tokenData['username']; // Store username in session.
+
+            rememberMe($user_id); // Refresh the "remember me" token for security.
+
+            header("Location: index.php"); // Redirect to the main page.
             exit();
         } else {
-            return 'Invalid credentials from cookies.';
+            return 'Invalid or expired token.';
         }
     }
+    return null; // No "remember_me" cookie found.
 }
 
 /**
@@ -308,26 +426,23 @@ function generateActivationCode($email)
 }
 
 /**
- * Send an activation email to the user.
+ * Sends an account activation email to the user.
  *
- * Loads configuration, connects to the database, retrieves user data, 
- * generates or retrieves an activation code, updates the activation expiration, 
- * constructs the activation link, and sends the activation email to the user.
+ * This function retrieves user data, generates or updates the activation code expiration,
+ * constructs the activation link, and sends an email with the activation instructions.
  *
- * @param string $userEmail The email address to send the activation email to.
- * @param string $activationCode The activation code to include in the email.
+ * @param string $userEmail The recipient's email address.
+ * @param string $activationCode The activation code to be included in the email.
  * @param string|null $username Optional. The username of the user, used to fetch additional user data if provided.
- * @return mixed Returns true if the email was sent successfully, or an error message otherwise.
+ * @return mixed Returns true if the email is sent successfully, otherwise an error message.
  */
 function sendActivationEmail($userEmail, $activationCode, $username = null)
 {
-    // Get environment configuration and base URL
-    $config = getEnvironmentConfig();
-    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
-    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+    $config = getEnvironmentConfig(); // Load environment configuration
+    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get base URL for activation link
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'; // Determine environment
 
-    // Get PDO connection and check for connection errors
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection(); // Establish database connection
     if (!$pdo) {
         handleError("Database connection failed while sending activation email.", $env);
         return 'Database connection failed';
@@ -335,14 +450,13 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
 
     try {
         $user = null;
-        // Retrieve user data based on username or email
         if ($username) {
-            $query = "SELECT isactive, activation_expires_at FROM users WHERE username = :username";
+            $query = "SELECT isactive,activation_expires_at FROM users WHERE username=:username";
             $stmt = $pdo->prepare($query);
             $stmt->execute(['username' => $username]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
         } else {
-            $query = "SELECT isactive, activation_expires_at FROM users WHERE email = :email";
+            $query = "SELECT isactive,activation_expires_at FROM users WHERE email=:email";
             $stmt = $pdo->prepare($query);
             $stmt->execute(['email' => $userEmail]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -351,99 +465,81 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
             handleError("User does not exist.", $env);
             return 'User does not exist.';
         }
-        // Check if the user is already active
         if ($user['isactive'] == 1)
-            return 'User is already active.';
+            return 'User is already active.'; // Check if user is already activated
 
-        // Set new activation expiration time (e.g., 2 hours from now) using Carbon
-        $newActivationExpires = Carbon::now()->addHours(2);
+        $newActivationExpires = Carbon::now()->addHours(2); // Set new activation expiration time
 
-        // Update the activation_expires_at column in the database
         if ($username) {
-            $updateQuery = "UPDATE users SET activation_expires_at = :activationExpires WHERE username = :identifier";
-            $updateParams = [
-                'activationExpires' => $newActivationExpires->toDateTimeString(),
-                'identifier' => $username
-            ];
+            $updateQuery = "UPDATE users SET activation_expires_at=:activationExpires WHERE username=:identifier";
+            $updateParams = ['activationExpires' => $newActivationExpires->toDateTimeString(), 'identifier' => $username];
         } else {
-            $updateQuery = "UPDATE users SET activation_expires_at = :activationExpires WHERE email = :identifier";
-            $updateParams = [
-                'activationExpires' => $newActivationExpires->toDateTimeString(),
-                'identifier' => $userEmail
-            ];
+            $updateQuery = "UPDATE users SET activation_expires_at=:activationExpires WHERE email=:identifier";
+            $updateParams = ['activationExpires' => $newActivationExpires->toDateTimeString(), 'identifier' => $userEmail];
         }
         $updateStmt = $pdo->prepare($updateQuery);
         $updateStmt->execute($updateParams);
 
-        // Set the activation expiration variable to the new value
-        $activationExpires = $newActivationExpires;
+        $activationExpires = $newActivationExpires; // Update expiration variable
+        $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode"; // Construct activation URL
 
-        // Build activation URL by appending the activation code to the base URL
-        $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode";
-
-        // Configure the mailer object
-        $mail = getMailer();
+        $mail = getMailer(); // Initialize mailer
         $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
         $mail->addAddress($userEmail);
         $mail->Subject = 'Aktivasi Akun Anda - Sarjana Canggih Indonesia';
         $mail->isHTML(true);
 
-        // HTML Email Body
         $mail->Body = '
-        <div style="font-family: Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <div style="text-align: center; margin-bottom: 30px;">
-                <img src="https://sarjanacanggihindonesia.com/assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia" style="max-width: 90px; height: auto;">
+        <div style="font-family:Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+            <div style="text-align:center;margin-bottom:30px;">
+                <img src="https://sarjanacanggihindonesia.com/assets/images/logoscblue.png" alt="Logo" style="max-width:90px;height:auto;">
             </div>
-            <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px;">
-                <h2 style="color: #2c3e50; margin-top: 0;">Selamat Datang di Sarjana Canggih Indonesia</h2>
-                <p style="color: #4a5568;">Halo,</p>
-                <p style="color: #4a5568;">Terima kasih telah bergabung dengan kami! Silakan klik tombol di bawah ini untuk mengaktifkan akun Anda dan mulai mengakses layanan kami.</p>
-                <div style="text-align: center; margin: 30px 0;">
-                    <a href="' . $activationLink . '" style="background-color: #3182ce; color: white; padding: 12px 25px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: bold;">Aktifkan Akun</a>
+            <div style="background-color:#f8f9fa;padding:30px;border-radius:10px;">
+                <h2 style="color:#2c3e50;margin-top:0;">Selamat Datang di Sarjana Canggih Indonesia</h2>
+                <p style="color:#4a5568;">Halo,</p>
+                <p style="color:#4a5568;">Silakan klik tombol di bawah ini untuk mengaktifkan akun Anda.</p>
+                <div style="text-align:center;margin:30px 0;">
+                    <a href="' . $activationLink . '" style="background-color:#3182ce;color:white;padding:12px 25px;border-radius:5px;text-decoration:none;display:inline-block;font-weight:bold;">Aktifkan Akun</a>
                 </div>
-                <p style="color: #4a5568;">Jika mengalami masalah dengan tombol di atas, salin tautan berikut ke browser Anda:</p>
-                <p style="word-break: break-all; color: #3182ce;">' . $activationLink . '</p>
-                <p style="color: #e53e3e; margin-top: 15px; border-left: 4px solid #e53e3e; padding-left: 10px;">
-                    <strong>Penting:</strong> Jika Anda tidak melakukan registrasi akun ini, Anda dapat mengabaikan email ini.
+                <p style="color:#4a5568;">Jika tombol tidak berfungsi, salin tautan ini ke browser Anda:</p>
+                <p style="word-break:break-all;color:#3182ce;">' . $activationLink . '</p>
+                <p style="color:#e53e3e;margin-top:15px;border-left:4px solid #e53e3e;padding-left:10px;">
+                    <strong>Penting:</strong> Jika Anda tidak mendaftar, abaikan email ini.
                 </p>
-                <p style="color: #4a5568; margin-top: 25px;">
-                    Untuk bantuan lebih lanjut, hubungi <a href="mailto:admin@sarjanacanggihindonesia.com" style="color: #3182ce;">admin@sarjanacanggihindonesia.com</a>
+                <p style="color:#4a5568;margin-top:25px;">
+                    Untuk bantuan, hubungi <a href="mailto:admin@sarjanacanggihindonesia.com" style="color:#3182ce;">admin@sarjanacanggihindonesia.com</a>
                 </p>
             </div>
-            <div style="text-align: center; margin-top: 30px; color: #718096; font-size: 12px;">
+            <div style="text-align:center;margin-top:30px;color:#718096;font-size:12px;">
                 <p>Email ini dikirim ke ' . htmlspecialchars($userEmail) . '</p>
             </div>
         </div>';
 
-        // Plain Text Body
         $mail->AltBody = "Aktivasi Akun Anda - Sarjana Canggih Indonesia
 
         Halo,
 
-        Terima kasih telah bergabung dengan Sarjana Canggih Indonesia. Untuk mengaktifkan akun Anda, silakan kunjungi link berikut:
+        Terima kasih telah bergabung. Klik tautan berikut untuk mengaktifkan akun Anda:
 
         $activationLink        
 
-        Jika tombol tidak berfungsi, salin dan tempel tautan di atas ke browser Anda.
+        Jika tombol tidak berfungsi, salin tautan di atas ke browser Anda.
 
-        **Penting:** Jika Anda tidak melakukan registrasi akun ini, Anda dapat mengabaikan email ini.         
+        **Penting:** Jika Anda tidak melakukan registrasi, abaikan email ini.         
 
-        Untuk bantuan lebih lanjut, hubungi: admin@sarjanacanggihindonesia.com
+        Untuk bantuan, hubungi: admin@sarjanacanggihindonesia.com
 
         Email ini dikirim ke: " . $userEmail;
 
-        // Send the email and check for any sending errors
         if (!$mail->send()) {
             handleError('Mailer Error: ' . $mail->ErrorInfo, $env);
             return 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
         }
         return true;
     } catch (Exception $e) {
-        // Handle general email sending errors
         handleError("Mailer Exception: " . $e->getMessage(), $env);
         return 'Mailer Error: ' . $e->getMessage();
     } catch (PDOException $e) {
-        // Handle PDO-related errors
         handleError("PDOException: " . $e->getMessage(), $env);
         return 'Database Error: ' . $e->getMessage();
     }
@@ -646,61 +742,78 @@ function registerUser($username, $email, $password, $env)
  * Validates and processes the login form submission.
  * 
  * This function checks for honeypot field, validates CSRF token and reCAPTCHA response,
- * sanitizes and validates username and password, and processes the login.
+ * sanitizes and validates username/email and password, and processes the login.
  * 
- * @param array $_POST The POST data from the login form.
  * @param string $env The environment configuration.
  * @param string $baseUrl The base URL for redirection after successful login.
  * @return void
  */
 function processLoginForm($env, $baseUrl)
 {
+    // Honeypot check
     if (!empty($_POST['honeypot'])) {
         $_SESSION['error_message'] = 'Bot detected. Submission rejected.';
-        header("Location: " . $baseUrl . "auth/login.php"); // Sesuaikan path
+        header("Location: " . $baseUrl . "auth/login.php");
         exit();
     }
 
+    // Validate CSRF and reCAPTCHA
     $client = HttpClient::create();
     $error_message = validateCsrfAndRecaptcha($_POST, $client);
 
-    if ($error_message === true) {
-        $username = isset($_POST['username']) ? sanitize_input($_POST['username']) : '';
-        $password = isset($_POST['password']) ? sanitize_input($_POST['password']) : '';
-
-        $usernameViolations = validateUsername($username);
-        if (count($usernameViolations) > 0) {
-            $_SESSION['error_message'] = 'Username tidak sesuai atau tidak ditemukan.';
-            header("Location: " . $baseUrl . "auth/login.php");
-            exit();
-        }
-
-        $passwordViolations = validatePassword($password);
-        if (count($passwordViolations) > 0) {
-            $_SESSION['error_message'] = 'Password tidak sesuai atau tidak ditemukan.';
-            header("Location: " . $baseUrl . "auth/login.php");
-            exit();
-        }
-
-        $login_result = processLogin($username, $password);
-
-        if ($login_result === 'Login successful.') {
-            if (isset($_POST['rememberMe'])) {
-                rememberMe($username, $password);
-            }
-            header("Location: $baseUrl");
-            exit();
-        } elseif ($login_result === 'account_not_activated') {
-            $_SESSION['error_message'] = 'Akun Anda belum diaktifkan. Silakan cek email untuk link aktivasi.';
-            header("Location: " . $baseUrl . "auth/login.php");
-            exit();
-        } else {
-            $_SESSION['error_message'] = 'Username/Password tidak sesuai.';
-            header("Location: " . $baseUrl . "auth/login.php");
-            exit();
-        }
-    } else {
+    if ($error_message !== true) {
         $_SESSION['error_message'] = $error_message; // Error reCAPTCHA/CSRF
+        header("Location: " . $baseUrl . "auth/login.php");
+        exit();
+    }
+
+    // Sanitize input
+    $login_id = isset($_POST['username']) ? sanitize_input($_POST['username']) : '';
+    $password = isset($_POST['password']) ? sanitize_input($_POST['password']) : '';
+
+    // Validate login_id (username or email)
+    $isEmail = filter_var($login_id, FILTER_VALIDATE_EMAIL);
+    if ($isEmail) {
+        $violations = validateEmail($login_id);
+        $errorType = 'Email';
+    } else {
+        $violations = validateUsername($login_id);
+        $errorType = 'Username';
+    }
+
+    if (count($violations) > 0) {
+        $_SESSION['error_message'] = $errorType . ' tidak valid.';
+        header("Location: " . $baseUrl . "auth/login.php");
+        exit();
+    }
+
+    // Validate password
+    $passwordViolations = validatePassword($password);
+    if (count($passwordViolations) > 0) {
+        $_SESSION['error_message'] = 'Password tidak valid.';
+        header("Location: " . $baseUrl . "auth/login.php");
+        exit();
+    }
+
+    // Process login
+    $login_result = processLogin($login_id, $password);
+
+    // Handle login result
+    if ($login_result === 'Login successful.') {
+        // Set remember me cookie if checked
+        if (isset($_POST['rememberMe'])) {
+            rememberMe($login_result['user']['user_id']); // Gunakan user_id dari database
+        }
+        header("Location: $baseUrl");
+        exit();
+    } else {
+        // Map login result to error messages
+        $error_messages = [
+            'account_not_activated' => 'Akun Anda belum diaktifkan. Silakan cek email untuk link aktivasi.',
+            'invalid_credentials' => 'Username/Email atau Password tidak sesuai.',
+            'error' => 'Terjadi kesalahan sistem. Silakan coba lagi nanti.'
+        ];
+        $_SESSION['error_message'] = $error_messages[$login_result] ?? 'Login gagal. Silakan coba lagi.';
         header("Location: " . $baseUrl . "auth/login.php");
         exit();
     }
