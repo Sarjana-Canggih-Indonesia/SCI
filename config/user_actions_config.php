@@ -336,33 +336,98 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
     }
 
     try {
-        // Jika username disediakan, periksa status aktivasi pengguna
+        $user = null;
+        $activationExpires = null;
+
+        // Get user data and activation expiry
         if ($username) {
-            $query = "SELECT isactive FROM users WHERE username = :username";
+            $query = "SELECT isactive, activation_expires_at FROM users WHERE username = :username";
             $stmt = $pdo->prepare($query);
             $stmt->execute(['username' => $username]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
-
-            if (!$user) {
-                handleError("User {$username} does not exist.", $env);
-                return 'User does not exist.';
-            }
-
-            if ($user['isactive'] == 1) {
-                return 'User is already active.';
-            }
+        } else {
+            $query = "SELECT isactive, activation_expires_at FROM users WHERE email = :email";
+            $stmt = $pdo->prepare($query);
+            $stmt->execute(['email' => $userEmail]);
+            $user = $stmt->fetch(PDO::FETCH_ASSOC);
         }
 
-        // Buat link aktivasi
+        if (!$user) {
+            handleError("User does not exist.", $env);
+            return 'User does not exist.';
+        }
+
+        if ($user['isactive'] == 1) {
+            return 'User is already active.';
+        }
+
+        // Parse expiration time
+        $activationExpires = Carbon::parse($user['activation_expires_at']);
+
+        // Build activation link
         $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode";
 
-        // Kirim email
+        // Configure email
         $mail = getMailer();
         $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
         $mail->addAddress($userEmail);
-        $mail->Subject = 'Activate your account';
-        $mail->isHTML(true); // Mengaktifkan format HTML dalam email
-        $mail->Body = "<p>Klik link berikut untuk mengaktifkan akun Anda:</p><p><a href='$activationLink'>$activationLink</a></p>";
+        $mail->Subject = 'Aktivasi Akun Anda - Sarjana Canggih Indonesia';
+        $mail->isHTML(true);
+
+        // HTML Email Body
+        $mail->Body = '
+        <div style="font-family: Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <img src="https://sarjanacanggihindonesia.com/assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia" style="max-width: 90px; height: auto;">
+            </div>
+
+            <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px;">
+                <h2 style="color: #2c3e50; margin-top: 0;">Selamat Datang di Sarjana Canggih Indonesia</h2>
+
+                <p style="color: #4a5568;">Halo,</p>
+
+                <p style="color: #4a5568;">Terima kasih telah bergabung dengan kami! Silakan klik tombol di bawah ini untuk mengaktifkan akun Anda dan mulai mengakses layanan kami.</p>
+
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="' . $activationLink . '" style="background-color: #3182ce; color: white; padding: 12px 25px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: bold;">
+                    Aktifkan Akun
+                    </a>
+                </div>
+
+                <p style="color: #4a5568;">Jika mengalami masalah dengan tombol di atas, salin tautan berikut ke browser Anda:</p>
+                <p style="word-break: break-all; color: #3182ce;">' . $activationLink . '</p>
+                
+                <p style="color: #e53e3e; margin-top: 15px; border-left: 4px solid #e53e3e; padding-left: 10px;">
+                <strong>Penting:</strong> Jika Anda tidak melakukan registrasi akun ini, 
+                Anda dapat mengabaikan email ini.
+                </p>
+
+                <p style="color: #4a5568; margin-top: 25px;">
+                Untuk bantuan lebih lanjut, hubungi <a href="mailto:admin@sarjanacanggihindonesia.com" style="color: #3182ce;">admin@sarjanacanggihindonesia.com</a>
+                </p>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px; color: #718096; font-size: 12px;">
+                <p>Email ini dikirim ke ' . htmlspecialchars($userEmail) . '</p>
+            </div>
+        </div>';
+
+        // Plain Text Body
+        $mail->AltBody = "Aktivasi Akun Anda - Sarjana Canggih Indonesia
+
+        Halo,
+
+        Terima kasih telah bergabung dengan Sarjana Canggih Indonesia. Untuk mengaktifkan akun Anda, silakan kunjungi link berikut:
+
+        $activationLink        
+
+        Jika tombol tidak berfungsi, salin dan tempel tautan di atas ke browser Anda.
+
+        **Penting:** Jika Anda tidak melakukan registrasi akun ini, Anda dapat mengabaikan email ini.         
+
+        Untuk bantuan lebih lanjut, hubungi: admin@sarjanacanggihindonesia.com
+
+        Email ini dikirim ke: " . $userEmail;
 
         if (!$mail->send()) {
             handleError('Mailer Error: ' . $mail->ErrorInfo, $env);
@@ -458,12 +523,7 @@ function resendActivationEmail($username)
                     <a href="' . $activationLink . '" style="background-color: #3182ce; color: white; padding: 12px 25px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: bold;">
                 Aktifkan Akun
                     </a>
-                </div>
-
-                <p style="color: #4a5568; margin-top: 15px;">
-                    <strong>Link ini akan kadaluarsa pada:</strong><br>
-                    ' . $activationExpires->locale('id')->isoFormat('dddd, D MMMM YYYY [pukul] HH:mm') . '
-                </p>
+                </div>               
         
                 <p style="color: #4a5568;">Jika tombol tidak berfungsi, salin dan tempel link ini di browser Anda:</p>
                 <p style="word-break: break-all; color: #3182ce;">' . $activationLink . '</p>
@@ -486,8 +546,6 @@ function resendActivationEmail($username)
 
         Silakan klik link berikut untuk mengaktifkan akun Anda:
         $activationLink
-
-        Link aktivasi akan kadaluarsa pada: " . $activationExpires->format('d-m-Y H:i') . "
 
         Jika tidak bisa mengklik link, salin dan tempel ke address bar browser Anda.
 
