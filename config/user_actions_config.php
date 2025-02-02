@@ -315,8 +315,8 @@ function generateActivationCode($email)
  * Send an activation email to the user.
  *
  * Loads configuration, connects to the database, retrieves user data, 
- * generates or retrieves an activation code, constructs the activation link, 
- * and sends the activation email to the user.
+ * generates or retrieves an activation code, updates the activation expiration, 
+ * constructs the activation link, and sends the activation email to the user.
  *
  * @param string $userEmail The email address to send the activation email to.
  * @param string $activationCode The activation code to include in the email.
@@ -325,10 +325,12 @@ function generateActivationCode($email)
  */
 function sendActivationEmail($userEmail, $activationCode, $username = null)
 {
+    // Get environment configuration and base URL
     $config = getEnvironmentConfig();
     $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
     $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
+    // Get PDO connection and check for connection errors
     $pdo = getPDOConnection();
     if (!$pdo) {
         handleError("Database connection failed while sending activation email.", $env);
@@ -337,9 +339,7 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
 
     try {
         $user = null;
-        $activationExpires = null;
-
-        // Get user data and activation expiry
+        // Retrieve user data based on username or email
         if ($username) {
             $query = "SELECT isactive, activation_expires_at FROM users WHERE username = :username";
             $stmt = $pdo->prepare($query);
@@ -351,23 +351,41 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
             $stmt->execute(['email' => $userEmail]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
         }
-
         if (!$user) {
             handleError("User does not exist.", $env);
             return 'User does not exist.';
         }
-
-        if ($user['isactive'] == 1) {
+        // Check if the user is already active
+        if ($user['isactive'] == 1)
             return 'User is already active.';
+
+        // Set new activation expiration time (e.g., 24 hours from now) using Carbon
+        $newActivationExpires = Carbon::now()->addHours(24);
+
+        // Update the activation_expires_at column in the database
+        if ($username) {
+            $updateQuery = "UPDATE users SET activation_expires_at = :activationExpires WHERE username = :identifier";
+            $updateParams = [
+                'activationExpires' => $newActivationExpires->toDateTimeString(),
+                'identifier' => $username
+            ];
+        } else {
+            $updateQuery = "UPDATE users SET activation_expires_at = :activationExpires WHERE email = :identifier";
+            $updateParams = [
+                'activationExpires' => $newActivationExpires->toDateTimeString(),
+                'identifier' => $userEmail
+            ];
         }
+        $updateStmt = $pdo->prepare($updateQuery);
+        $updateStmt->execute($updateParams);
 
-        // Parse expiration time
-        $activationExpires = Carbon::parse($user['activation_expires_at']);
+        // Set the activation expiration variable to the new value
+        $activationExpires = $newActivationExpires;
 
-        // Build activation link
+        // Build activation URL by appending the activation code to the base URL
         $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode";
 
-        // Configure email
+        // Configure the mailer object
         $mail = getMailer();
         $mail->setFrom($config['MAIL_USERNAME'], 'Sarjana Canggih Indonesia');
         $mail->addAddress($userEmail);
@@ -380,33 +398,22 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
             <div style="text-align: center; margin-bottom: 30px;">
                 <img src="https://sarjanacanggihindonesia.com/assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia" style="max-width: 90px; height: auto;">
             </div>
-
             <div style="background-color: #f8f9fa; padding: 30px; border-radius: 10px;">
                 <h2 style="color: #2c3e50; margin-top: 0;">Selamat Datang di Sarjana Canggih Indonesia</h2>
-
                 <p style="color: #4a5568;">Halo,</p>
-
                 <p style="color: #4a5568;">Terima kasih telah bergabung dengan kami! Silakan klik tombol di bawah ini untuk mengaktifkan akun Anda dan mulai mengakses layanan kami.</p>
-
                 <div style="text-align: center; margin: 30px 0;">
-                    <a href="' . $activationLink . '" style="background-color: #3182ce; color: white; padding: 12px 25px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: bold;">
-                    Aktifkan Akun
-                    </a>
+                    <a href="' . $activationLink . '" style="background-color: #3182ce; color: white; padding: 12px 25px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: bold;">Aktifkan Akun</a>
                 </div>
-
                 <p style="color: #4a5568;">Jika mengalami masalah dengan tombol di atas, salin tautan berikut ke browser Anda:</p>
                 <p style="word-break: break-all; color: #3182ce;">' . $activationLink . '</p>
-                
                 <p style="color: #e53e3e; margin-top: 15px; border-left: 4px solid #e53e3e; padding-left: 10px;">
-                <strong>Penting:</strong> Jika Anda tidak melakukan registrasi akun ini, 
-                Anda dapat mengabaikan email ini.
+                    <strong>Penting:</strong> Jika Anda tidak melakukan registrasi akun ini, Anda dapat mengabaikan email ini.
                 </p>
-
                 <p style="color: #4a5568; margin-top: 25px;">
-                Untuk bantuan lebih lanjut, hubungi <a href="mailto:admin@sarjanacanggihindonesia.com" style="color: #3182ce;">admin@sarjanacanggihindonesia.com</a>
+                    Untuk bantuan lebih lanjut, hubungi <a href="mailto:admin@sarjanacanggihindonesia.com" style="color: #3182ce;">admin@sarjanacanggihindonesia.com</a>
                 </p>
             </div>
-
             <div style="text-align: center; margin-top: 30px; color: #718096; font-size: 12px;">
                 <p>Email ini dikirim ke ' . htmlspecialchars($userEmail) . '</p>
             </div>
@@ -429,16 +436,18 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
 
         Email ini dikirim ke: " . $userEmail;
 
+        // Send the email and check for any sending errors
         if (!$mail->send()) {
             handleError('Mailer Error: ' . $mail->ErrorInfo, $env);
             return 'Message could not be sent. Mailer Error: ' . $mail->ErrorInfo;
         }
-
         return true;
     } catch (Exception $e) {
+        // Handle general email sending errors
         handleError("Mailer Exception: " . $e->getMessage(), $env);
         return 'Mailer Error: ' . $e->getMessage();
     } catch (PDOException $e) {
+        // Handle PDO-related errors
         handleError("PDOException: " . $e->getMessage(), $env);
         return 'Database Error: ' . $e->getMessage();
     }
