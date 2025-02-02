@@ -1,4 +1,6 @@
 <?php
+// login.php
+
 require_once __DIR__ . '/../../config/config.php'; // Include configuration file
 require_once __DIR__ . '/../../config/user_actions_config.php'; // Include user actions configuration file
 
