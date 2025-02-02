@@ -495,22 +495,16 @@ function resendActivationEmail($identifier)
         }
 
         // Retrieve existing activation code or generate a new one
-        $activationCode = $user['activation_code'] ?? generateActivationCode($user['email']);
-        $activationExpires = isset($user['activation_expires_at'])
-            ? Carbon::parse($user['activation_expires_at'])
-            : Carbon::now()->addHours(24);
-
-        if (empty($user['activation_code'])) {
-            // Update activation code and expiration date
-            $updateQuery = "UPDATE users SET activation_code=:activation_code, activation_expires_at=:activation_expires_at WHERE " .
-                (filter_var($identifier, FILTER_VALIDATE_EMAIL) ? "email" : "username") . "=:identifier";
-            $stmt = $pdo->prepare($updateQuery);
-            $stmt->execute([
-                'activation_code' => $activationCode,
-                'activation_expires_at' => $activationExpires->format('Y-m-d H:i:s'),
-                'identifier' => $identifier
-            ]);
-        }
+        $activationCode = generateActivationCode($user['email']);
+        $activationExpires = Carbon::now()->addHours(24);
+        $updateQuery = "UPDATE users SET activation_code=:activation_code, activation_expires_at=:activation_expires_at WHERE " .
+            (filter_var($identifier, FILTER_VALIDATE_EMAIL) ? "email" : "username") . "=:identifier";
+        $stmt = $pdo->prepare($updateQuery);
+        $stmt->execute([
+            'activation_code' => $activationCode,
+            'activation_expires_at' => $activationExpires->format('Y-m-d H:i:s'),
+            'identifier' => $identifier
+        ]);
 
         // Construct activation link
         $activationLink = rtrim($baseUrl, '/') . "/auth/activate.php?code=$activationCode";
