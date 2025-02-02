@@ -360,7 +360,7 @@ function sendActivationEmail($userEmail, $activationCode, $username = null)
             return 'User is already active.';
 
         // Set new activation expiration time (e.g., 24 hours from now) using Carbon
-        $newActivationExpires = Carbon::now()->addHours(24);
+        $newActivationExpires = Carbon::now()->addHours(2);
 
         // Update the activation_expires_at column in the database
         if ($username) {
@@ -496,7 +496,7 @@ function resendActivationEmail($identifier)
 
         // Retrieve existing activation code or generate a new one
         $activationCode = generateActivationCode($user['email']);
-        $activationExpires = Carbon::now()->addHours(24);
+        $activationExpires = Carbon::now()->addHours(2);
         $updateQuery = "UPDATE users SET activation_code=:activation_code, activation_expires_at=:activation_expires_at WHERE " .
             (filter_var($identifier, FILTER_VALIDATE_EMAIL) ? "email" : "username") . "=:identifier";
         $stmt = $pdo->prepare($updateQuery);
