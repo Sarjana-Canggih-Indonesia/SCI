@@ -776,44 +776,83 @@ function default_profile_image($imageFilename)
  */
 function activateAccount($activationCode)
 {
+    // Define response messages
     define('DB_CONNECTION_FAILED', 'Database connection failed');
     define('ACCOUNT_ACTIVATED_SUCCESS', 'Account activated successfully.');
     define('INVALID_ACTIVATION_CODE', 'Invalid activation code.');
-    define('ERROR_OCCURED', 'Error: ');
+    define('ACTIVATION_CODE_EXPIRED', 'Activation failed: activation code has expired.');
+    define('ALREADY_ACTIVATED', 'Account is already activated.');
+    define('ERROR_OCCURRED', 'Error: ');
 
-    $config = getEnvironmentConfig(); // Load environment configuration
-    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'; // Determine the environment
+    // Load environment configuration and determine the environment
+    $config = getEnvironmentConfig();
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
-    $activationCode = sanitize_input($activationCode); // Sanitize the input
-    if (strlen($activationCode) !== 64 || !ctype_xdigit($activationCode)) { // Validate activation code format
+    // Sanitize and validate the activation code input
+    $activationCode = sanitize_input($activationCode);
+    if (strlen($activationCode) !== 64 || !ctype_xdigit($activationCode)) {
         handleError('Invalid activation code format: ' . $activationCode, $env);
         return INVALID_ACTIVATION_CODE;
     }
 
-    $pdo = getPDOConnection(); // Establish database connection
+    // Establish database connection
+    $pdo = getPDOConnection();
     if (!$pdo) {
         handleError(DB_CONNECTION_FAILED, $env);
         return DB_CONNECTION_FAILED;
     }
 
     try {
-        $pdo->beginTransaction(); // Begin database transaction
-        $query = "UPDATE users SET isactive = 1 WHERE activation_code = :activation_code"; // Update query
-        $stmt = $pdo->prepare($query);
-        $stmt->execute(['activation_code' => $activationCode]); // Execute the query
+        // Begin transaction
+        $pdo->beginTransaction();
 
-        if ($stmt->rowCount() === 0) { // Check if activation code is valid
-            handleError('No rows affected, invalid activation code: ' . $activationCode, $env);
-            $pdo->rollBack(); // Rollback transaction
+        // Retrieve the activation_expires_at and isactive values for the provided activation code
+        $selectQuery = "SELECT activation_expires_at, isactive FROM users WHERE activation_code = :activation_code FOR UPDATE";
+        $selectStmt = $pdo->prepare($selectQuery);
+        $selectStmt->execute(['activation_code' => $activationCode]);
+        $user = $selectStmt->fetch(PDO::FETCH_ASSOC);
+
+        // Check if the activation code exists
+        if (!$user) {
+            handleError('Invalid activation code: ' . $activationCode, $env);
+            $pdo->rollBack();
             return INVALID_ACTIVATION_CODE;
         }
 
-        $pdo->commit(); // Commit transaction
+        // Check if the account is already activated
+        if ($user['isactive'] == 1) {
+            $pdo->rollBack();
+            return ALREADY_ACTIVATED;
+        }
+
+        // Parse the expiration time using Carbon
+        $activationExpires = Carbon::parse($user['activation_expires_at']);
+        if (Carbon::now()->greaterThan($activationExpires)) {
+            // If current time is past the expiration time, rollback and return error
+            $pdo->rollBack();
+            return ACTIVATION_CODE_EXPIRED;
+        }
+
+        // Proceed to activate the user account if the activation code is still valid
+        $updateQuery = "UPDATE users SET isactive = 1 WHERE activation_code = :activation_code";
+        $updateStmt = $pdo->prepare($updateQuery);
+        $updateStmt->execute(['activation_code' => $activationCode]);
+
+        // Check if any row was affected (should be at least one if valid)
+        if ($updateStmt->rowCount() === 0) {
+            handleError('No rows affected, invalid activation code: ' . $activationCode, $env);
+            $pdo->rollBack();
+            return INVALID_ACTIVATION_CODE;
+        }
+
+        // Commit the transaction
+        $pdo->commit();
         return ACCOUNT_ACTIVATED_SUCCESS;
-    } catch (PDOException $e) { // Handle database errors
-        $pdo->rollBack(); // Rollback on error
+    } catch (PDOException $e) {
+        // Rollback transaction on error
+        $pdo->rollBack();
         handleError('Database error: ' . $e->getMessage(), $env);
-        return ERROR_OCCURED . $e->getMessage();
+        return ERROR_OCCURRED . $e->getMessage();
     }
 }
 
