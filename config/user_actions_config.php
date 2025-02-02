@@ -188,7 +188,6 @@ function loginUser($username, $password)
 {
     $pdo = getPDOConnection();
     if (!$pdo) {
-        // Tambahkan logging untuk local
         if (!isLiveEnvironment()) {
             error_log("Local Debug: Gagal koneksi database di loginUser");
         }
@@ -204,17 +203,14 @@ function loginUser($username, $password)
         if ($user) {
             if (password_verify($password, $user['password'])) {
                 if ($user['isactive'] == 1) {
-                    $_SESSION['user_id'] = $user['user_id'];
-                    $_SESSION['username'] = $user['username'];
-                    return 'Login successful.';
+                    return 'Login successful.'; // ✅ Login sukses
                 } else {
-                    return 'Account not activated.';
+                    return 'account_not_activated'; // ❌ Akun belum diaktifkan
                 }
             }
         }
-        return 'Invalid credentials.';
+        return 'invalid_credentials'; // ❌ Ganti pesan error umum
     } catch (PDOException $e) {
-        // Tambahkan logging untuk local
         if (!isLiveEnvironment()) {
             error_log("Local Debug: PDO Error - " . $e->getMessage());
         }
@@ -660,9 +656,9 @@ function registerUser($username, $email, $password, $env)
 function processLoginForm($env, $baseUrl)
 {
     if (!empty($_POST['honeypot'])) {
-        $error_message = 'Bot detected. Submission rejected.';
-        handleError($error_message, $env);
-        return;
+        $_SESSION['error_message'] = 'Bot detected. Submission rejected.';
+        header("Location: " . $baseUrl . "auth/login.php"); // Sesuaikan path
+        exit();
     }
 
     $client = HttpClient::create();
@@ -674,32 +670,39 @@ function processLoginForm($env, $baseUrl)
 
         $usernameViolations = validateUsername($username);
         if (count($usernameViolations) > 0) {
-            $error_message = 'Username tidak sesuai atau tidak ditemukan.';
-            handleError($error_message, $env);
-            return;
+            $_SESSION['error_message'] = 'Username tidak sesuai atau tidak ditemukan.';
+            header("Location: " . $baseUrl . "auth/login.php");
+            exit();
         }
 
         $passwordViolations = validatePassword($password);
         if (count($passwordViolations) > 0) {
-            $error_message = 'Password tidak sesuai atau tidak ditemukan.';
-            handleError($error_message, $env);
-            return;
+            $_SESSION['error_message'] = 'Password tidak sesuai atau tidak ditemukan.';
+            header("Location: " . $baseUrl . "auth/login.php");
+            exit();
         }
 
-        $error_message = processLogin($username, $password);
+        $login_result = processLogin($username, $password);
 
-        if ($error_message === 'Login successful.') {
+        if ($login_result === 'Login successful.') {
             if (isset($_POST['rememberMe'])) {
                 rememberMe($username, $password);
             }
             header("Location: $baseUrl");
             exit();
+        } elseif ($login_result === 'account_not_activated') {
+            $_SESSION['error_message'] = 'Akun Anda belum diaktifkan. Silakan cek email untuk link aktivasi.';
+            header("Location: " . $baseUrl . "auth/login.php");
+            exit();
         } else {
-            $error_message = 'Username / Password tidak sesuai atau tidak ditemukan. Silahkan coba lagi atau lakukan reset password.';
-            handleError($error_message, $env);
+            $_SESSION['error_message'] = 'Username/Password tidak sesuai.';
+            header("Location: " . $baseUrl . "auth/login.php");
+            exit();
         }
     } else {
-        handleError($error_message, $env);
+        $_SESSION['error_message'] = $error_message; // Error reCAPTCHA/CSRF
+        header("Location: " . $baseUrl . "auth/login.php");
+        exit();
     }
 }
 
