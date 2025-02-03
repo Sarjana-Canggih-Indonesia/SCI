@@ -297,6 +297,7 @@ function processLogin($login_id, $password)
     if ($login_result['status'] === 'success') {
         $_SESSION['user_logged_in'] = true; // Set session flag indicating successful login
         $_SESSION['username'] = $login_result['user']['username']; // Store the username in the session
+        $_SESSION['user_id'] = $login_result['user']['user_id'];
         return 'Login successful.';
     } else {
         return $login_result['status']; // Return the error status if login fails
