@@ -820,17 +820,17 @@ function processLoginForm($env, $baseUrl)
 }
 
 /**
- * Retrieves detailed user information from the database.
+ * Retrieves user information based on the provided user ID.
  *
- * This function fetches user data, including account details from the `users` table
- * and profile information from the `user_profiles` table.
- *
- * @param int $userId The unique identifier of the user whose information is to be retrieved.
+ * This function fetches detailed information about a user, including their basic user details (username, email, etc.) 
+ * and additional profile details (first name, last name, phone, address, etc.) from the database.
+ * 
+ * @param int $userId The unique identifier of the user.
  * @return array|null An associative array containing user details, or null if the user is not found or an error occurs.
  */
 function getUserInfo($userId)
 {
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection(); // Establish PDO connection to the database
     if (!$pdo) {
         return null; // Return null if database connection fails
     }
@@ -850,47 +850,42 @@ function getUserInfo($userId)
         return $userInfo ?: null; // Return user details or null if not found
     } catch (PDOException $e) {
         handleError('Database Error: ' . $e->getMessage(), 'live'); // Log error if query fails
-        return null;
+        return null; // Return null if an error occurs
     }
 }
 
 /**
- * Retrieves the URL of the user's profile image.
+ * Returns the URL of the user's profile image.
  *
- * This function constructs the URL of a user's profile image based on the provided filename.
- * If no filename is given, it returns the default profile image. The function also dynamically 
- * adjusts the base URL depending on whether the script is running locally or in a live environment.
+ * This function constructs the URL for the user's profile image based on the provided filename.
+ * If no image filename is provided, it returns the default profile image URL. The base URL is determined 
+ * based on the environment (local or live).
  *
- * @param string|null $imageFilename The filename of the user's profile image. If null or empty, the default image is returned.
- * @return string|null The full URL of the user's profile image, or null if a database connection error occurs.
+ * @param string $imageFilename The filename of the user's profile image.
+ * @return string|null The URL of the profile image or null in case of an error.
  */
 function default_profile_image($imageFilename)
 {
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection(); // Establish PDO connection to the database
     if (!$pdo)
-        return null;
+        return null; // Return null if PDO connection fails
 
     try {
-        $config = getEnvironmentConfig();
+        $config = getEnvironmentConfig(); // Get environment configuration
 
-        // Tentukan baseUrl untuk lingkungan lokal dan live
-        if ($_SERVER['HTTP_HOST'] === 'localhost') {
-            // Untuk lokal, baseUrl harus mengarah ke folder di dalam public_html
-            $baseUrl = rtrim($config['BASE_URL'], '/') . '/public_html/uploads/user_images/';
+        if ($_SERVER['HTTP_HOST'] === 'localhost') { // Check if the environment is local
+            $baseUrl = rtrim($config['BASE_URL'], '/') . '/public_html/uploads/user_images/'; // Set base URL for local environment
         } else {
-            // Untuk live, baseUrl mengarah ke folder di luar public_html
-            $baseUrl = rtrim($config['BASE_URL'], '/') . '/uploads/user_images/';
+            $baseUrl = rtrim($config['BASE_URL'], '/') . '/uploads/user_images/'; // Set base URL for live environment
         }
 
-        // Jika imageFilename kosong, kembalikan gambar default
         if (empty($imageFilename))
-            return $baseUrl . 'default-profile.svg';
+            return $baseUrl . 'default-profile.svg'; // Return default profile image URL if no image filename is provided
 
-        // Kembalikan URL untuk gambar profil
-        return $baseUrl . $imageFilename;
+        return $baseUrl . $imageFilename; // Return the URL for the provided profile image filename
     } catch (PDOException $e) {
-        error_log('Error: ' . $e->getMessage());
-        return null;
+        error_log('Error: ' . $e->getMessage()); // Log the error if database query fails
+        return null; // Return null if there is a database error
     }
 }
 
