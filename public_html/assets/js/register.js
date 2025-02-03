@@ -74,15 +74,12 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       // Validasi password strength
-      var passwordStrengthRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/; // Update regex
+      var passwordStrengthRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
       if (!password.value.trim()) {
         showError(password, "Password is required");
         isValid = false;
       } else if (!passwordStrengthRegex.test(password.value)) {
-        showError(
-          password,
-          "Password must be at least 8 characters, include uppercase, lowercase, and a number", // Update pesan error
-        );
+        showError(password, "Password must be at least 6 characters, include uppercase, lowercase, and a number");
         isValid = false;
       }
 
