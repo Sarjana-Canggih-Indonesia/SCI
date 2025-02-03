@@ -153,39 +153,32 @@ header("X-XSS-Protection: 1; mode=block");
         </div>
 
         <!-- Bulk Actions Section -->
-        <div class="mb-4 d-flex justify-content-between align-items-center">
-            <button class="btn btn-secondary"><i class="fas fa-check-circle"></i> Select All</button>
-            <button class="btn btn-danger"><i class="fas fa-trash"></i> Delete Selected</button>
+        <div class="mb-4 d-flex">
+            <button class="me-1 btn btn-secondary"><i class="fas fa-check-circle"></i> Select All</button>
+            <button class="mx-1 btn btn-danger"><i class="fas fa-trash"></i> Delete Selected</button>
+            <button class="mx-1 btn btn-success"><i class="fas fa-download"></i> Export Data</button>
+            <button class="mx-1 btn btn-primary btn-sm"><i class="fas fa-eye"></i> View Details</button>
+            <button class="mx-1 btn btn-warning btn-sm"><i class="fas fa-pencil-alt"></i> Quick Edit</button>
         </div>
 
-        <!-- Export Data Section -->
-        <div class="mb-4 d-flex justify-content-between align-items-center">
-            <button class="btn btn-success"><i class="fas fa-download"></i> Export Data</button>
-        </div>
-
-        <!-- Price History / Price Updates Section -->
+        <!-- Filter by Tags and Category Section -->
         <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-info text-white">
-                <h5 class="mb-0">Price History / Price Updates</h5>
+            <div class="card-header bg-primary-subtle">
+                <h5 class="mb-0">Filter by Tags and Category</h5>
             </div>
-            <div class="card-body">
-                <ul class="list-unstyled">
-                    <li><strong>Product A:</strong> Rp 180,000 -> Rp 150,000 (2025-02-01)</li>
-                    <li><strong>Product B:</strong> Rp 300,000 -> Rp 250,000 (2025-01-30)</li>
-                </ul>
-            </div>
-        </div>
-
-        <!-- Filter by Tags Section -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-secondary text-white">
-                <h5 class="mb-0">Filter by Tags</h5>
-            </div>
-            <div class="card-body">
-                <select class="form-select" aria-label="Filter by Tags">
+            <div class="card-body d-flex justify-content-between">
+                <!-- Filter by Tags -->
+                <select class="form-select w-45 mx-3" aria-label="Filter by Tags">
                     <option selected>Filter by Tags</option>
                     <option value="gadget">Gadget</option>
                     <option value="fashion">Fashion</option>
+                </select>
+
+                <!-- Filter by Category -->
+                <select class="form-select w-45 mx-3" aria-label="Filter by Category">
+                    <option selected>Filter by Category</option>
+                    <option value="electronics">Electronics</option>
+                    <option value="clothing">Clothing</option>
                 </select>
             </div>
         </div>
@@ -201,14 +194,7 @@ header("X-XSS-Protection: 1; mode=block");
             </ul>
         </nav>
 
-        <!-- Quick Edit/Details View Section -->
-        <div class="mt-5">
-            <h5>Quick Edit/Details View</h5>
-            <button class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> View Details</button>
-            <button class="btn btn-warning btn-sm"><i class="fas fa-pencil-alt"></i> Quick Edit</button>
-        </div>
-
-        <!-- Recent Activity and Product Reviews Section -->
+        <!-- Price History and Recent Activity Section (in 1 row) -->
         <div class="row my-4">
             <!-- Recent Activity -->
             <div class="col-md-6">
@@ -229,10 +215,28 @@ header("X-XSS-Protection: 1; mode=block");
                 </div>
             </div>
 
-            <!-- Product Reviews -->
+            <!-- Price History -->
             <div class="col-md-6">
                 <div class="card shadow-sm">
                     <div class="card-header bg-light">
+                        <h5 class="mb-0">Price History / Price Updates</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-unstyled">
+                            <li><strong>Product A:</strong> Rp 180,000 -> Rp 150,000 (2025-02-01)</li>
+                            <li><strong>Product B:</strong> Rp 300,000 -> Rp 250,000 (2025-01-30)</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Reviews Section -->
+        <div class="row my-4">
+            <!-- Product Reviews -->
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-info text-white">
                         <h5 class="mb-0">Product Reviews</h5>
                     </div>
                     <div class="card-body">
