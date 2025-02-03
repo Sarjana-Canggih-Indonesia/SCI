@@ -873,17 +873,23 @@ function default_profile_image($imageFilename)
     try {
         $config = getEnvironmentConfig();
 
-        $baseUrl = $config['BASE_URL'] . '/uploads/user_images/';
+        // Tentukan baseUrl untuk lingkungan lokal dan live
+        if ($_SERVER['HTTP_HOST'] === 'localhost') {
+            // Untuk lokal, baseUrl harus mengarah ke folder di dalam public_html
+            $baseUrl = rtrim($config['BASE_URL'], '/') . '/public_html/uploads/user_images/';
+        } else {
+            // Untuk live, baseUrl mengarah ke folder di luar public_html
+            $baseUrl = rtrim($config['BASE_URL'], '/') . '/uploads/user_images/';
+        }
 
-        if ($_SERVER['HTTP_HOST'] !== 'localhost')
-            $baseUrl = dirname($baseUrl);
-
+        // Jika imageFilename kosong, kembalikan gambar default
         if (empty($imageFilename))
             return $baseUrl . 'default-profile.svg';
 
+        // Kembalikan URL untuk gambar profil
         return $baseUrl . $imageFilename;
     } catch (PDOException $e) {
-        error_log('Error: ' . $e->getMessage()); // Menggunakan error_log
+        error_log('Error: ' . $e->getMessage());
         return null;
     }
 }
