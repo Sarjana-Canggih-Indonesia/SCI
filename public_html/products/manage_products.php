@@ -164,19 +164,6 @@ header("X-XSS-Protection: 1; mode=block");
             <button class="btn btn-success"><i class="fas fa-download"></i> Export Data</button>
         </div>
 
-        <!-- Recent Activity Section -->
-        <div class="my-4">
-            <h5>Recent Activity/Actions</h5>
-            <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-action">
-                    2025-02-01 14:30:00 - User "JohnDoe" added Product A
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    2025-02-01 15:00:00 - User "JohnDoe" deleted Product B
-                </a>
-            </div>
-        </div>
-
         <!-- Price History / Price Updates Section -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-info text-white">
@@ -223,16 +210,44 @@ header("X-XSS-Protection: 1; mode=block");
             <button class="btn btn-warning btn-sm"><i class="fas fa-pencil-alt"></i> Quick Edit</button>
         </div>
 
-        <!-- Product Reviews Section -->
-        <div class="my-5">
-            <h5>Product Reviews</h5>
-            <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-action">
-                    Product A - 4.5 stars - "Great product!"
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    Product B - 3 stars - "Good value for money."
-                </a>
+        <!-- Recent Activity and Product Reviews Section -->
+        <div class="row my-4">
+            <!-- Recent Activity -->
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Recent Activity</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action">
+                                2025-02-01 14:30:00 - User "JohnDoe" added Product A
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                2025-02-01 15:00:00 - User "JohnDoe" deleted Product B
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Reviews -->
+            <div class="col-md-6">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Product Reviews</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                            <a href="#" class="list-group-item list-group-item-action">
+                                Product A - 4.5 stars - "Great product!"
+                            </a>
+                            <a href="#" class="list-group-item list-group-item-action">
+                                Product B - 3 stars - "Good value for money."
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
