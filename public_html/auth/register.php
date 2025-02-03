@@ -117,7 +117,7 @@ redirect_if_logged_in();
     <section class="h-100 d-flex justify-content-center align-items-center">
         <div class="card-wrapper">
             <div class="brand">
-                <a href="<?php echo $config['BASE_URL']; ?>/">
+                <a href="<?php echo $baseUrl; ?>">
                     <img src="<?php echo $baseUrl; ?>assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia"
                         srcset=""></a>
             </div>
