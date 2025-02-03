@@ -883,7 +883,7 @@ function default_profile_image($imageFilename)
 
         return $baseUrl . $imageFilename;
     } catch (PDOException $e) {
-        handleError('Error: ' . $e->getMessage(), 'live');
+        error_log('Error: ' . $e->getMessage()); // Menggunakan error_log
         return null;
     }
 }
