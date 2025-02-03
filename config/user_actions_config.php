@@ -45,34 +45,41 @@ $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
 /**
- * Get a PDO connection to the database.
- * This function retrieves environment-specific configuration settings, establishes a connection
- * to a MySQL database using PDO, and sets the error mode to exceptions for better error handling.
- * @return PDO|null Returns a PDO instance for database interaction or null if an error occurs.
+ * Establishes a PDO database connection using environment-specific settings.
+ *
+ * This function retrieves database configuration details from the environment, 
+ * connects to a MySQL database using PDO, sets the error mode to exceptions, 
+ * and adjusts the MySQL session timezone.
+ *
+ * @return PDO|null Returns a PDO instance if the connection is successful; otherwise, returns null.
  */
 function getPDOConnection()
 {
-    // Retrieve environment-specific database configuration
     $config = getEnvironmentConfig();
+
     try {
-        // Create a PDO instance to connect to the MySQL database
+        // Create a PDO connection using the database credentials
         $pdo = new PDO(
-            "mysql:host={$config['DB_HOST']};dbname={$config['DB_NAME']}", // DSN for MySQL connection
-            $config['DB_USER'], // Database username
-            $config['DB_PASS']  // Database password
+            "mysql:host={$config['DB_HOST']};dbname={$config['DB_NAME']}",
+            $config['DB_USER'],
+            $config['DB_PASS']
         );
-        // Set PDO error mode to exceptions for better error handling
+
+        // Enable exception mode for better error handling
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-        // Set MySQL session timezone to +07:00 (Asia/Jakarta)
+
+        // Set the MySQL session timezone to Asia/Jakarta (+07:00)
         $pdo->exec("SET time_zone = '+07:00';");
-        // Return the PDO connection instance
+
         return $pdo;
     } catch (PDOException $e) {
-        // Handle database connection errors
-        handleError("Database Error: " . $e->getMessage(), ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live');
-        // Display a user-friendly error message
+        // Log the error and display a user-friendly message
+        handleError(
+            "Database Error: " . $e->getMessage(),
+            ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'
+        );
+
         echo 'Database Error: An error occurred. Please try again later.';
-        // Return null to indicate connection failure
         return null;
     }
 }
