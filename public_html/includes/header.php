@@ -1,59 +1,44 @@
 <?php
 // header.php
 
-/**
- * Memuat konfigurasi aplikasi dan menginisialisasi sesi.
- * 
- * @require_once Memuat file konfigurasi aplikasi dan pengaturan pengguna.
- * @startSession Memulai sesi jika belum dimulai.
- * 
- * @var array $config Konfigurasi lingkungan.
- * @var int|null $userId ID pengguna dari sesi.
- * @var bool $isLoggedIn Status login pengguna.
- * @var string $username Nama pengguna yang login.
- * @var string|null $profileImage Nama file gambar profil pengguna.
- * @var string $profileImageUrl URL gambar profil pengguna atau gambar default.
- * @var string|null $error Pesan kesalahan jika ada masalah.
- */
-
-// Memuat konfigurasi aplikasi
+// Load application configuration
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
 
-// Memuat konfigurasi lingkungan
+// Load environment configuration
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 
-// Memulai sesi hanya jika belum aktif
+// Start session only if not already active
 startSession();
 
-// Ambil user ID dari sesi
+// Get user ID from session
 $userId = $_SESSION['user_id'] ?? null;
 
-// Memeriksa status login pengguna
+// Check user login status
 $isLoggedIn = isset($_SESSION['username']);
 $username = $_SESSION['username'] ?? '';
 
-// Tentukan nilai default untuk $profileImage
+// Set default value for $profileImage
 $profileImage = null;
 
-// Hanya lakukan proses jika pengguna login dan memiliki ID
+// Only process if user is logged in and has an ID
 if ($isLoggedIn && $userId) {
     $userInfo = getUserInfo($userId);
 
     if ($userInfo) {
-        // Tentukan gambar profil pengguna jika ada dalam database
+        // Set profile image filename if available in the database
         $profileImage = $userInfo['image_filename'] ?? null;
     } else {
-        // Tangani jika pengguna tidak ditemukan
+        // Handle case if user is not found
         $error = 'User not found.';
     }
 } else {
-    // Tangani jika pengguna belum login
+    // Handle case if user is not logged in
     $error = 'User is not logged in.';
 }
 
-// Tentukan URL gambar profil menggunakan fungsi
+// Set the profile image URL using the function
 $profileImageUrl = default_profile_image($profileImage);
 ?>
 
