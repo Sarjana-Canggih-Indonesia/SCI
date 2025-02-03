@@ -104,20 +104,6 @@ function getEnvironmentConfig()
 }
 
 /**
- * Checks if the current environment is a live (production) environment.
- *
- * This function determines if the application is running in a live environment
- * by checking the HTTP_HOST server variable. It returns `true` if the host is
- * neither 'localhost' nor '127.0.0.1', indicating a live environment.
- *
- * @return bool Returns `true` if the environment is live (production), otherwise `false`.
- */
-function isLiveEnvironment()
-{
-    return ($_SERVER['HTTP_HOST'] !== 'localhost' && $_SERVER['HTTP_HOST'] !== '127.0.0.1');
-}
-
-/**
  * Handles error logging and script termination based on the environment.
  *
  * @param string $message The error message to be logged or displayed.
@@ -134,6 +120,16 @@ function handleError($message, $env)
         error_log($message);
         exit;
     }
+}
+
+/**
+ * Checks if the current environment is live (production).
+ *
+ * @return bool Returns `true` if the environment is live (production), otherwise `false`.
+ */
+function isLive()
+{
+    return ($_SERVER['HTTP_HOST'] !== 'localhost' && $_SERVER['HTTP_HOST'] !== '127.0.0.1');
 }
 
 /**
