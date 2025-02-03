@@ -6,7 +6,7 @@ require_once __DIR__ . '/../../config/user_actions_config.php';
 require_once __DIR__ . '/../../config/product_functions.php';
 
 // Memulai sesi apabila tidak ada
-startSession();
+regenerateSessionId();
 
 // Pengecekan autentikasi dan authorization
 // Redirect ke login jika belum login
