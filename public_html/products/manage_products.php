@@ -6,43 +6,25 @@ require_once __DIR__ . '/../../config/user_actions_config.php';
 require_once __DIR__ . '/../../config/product_functions.php';
 
 // Pastikan sesi dimulai
-error_log("Memulai sesi...");
 startSession();
-error_log("Sesi dimulai.");
-
-error_log("=== Debugging Session Start ===");
 
 // Cek apakah sesi berjalan dengan benar
 if (!isset($_SESSION['user_id'])) {
-    error_log("Session user_id tidak ditemukan. Redirecting...");
-    echo "Session user_id tidak ditemukan. Redirecting...";
-    exit(header("Location: " . $baseUrl . "auth/login.php"));
+    handleError("Session user_id tidak ditemukan. Redirecting...", $_ENV['ENVIRONMENT']);
 }
-
-// Debugging: Log nilai sesi
-error_log("Session user_id: " . $_SESSION['user_id']);
 
 // Ambil info user
 $userInfo = getUserInfo($_SESSION['user_id']);
 
-// Debugging: Log hasil dari getUserInfo()
+// Jika user tidak ditemukan
 if (!$userInfo) {
-    error_log("User tidak ditemukan di database atau error database. Redirecting...");
-    echo "User tidak ditemukan di database. Redirecting...";
-    session_destroy();
-    exit(header("Location: " . $baseUrl . "auth/login.php?error=user_not_found"));
+    handleError("User tidak ditemukan di database. Redirecting...", $_ENV['ENVIRONMENT']);
 }
-
-error_log("User ditemukan: " . json_encode($userInfo));
 
 // Block akses untuk non-admin
 if ($userInfo['role'] !== 'admin') {
-    error_log("Akses ditolak! Role: " . $userInfo['role']);
-    echo "Akses ditolak! Role: " . htmlspecialchars($userInfo['role']);
-    exit(header("Location: " . $baseUrl));
+    handleError("Akses ditolak! Role: " . $userInfo['role'], $_ENV['ENVIRONMENT']);
 }
-
-error_log("=== Debugging Session End ===");
 
 // Memuat konfigurasi URL Dinamis
 $config = getEnvironmentConfig();
