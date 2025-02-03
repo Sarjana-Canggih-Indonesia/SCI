@@ -820,11 +820,10 @@ function processLoginForm($env, $baseUrl)
 }
 
 /**
- * Retrieves user information from the database.
+ * Retrieves detailed user information from the database.
  *
- * This function fetches user details, including basic account data and profile information, 
- * by joining the `users` and `user_profiles` tables. If the user does not exist or an 
- * error occurs, it returns null.
+ * This function fetches user data, including account details from the `users` table
+ * and profile information from the `user_profiles` table.
  *
  * @param int $userId The unique identifier of the user whose information is to be retrieved.
  * @return array|null An associative array containing user details, or null if the user is not found or an error occurs.
@@ -832,23 +831,25 @@ function processLoginForm($env, $baseUrl)
 function getUserInfo($userId)
 {
     $pdo = getPDOConnection();
-    if (!$pdo)
-        return null;
+    if (!$pdo) {
+        return null; // Return null if database connection fails
+    }
 
     try {
-        $query = "SELECT u.user_id, u.username, u.email, u.role, 
-                         up.first_name, up.last_name, up.phone, up.address, up.city, up.country, up.profile_image_filename
+        $query = "SELECT 
+                    u.user_id, u.username, u.email, u.role, u.isactive, 
+                    up.first_name, up.last_name, up.phone, up.address, up.city, up.country, up.profile_image_filename 
                   FROM users u
                   LEFT JOIN user_profiles up ON u.user_id = up.user_id
                   WHERE u.user_id = :user_id";
 
-        $stmt = $pdo->prepare($query); // Prepare the SQL query
-        $stmt->execute(['user_id' => $userId]); // Bind and execute the query with the given user ID
-        $userInfo = $stmt->fetch(PDO::FETCH_ASSOC); // Fetch user details as an associative array
+        $stmt = $pdo->prepare($query); // Prepare SQL query
+        $stmt->execute(['user_id' => $userId]); // Bind and execute query with user ID
+        $userInfo = $stmt->fetch(PDO::FETCH_ASSOC); // Fetch user details as associative array
 
         return $userInfo ?: null; // Return user details or null if not found
     } catch (PDOException $e) {
-        handleError('Error: ' . $e->getMessage(), 'live'); // Log the error message
+        handleError('Database Error: ' . $e->getMessage(), 'live'); // Log error if query fails
         return null;
     }
 }
