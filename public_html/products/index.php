@@ -1,15 +1,22 @@
 <?php
-session_start();
+// Memuat config dan dependensi
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/user_actions_config.php';
 
-// Menggunakan konfigurasi dari config.php dengan path relatif menggunakan __DIR__
-require_once __DIR__ . '/../config/config.php';
+// Memulai sesi apabila tidak ada
+startSession();
 
 // Buat koneksi ke database
 $conn = getPDOConnection();
 
-// Menghancurkan koneksi setelah selesai (opsional)
-$conn = null;
+// Memuat konfigurasi URL Dinamis
+$config = getEnvironmentConfig();
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+
+// Deteksi environment
+$isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -18,24 +25,14 @@ $conn = null;
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sarjana Canggih Indonesia</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/SCI/favicon.ico" />
-
+    <link rel="icon" type="image/x-icon" href="<?php echo $baseUrl; ?>favicon.ico" />
     <!-- Bootstrap css -->
-    <link rel="stylesheet" type="text/css"
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-
-    <!-- Slick Slider css -->
-    <link rel="stylesheet" type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css" />
-    <link rel="stylesheet" type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css" />
-
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/bootstrap.min.css" />
     <!-- Font Awesome -->
     <link rel="stylesheet" type="text/css"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-
     <!-- Custom CSS -->
-    <link rel="stylesheet" type="text/css" href="/SCI/assets/css/styles.css" />
+    <link rel="stylesheet" type="text/css" href="../assets/css/styles.css" />
 
 </head>
 
@@ -104,7 +101,8 @@ $conn = null;
                                         </h5>
                                         <p class="card-text">Price: $<?php echo htmlspecialchars($product['price']); ?></p>
                                         <p class="card-text mb-3">Category:
-                                            <?php echo htmlspecialchars($product['category']); ?></p>
+                                            <?php echo htmlspecialchars($product['category']); ?>
+                                        </p>
                                         <p class="card-text mb-3"><?php echo htmlspecialchars($product['description']); ?>
                                         </p>
                                         <button type="button" class="btn btn-primary w-100"
@@ -126,16 +124,12 @@ $conn = null;
 <?php include '../includes/footer.php'; ?>
 <!--================ AKHIR AREA FOOTER =================-->
 
-<!-- jQuery 3.7.1 (necessary for Bootstrap's JavaScript plugins) -->
-<script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.slim.min.js"></script>
-<!-- POPPER 2.11.8 -->
-<script type="text/javascript" src="https://unpkg.com/@popperjs/core@2"></script>
-<!--Bootstrap bundle min js-->
-<script type="text/javascript"
-    src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-<!-- Slick Slider JS -->
-<script type="text/javascript" src="//cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.min.js"></script>
+<!-- External JS libraries -->
+<script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
+<script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
+<script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/slick.min.js"></script>
 <!-- Custom JS -->
-<script type="text/javascript" src="/SCI/assets/js/custom.js"></script>
+<script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
 
 </html>
