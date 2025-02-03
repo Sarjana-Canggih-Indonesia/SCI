@@ -154,8 +154,10 @@ function startSession()
  */
 function regenerateSessionId()
 {
-    if (session_status() === PHP_SESSION_ACTIVE)
-        session_regenerate_id(true); // Regenerate session ID
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start();
+        session_regenerate_id(true);
+    }
 }
 
 /**
