@@ -1,12 +1,44 @@
 <?php
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/product_functions.php';
+// manage_products.php
 
-// Ambil semua produk dari database
-$products = getAllProducts($productConn);
+require_once __DIR__ . '/../../config/config.php';
+require_once __DIR__ . '/../../config/user_actions_config.php';
+require_once __DIR__ . '/../../config/product_functions.php';
 
-// Cek apakah status penghapusan berhasil
-$delete_status = $_GET['status'] ?? null;
+// Memulai sesi apabila tidak ada
+startSession();
+
+// Pengecekan autentikasi dan authorization
+// Redirect ke login jika belum login
+if (!isset($_SESSION['user_id'])) {
+    header("Location: " . $baseUrl . "auth/login.php");
+    exit;
+}
+
+// Ambil info user
+$userInfo = getUserInfo($_SESSION['user_id']);
+
+// Handle jika user tidak ditemukan atau error database
+if (!$userInfo) {
+    session_destroy();
+    header("Location: " . $baseUrl . "auth/login.php?error=user_not_found");
+    exit;
+}
+
+// Block akses untuk non-admin
+if ($userInfo['role'] !== 'admin') {
+    header("Location: " . $baseUrl);
+    exit;
+}
+
+// Memuat konfigurasi URL Dinamis
+$config = getEnvironmentConfig();
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+
+// Set security headers
+header("X-Frame-Options: DENY");
+header("X-Content-Type-Options: nosniff");
+header("X-XSS-Protection: 1; mode=block");
 ?>
 
 <!DOCTYPE html>
@@ -15,108 +47,34 @@ $delete_status = $_GET['status'] ?? null;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Products</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Manages Products - Sarjana Canggih Indonesia</title>
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="../favicon.ico" />
+    <link rel="icon" type="image/x-icon" href="<?php echo $baseUrl; ?>favicon.ico" />
+    <!-- Bootstrap css -->
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/bootstrap.min.css" />
+    <!-- Slick Slider css -->
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/slick.min.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/slick-theme.min.css" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
 </head>
 
-<body>
-    <div class="container my-5">
-        <h1 class="mb-4">Manage Products</h1>
+<body style="background-color: #f7f9fb;">
+    <!-- PLACEHOLDER -->
 
-        <!-- Tambah Layanan Button -->
-        <a href="add_product.php" class="btn btn-primary mb-3">Add New Product</a>
+    <!-- PLACEHOLDER -->
 
-        <!-- Tabel Layanan -->
-        <table class="table table-bordered">
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Image</th>
-                    <th>Name</th>
-                    <th>Short Description</th>
-                    <th>Status</th>
-                    <th>Price</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <?php foreach ($products as $product): ?>
-                    <tr>
-                        <td><?php echo $product['id']; ?></td>
-                        <td>
-                            <img src="<?php echo htmlspecialchars($product['image']); ?>"
-                                alt="product Image"
-                                class="img-thumbnail"
-                                style="max-width: 100px; height: auto;">
-                        </td>
-                        <td><?php echo htmlspecialchars($product['name']); ?></td>
-                        <td><?php echo htmlspecialchars($product['short_description']); ?></td>
-                        <td>
-                            <?php echo $product['status'] == 'available' ? '<span class="badge bg-success">Available</span>' : '<span class="badge bg-danger">Unavailable</span>'; ?>
-                        </td>
-                        <td><?php echo $product['price'] ? '$' . number_format($product['price'], 2) : 'Free'; ?></td>
-                        <td>
-                            <a href="edit_product.php?id=<?php echo $product['id']; ?>" class="btn btn-warning btn-sm">Edit</a>
-                            <button class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#deleteModal<?php echo $product['id']; ?>">Delete</button>
-                        </td>
-                    </tr>
-
-                    <!-- Modal untuk konfirmasi penghapusan produk -->
-                    <div class="modal fade" id="deleteModal<?php echo $product['id']; ?>" tabindex="-1" aria-labelledby="deleteModalLabel<?php echo $product['id']; ?>" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="deleteModalLabel<?php echo $product['id']; ?>">Confirm Deletion</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    Are you sure you want to delete the product "<?php echo htmlspecialchars($product['name']); ?>"?
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <!-- Form untuk menghapus produk menggunakan metode POST -->
-                                    <form action="delete_product.php" method="POST">
-                                        <input type="hidden" name="id" value="<?php echo $product['id']; ?>">
-                                        <button type="submit" name="delete" class="btn btn-danger">Delete</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                <?php endforeach; ?>
-            </tbody>
-        </table>
-    </div>
-
-    <!-- Modal Pemberitahuan Penghapusan Berhasil -->
-    <?php if ($delete_status === 'delete_success'): ?>
-        <div class="modal fade" id="deleteproduct-SuccessModal" tabindex="-1" aria-labelledby="deleteproduct-SuccessModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="deleteproduct-SuccessModalLabel">Product Deleted Successfully</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        The product has been successfully deleted.
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <script>
-            // Show the modal automatically when the page loads
-            var myModal = new bootstrap.Modal(document.getElementById('deleteproduct-SuccessModal'));
-            myModal.show();
-        </script>
-    <?php endif; ?>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- External JS libraries -->
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/slick.min.js"></script>
+    <!-- Custom JS -->
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
 </body>
 
 </html>
