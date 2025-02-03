@@ -266,23 +266,11 @@ header("X-XSS-Protection: 1; mode=block");
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/slick.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.1.0"></script>
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/manage_products.js"></script>
     <script type="text/javascript">
-        // Fungsi untuk mencari produk berdasarkan nama
-        document.getElementById('searchInput').addEventListener('input', function () {
-            var searchValue = this.value.toLowerCase();
-            var tableRows = document.querySelectorAll('tbody tr');
-            tableRows.forEach(function (row) {
-                var productName = row.cells[1].textContent.toLowerCase();
-                if (productName.includes(searchValue)) {
-                    row.style.display = '';  // Menampilkan baris jika cocok
-                } else {
-                    row.style.display = 'none';  // Menyembunyikan baris jika tidak cocok
-                }
-            });
-        });
-
         // Fungsi untuk menampilkan modal konfirmasi saat klik tombol Delete
         document.querySelectorAll('.btn-danger').forEach(function (deleteButton) {
             deleteButton.addEventListener('click', function () {
