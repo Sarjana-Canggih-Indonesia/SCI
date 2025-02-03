@@ -270,24 +270,6 @@ header("X-XSS-Protection: 1; mode=block");
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/manage_products.js"></script>
-    <script type="text/javascript">
-        // Fungsi untuk menampilkan modal konfirmasi saat klik tombol Delete
-        document.querySelectorAll('.btn-danger').forEach(function (deleteButton) {
-            deleteButton.addEventListener('click', function () {
-                // Menampilkan modal konfirmasi
-                var modal = new bootstrap.Modal(document.getElementById('deleteModal'));
-                modal.show();
-
-                // Tambahkan event listener untuk tombol Delete pada modal
-                var confirmDeleteButton = document.querySelector('#deleteModal .btn-danger');
-                confirmDeleteButton.addEventListener('click', function () {
-                    // Implementasi penghapusan produk (misalnya dengan AJAX atau refresh halaman)
-                    alert('Produk dihapus!');  // Ganti dengan aksi penghapusan yang sesuai
-                    modal.hide();
-                });
-            });
-        });
-    </script>
 </body>
 
 </html>

@@ -55,3 +55,24 @@ document.getElementById("searchInput").addEventListener("input", function () {
   });
 });
 // ==================== Akhir JS untuk Fuzzy Search ==================== //
+
+// ==================== JS untuk Modal Delete ==================== //
+document.addEventListener("DOMContentLoaded", function () {
+  // Fungsi untuk menampilkan modal konfirmasi saat klik tombol Delete
+  document.querySelectorAll(".btn-danger").forEach(function (deleteButton) {
+    deleteButton.addEventListener("click", function () {
+      // Menampilkan modal konfirmasi
+      var modal = new bootstrap.Modal(document.getElementById("deleteModal"));
+      modal.show();
+
+      // Tambahkan event listener untuk tombol Delete pada modal
+      var confirmDeleteButton = document.querySelector("#deleteModal .btn-danger");
+      confirmDeleteButton.addEventListener("click", function () {
+        // Implementasi penghapusan produk (misalnya dengan AJAX atau refresh halaman)
+        alert("Produk dihapus!"); // Ganti dengan aksi penghapusan yang sesuai
+        modal.hide();
+      });
+    });
+  });
+});
+// ==================== Akhir JS untuk Modal Delete ==================== //
