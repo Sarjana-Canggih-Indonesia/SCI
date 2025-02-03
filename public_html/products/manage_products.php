@@ -101,8 +101,7 @@ header("X-XSS-Protection: 1; mode=block");
                         <ul class="list-unstyled">
                             <li><strong>Total Products:</strong> 150</li>
                             <li><strong>Total Categories:</strong> 5</li>
-                            <li><strong>Total Stock:</strong> 5000</li>
-                            <li><strong>Total Revenue:</strong> $10,000</li>
+                            <li><strong>Total Revenue:</strong> Rp 150,000,000</li>
                         </ul>
                     </div>
                 </div>
@@ -130,7 +129,7 @@ header("X-XSS-Protection: 1; mode=block");
                         <td>Product A</td>
                         <td>Electronics</td>
                         <td>Gadget, Tech</td>
-                        <td>$10</td>
+                        <td>Rp 150,000</td>
                         <td>100</td>
                         <td>
                             <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
@@ -142,7 +141,7 @@ header("X-XSS-Protection: 1; mode=block");
                         <td>Product B</td>
                         <td>Clothing</td>
                         <td>Fashion, Casual</td>
-                        <td>$15</td>
+                        <td>Rp 250,000</td>
                         <td>50</td>
                         <td>
                             <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
@@ -170,10 +169,9 @@ header("X-XSS-Protection: 1; mode=block");
                 <h5 class="mb-0">Price History / Price Updates</h5>
             </div>
             <div class="card-body">
-                <!-- You can display price history for each product -->
                 <ul class="list-unstyled">
-                    <li><strong>Product A:</strong> $12 -> $10 (2025-02-01)</li>
-                    <li><strong>Product B:</strong> $20 -> $15 (2025-01-30)</li>
+                    <li><strong>Product A:</strong> Rp 180,000 -> Rp 150,000 (2025-02-01)</li>
+                    <li><strong>Product B:</strong> Rp 300,000 -> Rp 250,000 (2025-01-30)</li>
                 </ul>
             </div>
         </div>
