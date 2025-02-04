@@ -45,7 +45,7 @@ redirect_if_logged_in(); // Redirect to the index page if the user is already lo
   <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css">
   <!-- Google reCAPTCHA -->
   <script type="text/javascript" src="https://www.google.com/recaptcha/api.js" async defer></script>
-  <!-- Custom styles for auth pages -->
+  <!-- Custom Inline CSS -->
   <style>
     html,
     body {
