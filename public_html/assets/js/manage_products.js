@@ -76,3 +76,5 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 // ==================== Akhir JS untuk Modal Delete ==================== //
+
+// === AKHIR JS UNTUK HALAMAN MANAGE PRODUCTS === //
