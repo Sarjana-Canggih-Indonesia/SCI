@@ -1,9 +1,17 @@
 <?php
+// contact/index.php
+
 // Sertakan file konfigurasi
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
 
 startSession();
+
+// Memuat konfigurasi URL Dinamis
+$config = getEnvironmentConfig(); // Load environment configuration
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
+
+validateReCaptchaEnvVariables(); // Validate reCAPTCHA environment variables
 ?>
 
 <!DOCTYPE html>
@@ -14,22 +22,20 @@ startSession();
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Hubungi Kami - Sarjana Canggih Indonesia</title>
     <!-- Favicon -->
-    <link rel="icon" href="../favicon.ico" type="image/x-icon" />
+    <link rel="icon" type="image/x-icon" href="<?php echo $baseUrl; ?>favicon.ico" />
     <!-- Bootstrap css -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
-        crossorigin="anonymous" />
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/bootstrap.min.css" />
     <!-- Slick Slider css -->
-    <link rel="stylesheet" type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css" />
-    <link rel="stylesheet" type="text/css"
-        href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/slick.min.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/slick-theme.min.css" />
     <!-- Font Awesome -->
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
     <!-- Custom CSS -->
-    <link rel="stylesheet" type="text/css" href="../assets/css/styles.css" />
-    <!-- Memuat script reCAPTCHA -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-    <!-- Membuat konten rata tengah -->
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
+    <!-- Google reCAPTCHA -->
+    <script type="text/javascript" src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <!-- Custom Inline CSS -->
     <style>
         html,
         body {
@@ -80,7 +86,8 @@ startSession();
 
                         <!-- reCAPTCHA -->
                         <div class="mb-3">
-                            <div class="g-recaptcha" data-sitekey="<?php echo RECAPTCHA_SITE_KEY; ?>"></div>
+                            <div class="g-recaptcha" data-sitekey="<?php echo htmlspecialchars(RECAPTCHA_SITE_KEY); ?>"
+                                required></div>
                         </div>
 
                         <!-- CSRF Token -->
@@ -95,19 +102,12 @@ startSession();
         </div>
     </section>
 
-
+    <!-- External JS libraries -->
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS scripts -->
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
 </body>
-
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script type="text/javascript" src="../assets/js/jquery-3.5.1.min.js"></script>
-<script type="text/javascript" src="../assets/js/popper.min.js"></script>
-<!--Bootstrap bundle min js-->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
-    integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
-    crossorigin="anonymous"></script>
-<!-- Slick Slider JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
-<!-- Custom JS -->
-<script type="text/javascript" src="../assets/js/custom.js"></script>
 
 </html>
