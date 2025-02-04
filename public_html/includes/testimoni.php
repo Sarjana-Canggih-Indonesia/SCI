@@ -22,13 +22,9 @@
             <div class="col-sm-6">
                 <div class="testimoni-inner p-4 mb-4 shadow rounded-4 border-1">
                     <div class="testimoni-inner-upperarea mb-2">
-                        <img
-                            class="testimoni-profilepicture"
-                            src="./assets/images/profilepictures/female.svg"
-                            alt=""
-                            height="32"
-                            width="32" />
-                        <h5 class="testimoni-nama">Amazon User</h5>
+                        <img class="testimoni-profilepicture" src="./assets/images/profilepictures/female.svg" alt=""
+                            height="32" width="32" />
+                        <h5 class="testimoni-nama">Klien I******</h5>
                     </div>
                     <div class="testimoni-starandtitle mb-2">
                         <div class="testimoni-stars">
@@ -37,30 +33,30 @@
                         </div>
                         <div class="testimoni-title">
                             <!-- Judul ulasan -->
-                            <span>"Layanan sangat memuaskan!"</span>
+                            <span>"Saya terharu terhadap tim."</span>
                         </div>
                     </div>
                     <div class="review-date mb-2">
-                        <span class="color-secondary size-base">reviewed on December 26, 2023</span>
+                        <span class="color-secondary size-base">reviewed on July 05, 2024</span>
                     </div>
                     <div class="produk-dan-varian mb-2">
-                        <span class="color-secondary">Produk: Skripsi</span>
+                        <span class="color-secondary">Layanan: Skripsi</span>
                         <i class="text-separator" aria-hidden="true" aria-label="|">&#124;</i>
-                        <span class="color-secondary">Varian: Bab 4</span>
+                        <span class="color-secondary">Full</span>
                     </div>
                     <div class="size-base reviewtext">
-                        <span>Lorem ipsum dolor sit amet consectetur adipisicing elit. Asperiores, sequi aspernatur et voluptates debitis quibusdam eligendi maiores hic quas dignissimos temporibus doloribus, omnis ratione dolores, nesciunt dolor repellendus tenetur incidunt.</span>
+                        <span>Saya benar-benar terharu dengan dedikasi dan profesionalisme! Setiap pekerjaan selalu
+                            diselesaikan dengan tepat waktu dan hasilnya melebihi ekspektasi saya. Kualitas yang
+                            diberikan diluar ekspektasi saya, dan saya sangat menghargai kerja keras serta perhatian
+                            terhadap
+                            detail yang ditunjukkan. Terima kasih, atas pelayanan yang luar biasa!</span>
                     </div>
                 </div>
                 <div class="testimoni-inner p-4 mb-4 shadow rounded-4 border-1">
                     <div class="testimoni-inner-upperarea mb-2">
-                        <img
-                            class="testimoni-profilepicture"
-                            src="./assets/images/profilepictures/female.svg"
-                            alt=""
-                            height="32"
-                            width="32" />
-                        <h5 class="testimoni-nama">Amazon User</h5>
+                        <img class="testimoni-profilepicture" src="./assets/images/profilepictures/female.svg" alt=""
+                            height="32" width="32" />
+                        <h5 class="testimoni-nama">Klien A******</h5>
                     </div>
                     <div class="testimoni-starandtitle mb-2">
                         <div class="testimoni-stars">
@@ -69,30 +65,28 @@
                         </div>
                         <div class="testimoni-title">
                             <!-- Judul ulasan -->
-                            <span>"Layanan sangat memuaskan!"</span>
+                            <span>"Makasih banyak kak! Tinggal nunggu wisuda nih kak."</span>
                         </div>
                     </div>
                     <div class="review-date mb-2">
-                        <span class="color-secondary size-base">reviewed on December 26, 2023</span>
+                        <span class="color-secondary size-base">reviewed on November 06, 2023</span>
                     </div>
                     <div class="produk-dan-varian mb-2">
-                        <span class="color-secondary">Produk: Skripsi</span>
+                        <span class="color-secondary">Layanan: Skripsi</span>
                         <i class="text-separator" aria-hidden="true" aria-label="|">&#124;</i>
-                        <span class="color-secondary">Varian: Bab 4</span>
+                        <span class="color-secondary">Proposal</span>
                     </div>
                     <div class="size-base reviewtext">
-                        <span>Lorem ipsum dolor sit amet consectetur, adipisicing elit. Assumenda natus eius esse repudiandae dolores! Unde dolor possimus impedit voluptatum mollitia, itaque hic, obcaecati aliquam ratione in cupiditate odio aspernatur numquam?</span>
+                        <span>Aku sudah sidang! Meskipun jawaban aku kadang nggak sesuai sama yang mereka mau, aku tetap
+                            bisa melalui semuanya. Terima kasih atas bantuannya, Kak! Kakak juga kerjanya cepat banget,
+                            sangat membantu! Tinggal nunggu wisuda nih!</span>
                     </div>
                 </div>
                 <div class="testimoni-inner p-4 mb-4 shadow rounded-4 border-1">
                     <div class="testimoni-inner-upperarea mb-2">
-                        <img
-                            class="testimoni-profilepicture"
-                            src="./assets/images/profilepictures/female.svg"
-                            alt=""
-                            height="32"
-                            width="32" />
-                        <h5 class="testimoni-nama">Amazon User</h5>
+                        <img class="testimoni-profilepicture" src="./assets/images/profilepictures/female.svg" alt=""
+                            height="32" width="32" />
+                        <h5 class="testimoni-nama">Klien E******</h5>
                     </div>
                     <div class="testimoni-starandtitle mb-2">
                         <div class="testimoni-stars">
@@ -105,15 +99,19 @@
                         </div>
                     </div>
                     <div class="review-date mb-2">
-                        <span class="color-secondary size-base">reviewed on December 26, 2023</span>
+                        <span class="color-secondary size-base">reviewed on Juli 14, 2022</span>
                     </div>
                     <div class="produk-dan-varian mb-2">
-                        <span class="color-secondary">Produk: Skripsi</span>
+                        <span class="color-secondary">Layanan: Skripsi</span>
                         <i class="text-separator" aria-hidden="true" aria-label="|">&#124;</i>
-                        <span class="color-secondary">Varian: Bab 4</span>
+                        <span class="color-secondary">Judul</span>
                     </div>
                     <div class="size-base reviewtext">
-                        <span>Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas explicabo eos est sapiente, et laudantium aliquam, doloremque consequuntur consectetur atque commodi eaque labore quibusdam ipsam unde, molestias esse possimus quidem.</span>
+                        <span>
+                            Kak, dosen saya menyarankan untuk mengganti objek penelitian, tapi alhamdulillah
+                            sekarang sudah ACC! Rasanya lega sekali. Sekarang saya hanya perlu melanjutkan dengan
+                            menyusun Bab 1. Terima kasih banyak, Kak! &#x1F62D;
+                        </span>
                     </div>
                 </div>
             </div>
