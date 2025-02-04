@@ -37,7 +37,7 @@
                         </div>
                     </div>
                     <div class="review-date mb-2">
-                        <span class="color-secondary size-base">reviewed on July 05, 2024</span>
+                        <span class="color-secondary size-base">reviewed on Juli 05, 2024</span>
                     </div>
                     <div class="produk-dan-varian mb-2">
                         <span class="color-secondary">Layanan: Skripsi</span>
