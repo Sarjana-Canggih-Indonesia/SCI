@@ -2,8 +2,8 @@
 // product_functions.php
 
 require_once __DIR__ . '/../../vendor/autoload.php';
-require_once __DIR__ . '/../config/config.php';
-require_once __DIR__ . '/../config/user_actions_config.php';
+require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../user_actions_config.php';
 require_once __DIR__ . '/../auth/validate.php';
 
 use voku\helper\AntiXSS;
