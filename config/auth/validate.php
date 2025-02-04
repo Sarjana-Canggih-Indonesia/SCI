@@ -23,6 +23,8 @@ if (getenv('ENV_LOADED')) {
 
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints as Assert;
+use Brick\Money\Money;
+use Brick\Money\Currency;
 
 /**
  * Validates the username based on a set of constraints.
@@ -112,4 +114,61 @@ function validateEmail($email)
     ]);
     $violations = $validator->validate(['email' => $email], $emailConstraint); // Validate email
     return $violations; // Return validation violations if any
+}
+
+/**
+ * Validates product data.
+ *
+ * This function validates the product name, price, description, and slug.
+ * It returns an array of violations or an empty array if the data is valid.
+ *
+ * @param array $data An associative array containing the product data (name, price, description, image_path, slug).
+ * @return array Returns an array of validation violations or an empty array if the data is valid.
+ */
+function validateProductData($data)
+{
+    // Create a validator
+    $validator = Validation::createValidator();
+
+    // Define constraints for the data
+    $constraints = [
+        'name' => new Assert\NotBlank(['message' => 'Product name cannot be blank']),
+        'price' => new Assert\Range(['min' => 0, 'minMessage' => 'Price must be a positive number']),
+        'description' => new Assert\NotBlank(['message' => 'Description cannot be blank']),
+        'slug' => new Assert\Regex([
+            'pattern' => '/^[a-z0-9-]+$/',
+            'message' => 'Slug can only contain lowercase letters, numbers, and dashes'
+        ])
+    ];
+
+    $violations = [];
+
+    // Validate each field
+    $violations = array_merge($violations, iterator_to_array($validator->validate($data['name'], $constraints['name'])));
+    $violations = array_merge($violations, iterator_to_array($validator->validate($data['price'], $constraints['price'])));
+    $violations = array_merge($violations, iterator_to_array($validator->validate($data['description'], $constraints['description'])));
+    $violations = array_merge($violations, iterator_to_array($validator->validate($data['slug'], $constraints['slug'])));
+
+    return $violations;
+}
+
+/**
+ * Validates the price using Brick Money.
+ *
+ * This function validates the price to ensure it's a valid money format.
+ * It returns the validated Money object or throws an exception if invalid.
+ *
+ * @param float|string $price The price to validate.
+ * @return Money Returns a validated Money object.
+ * @throws \InvalidArgumentException if the price is invalid.
+ */
+function validatePrice($price)
+{
+    try {
+        // Validate price using Brick Money (assuming IDR currency)
+        $currency = Currency::of('IDR');
+        return Money::of($price, $currency);
+    } catch (\InvalidArgumentException $e) {
+        throw new \InvalidArgumentException("Invalid price format: " . $e->getMessage());
+    }
 }

@@ -4,6 +4,7 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/user_actions_config.php';
+require_once __DIR__ . '/../auth/validate.php';
 
 /**
  * Retrieves all products from the database.
@@ -61,16 +62,40 @@ function getProductById($id)
  */
 function addProduct($data)
 {
+    // Validate product data
+    $violations = validateProductData($data);
+
+    // If there are any violations, handle the error
+    if (count($violations) > 0) {
+        // You can either throw an exception or return an error message
+        handleError("Validation failed: " . implode(", ", array_map(fn($v) => $v->getMessage(), $violations)), getEnvironmentConfig()['local']);
+        return false;
+    }
+
+    // Sanitize data (example: trim, remove special characters, etc.)
+    $name = htmlspecialchars(trim($data['name']));
+    $description = htmlspecialchars(trim($data['description']));
+    $slug = strtolower(trim($data['slug']));  // Convert slug to lowercase
+
+    // Validate price
+    try {
+        $price = validatePrice($data['price']);
+    } catch (\InvalidArgumentException $e) {
+        handleError("Invalid price format: " . $e->getMessage(), getEnvironmentConfig()['local']);
+        return false;
+    }
+
     try {
         $pdo = getPDOConnection();
-        $stmt = $pdo->prepare("INSERT INTO products (product_name, price, description, image_path, slug) VALUES (:name, :price,
-:description, :image_path, :slug)");
+        $stmt = $pdo->prepare("INSERT INTO products (product_name, price, description, image_path, slug) VALUES (:name, :price, :description, :image_path, :slug)");
+
+        // Save the amount as an integer (cents) for storage
         return $stmt->execute([
-            'name' => $data['name'],
-            'price' => $data['price'],
-            'description' => $data['description'],
+            'name' => $name,
+            'price' => $price->getAmount(), // Store the amount in cents
+            'description' => $description,
             'image_path' => $data['image_path'],
-            'slug' => $data['slug'],
+            'slug' => $slug,
         ]);
     } catch (Exception $e) {
         handleError($e->getMessage(), getEnvironmentConfig()['local']);
