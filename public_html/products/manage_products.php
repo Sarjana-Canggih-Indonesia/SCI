@@ -58,7 +58,21 @@ header("X-XSS-Protection: 1; mode=block");
 </head>
 
 <body style="background-color: #f7f9fb;">
-    <div class="container mt-5">
+
+    <!--========== INSERT HEADER.PHP ==========-->
+    <?php include '../includes/header.php'; ?>
+    <!--========== AKHIR INSERT HEADER.PHP ==========-->
+
+    <!--========== AREA SCROLL TO TOP ==========-->
+    <section class="scroll">
+        <!-- Scroll to Top Button -->
+        <a href="#" class="scroll-to-top" id="scrollToTopBtn">
+            <i class="fa-solid fa-angles-up"></i>
+        </a>
+    </section>
+    <!--========== AKHIR AREA SCROLL TO TOP ==========-->
+
+    <div class="container jarak-kustom">
         <h2 class="mb-4 text-center">Manage Products</h2>
 
         <!-- Search Bar -->
