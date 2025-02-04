@@ -6,6 +6,29 @@ require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/user_actions_config.php';
 require_once __DIR__ . '/../auth/validate.php';
 
+use voku\helper\AntiXSS;
+
+/**
+ * Sanitizes product data to prevent XSS attacks.
+ *
+ * This function sanitizes the name, description, and slug fields
+ * by removing harmful HTML and special characters using AntiXSS.
+ *
+ * @param array $data The product data to sanitize.
+ * @return array The sanitized product data.
+ */
+function sanitizeProductData($data)
+{
+    $antiXSS = new AntiXSS();
+
+    // Sanitize the relevant fields
+    $data['name'] = $antiXSS->xss_clean(trim($data['name']));
+    $data['description'] = $antiXSS->xss_clean(trim($data['description']));
+    $data['slug'] = strtolower(trim($data['slug']));  // Convert slug to lowercase
+
+    return $data;
+}
+
 /**
  * Retrieves all products from the database.
  *
@@ -72,10 +95,8 @@ function addProduct($data)
         return false;
     }
 
-    // Sanitize data (example: trim, remove special characters, etc.)
-    $name = htmlspecialchars(trim($data['name']));
-    $description = htmlspecialchars(trim($data['description']));
-    $slug = strtolower(trim($data['slug']));  // Convert slug to lowercase
+    // Sanitize data using the sanitizeProductData function
+    $data = sanitizeProductData($data);
 
     // Validate price
     try {
@@ -91,11 +112,11 @@ function addProduct($data)
 
         // Save the amount as an integer (cents) for storage
         return $stmt->execute([
-            'name' => $name,
+            'name' => $data['name'],
             'price' => $price->getAmount(), // Store the amount in cents
-            'description' => $description,
+            'description' => $data['description'],
             'image_path' => $data['image_path'],
-            'slug' => $slug,
+            'slug' => $data['slug'],
         ]);
     } catch (Exception $e) {
         handleError($e->getMessage(), getEnvironmentConfig()['local']);
