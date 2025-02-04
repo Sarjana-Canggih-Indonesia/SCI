@@ -59,9 +59,12 @@ $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
                             <hr class="mb-4 mt-0 d-inline-block mx-auto"
                                 style="width: 60px; background-color: #7c4dff; height: 2px;">
                             <p>
-                                Lorem ipsum dolor sit amet consectetur adipisicing elit. Perferendis inventore deleniti
-                                maxime error culpa omnis unde temporibus fuga eum, esse quam qui quidem sapiente iste
-                                reprehenderit vitae, reiciendis voluptates molestiae?
+                                Sarjana Canggih Indonesia adalah platform yang menyediakan layanan bimbingan dan
+                                asistensi bagi
+                                pelajar serta profesional dalam menyelesaikan tugas akademik maupun pekerjaan. Kami
+                                membantu dalam pemahaman materi, analisis data, dan berbagai kebutuhan lainnya untuk
+                                mendukung pengembangan keterampilan serta pencapaian tujuan secara mandiri dan
+                                profesional.
                             </p>
                         </div>
 
