@@ -161,21 +161,14 @@ header("X-XSS-Protection: 1; mode=block");
             <button class="mx-1 btn btn-warning btn-sm"><i class="fas fa-pencil-alt"></i> Quick Edit</button>
         </div>
 
-        <!-- Filter by Tags and Category Section -->
+        <!-- Filter by Category Section -->
         <div class="card mb-4 shadow-sm">
             <div class="card-header bg-primary-subtle">
-                <h5 class="mb-0">Filter by Tags and Category</h5>
+                <h5 class="mb-0">Filter by Category</h5>
             </div>
-            <div class="card-body d-flex justify-content-between">
-                <!-- Filter by Tags -->
-                <select class="form-select w-45 mx-3" aria-label="Filter by Tags">
-                    <option selected>Filter by Tags</option>
-                    <option value="gadget">Gadget</option>
-                    <option value="fashion">Fashion</option>
-                </select>
-
+            <div class="card-body d-flex justify-content-center align-items-center">
                 <!-- Filter by Category -->
-                <select class="form-select w-45 mx-3" aria-label="Filter by Category">
+                <select class="form-select w-45" aria-label="Filter by Category">
                     <option selected>Filter by Category</option>
                     <option value="electronics">Electronics</option>
                     <option value="clothing">Clothing</option>
