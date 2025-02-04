@@ -34,9 +34,11 @@ function sanitizeProductData($data)
  *
  * This function establishes a connection to the database using PDO,
  * executes a query to fetch all products from the 'products' table,
- * and returns the result as an associative array.
+ * and returns the result as an associative array. If an error occurs,
+ * it returns an array with an error message.
  *
- * @return array Returns an associative array containing all products.
+ * @return array Returns an associative array containing all products on success,
+ *               or an array with an error message on failure.
  */
 function getProducts()
 {
@@ -45,7 +47,14 @@ function getProducts()
         $stmt = $pdo->query("SELECT * FROM products");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
+        // Log the error for debugging purposes
         handleError($e->getMessage(), getEnvironmentConfig()['local']);
+
+        // Return a user-friendly error message
+        return [
+            'error' => true,
+            'message' => 'Terjadi kesalahan saat mengambil data produk. Silakan hubungi admin.'
+        ];
     }
 }
 
@@ -78,10 +87,11 @@ function getProductById($id)
  * This function establishes a connection to the database using PDO,
  * prepares an SQL query to insert a new product into the 'products' table,
  * and executes the query with the provided product data.
- * It returns true if the insertion is successful, otherwise false.
+ * It returns an array with a success message or an error message.
  *
  * @param array $data An associative array containing the product data (name, price, description, image_path, slug).
- * @return bool Returns true on successful insertion, otherwise false.
+ * @return array Returns an array with a success message on successful insertion,
+ *               or an array with an error message on failure.
  */
 function addProduct($data)
 {
@@ -90,9 +100,14 @@ function addProduct($data)
 
     // If there are any violations, handle the error
     if (count($violations) > 0) {
-        // You can either throw an exception or return an error message
+        // Log the error for debugging purposes
         handleError("Validation failed: " . implode(", ", array_map(fn($v) => $v->getMessage(), $violations)), getEnvironmentConfig()['local']);
-        return false;
+
+        // Return a user-friendly error message
+        return [
+            'error' => true,
+            'message' => 'Data produk tidak valid. Silakan periksa kembali data yang Anda masukkan.'
+        ];
     }
 
     // Sanitize data using the sanitizeProductData function
@@ -102,56 +117,133 @@ function addProduct($data)
     try {
         $price = validatePrice($data['price']);
     } catch (\InvalidArgumentException $e) {
+        // Log the error for debugging purposes
         handleError("Invalid price format: " . $e->getMessage(), getEnvironmentConfig()['local']);
-        return false;
+
+        // Return a user-friendly error message
+        return [
+            'error' => true,
+            'message' => 'Format harga tidak valid. Harap masukkan harga yang benar.'
+        ];
     }
 
     try {
         $pdo = getPDOConnection();
         $stmt = $pdo->prepare("INSERT INTO products (product_name, price, description, image_path, slug) VALUES (:name, :price, :description, :image_path, :slug)");
 
-        // Save the amount as an integer (cents) for storage
-        return $stmt->execute([
+        // Execute the query
+        $success = $stmt->execute([
             'name' => $data['name'],
             'price' => $price->getAmount(), // Store the amount in cents
             'description' => $data['description'],
             'image_path' => $data['image_path'],
             'slug' => $data['slug'],
         ]);
+
+        if ($success) {
+            return [
+                'error' => false,
+                'message' => 'Produk berhasil ditambahkan.'
+            ];
+        } else {
+            return [
+                'error' => true,
+                'message' => 'Gagal menambahkan produk. Silakan coba lagi nanti.'
+            ];
+        }
     } catch (Exception $e) {
+        // Log the error for debugging purposes
         handleError($e->getMessage(), getEnvironmentConfig()['local']);
+
+        // Return a user-friendly error message
+        return [
+            'error' => true,
+            'message' => 'Terjadi kesalahan saat menambahkan produk. Silakan hubungi admin.'
+        ];
     }
 }
 
 /**
-* Updates an existing product in the database by its ID.
-*
-* This function establishes a connection to the database using PDO,
-* prepares an SQL query to update a product in the 'products' table,
-* and executes the query with the provided product data and ID.
-* It returns true if the update is successful, otherwise false.
-*
-* @param int $id The ID of the product to update.
-* @param array $data An associative array containing the updated product data (name, price, description, image_path,
-slug).
-* @return bool Returns true on successful update, otherwise false.
-*/
+ * Updates an existing product in the database by its ID.
+ *
+ * This function establishes a connection to the database using PDO,
+ * prepares an SQL query to update a product in the 'products' table,
+ * and executes the query with the provided product data and ID.
+ * It returns an array with a success message or an error message.
+ *
+ * @param int $id The ID of the product to update.
+ * @param array $data An associative array containing the updated product data (name, price, description, image_path, slug).
+ * @return array Returns an array with a success message on successful update,
+ *               or an array with an error message on failure.
+ */
 function updateProduct($id, $data)
 {
+    // Validate product data
+    $violations = validateProductData($data);
+
+    // If there are any violations, handle the error
+    if (count($violations) > 0) {
+        // Log the error for debugging purposes
+        handleError("Validation failed: " . implode(", ", array_map(fn($v) => $v->getMessage(), $violations)), getEnvironmentConfig()['local']);
+
+        // Return a user-friendly error message
+        return [
+            'error' => true,
+            'message' => 'Data produk tidak valid. Silakan periksa kembali data yang Anda masukkan.'
+        ];
+    }
+
+    // Sanitize data using the sanitizeProductData function
+    $data = sanitizeProductData($data);
+
+    // Validate price
+    try {
+        $price = validatePrice($data['price']);
+    } catch (\InvalidArgumentException $e) {
+        // Log the error for debugging purposes
+        handleError("Invalid price format: " . $e->getMessage(), getEnvironmentConfig()['local']);
+
+        // Return a user-friendly error message
+        return [
+            'error' => true,
+            'message' => 'Format harga tidak valid. Harap masukkan harga yang benar.'
+        ];
+    }
+
     try {
         $pdo = getPDOConnection();
-        $stmt = $pdo->prepare("UPDATE products SET product_name = :name, price = :price, description = :description, image_path
-= :image_path, slug = :slug WHERE product_id = :id");
-        return $stmt->execute([
+        $stmt = $pdo->prepare("UPDATE products SET product_name = :name, price = :price, description = :description, image_path = :image_path, slug = :slug WHERE product_id = :id");
+
+        // Execute the query
+        $success = $stmt->execute([
             'id' => $id,
             'name' => $data['name'],
-            'price' => $data['price'],
+            'price' => $price->getAmount(), // Store the amount in cents
             'description' => $data['description'],
             'image_path' => $data['image_path'],
             'slug' => $data['slug'],
         ]);
+
+        if ($success) {
+            return [
+                'error' => false,
+                'message' => 'Produk berhasil diperbarui.'
+            ];
+        } else {
+            return [
+                'error' => true,
+                'message' => 'Gagal memperbarui produk. Silakan coba lagi nanti.'
+            ];
+        }
     } catch (Exception $e) {
+        // Log the error for debugging purposes
         handleError($e->getMessage(), getEnvironmentConfig()['local']);
+
+        // Return a user-friendly error message
+        return [
+            'error' => true,
+            'message' => 'Terjadi kesalahan saat memperbarui produk. Silakan hubungi admin.'
+        ];
     }
 }
 
@@ -159,18 +251,40 @@ function updateProduct($id, $data)
  * Deletes a product from the database based on its ID.
  *
  * This function prepares and executes an SQL DELETE statement to remove a product from the 'products' table
- * using the provided product ID. It returns true if the deletion is successful, and false otherwise.
+ * using the provided product ID. It returns an array with a success message or an error message.
  *
  * @param int $id The ID of the product to delete.
- * @return bool True if the deletion is successful, false if the deletion fails.
+ * @return array Returns an array with a success message on successful deletion,
+ *               or an array with an error message on failure.
  */
 function deleteProduct($id)
 {
     try {
         $pdo = getPDOConnection();
         $stmt = $pdo->prepare("DELETE FROM products WHERE product_id = :id");
-        return $stmt->execute(['id' => $id]);
+
+        // Execute the query
+        $success = $stmt->execute(['id' => $id]);
+
+        if ($success) {
+            return [
+                'error' => false,
+                'message' => 'Produk berhasil dihapus.'
+            ];
+        } else {
+            return [
+                'error' => true,
+                'message' => 'Gagal menghapus produk. Produk tidak ditemukan atau sudah dihapus.'
+            ];
+        }
     } catch (Exception $e) {
+        // Log the error for debugging purposes
         handleError($e->getMessage(), getEnvironmentConfig()['local']);
+
+        // Return a user-friendly error message
+        return [
+            'error' => true,
+            'message' => 'Terjadi kesalahan saat menghapus produk. Silakan hubungi admin.'
+        ];
     }
 }
