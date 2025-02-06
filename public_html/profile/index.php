@@ -37,188 +37,12 @@ header('Expires: ' . ($isLive
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
+    </style>
     <style>
         body {
             background-color: #f8f9fa;
-        }
-
-        .profile-card {
-            border: none;
-            border-radius: 15px;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            background: #ffffff;
-        }
-
-        .profile-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .profile-img {
-            width: 140px;
-            height: 140px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 4px solid #fff;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-
-        .profile-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 2rem;
-            margin: -1rem -1rem 1rem -1rem;
-            border-radius: 15px 15px 0 0;
-            text-align: center;
-            color: white;
-        }
-
-        .card-title {
-            color: #2c3e50;
-            font-weight: 600;
-            margin-bottom: 1.5rem;
-            position: relative;
-        }
-
-        .card-title::after {
-            content: '';
-            position: absolute;
-            bottom: -8px;
-            left: 0;
-            width: 50px;
-            height: 3px;
-            background: #667eea;
-            border-radius: 2px;
-        }
-
-        .list-group-item {
-            border: none;
-            padding: 1rem 1.5rem;
-            margin-bottom: 0.5rem;
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-        }
-
-        .list-group-item:hover {
-            background-color: #e9ecef;
-            transform: translateX(5px);
-        }
-
-        .badge {
-            padding: 0.5em 0.75em;
-            font-weight: 500;
-            border-radius: 6px;
-        }
-
-        .btn-custom {
-            border-radius: 8px;
-            padding: 0.5rem 1rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-        }
-
-        .btn-custom:hover {
-            transform: translateY(-2px);
-        }
-
-        .order-list {
-            max-height: 300px;
-            overflow-y: auto;
-            padding-right: 0.5rem;
-        }
-
-        .order-list::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        .order-list::-webkit-scrollbar-track {
-            background: #f1f1f1;
-            border-radius: 4px;
-        }
-
-        .order-list::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 4px;
-        }
-
-        .order-list::-webkit-scrollbar-thumb:hover {
-            background: #555;
-        }
-
-        .sidebar {
-            width: 280px;
-            position: fixed;
-            top: 0;
-            left: 0;
-            height: 100vh;
-            background: linear-gradient(180deg, #ffffff 0%, #f8f9fa 100%);
-            padding: 1.5rem;
-            box-shadow: 4px 0 15px rgba(0, 0, 0, 0.05);
-            z-index: 1000;
-            transition: all 0.3s ease;
-        }
-
-        .sidebar-brand {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #2c3e50;
-            margin-bottom: 2rem;
-            padding: 0 1rem;
-            text-decoration: none;
-            display: block;
-        }
-
-        .sidebar-nav .nav-item {
-            margin-bottom: 0.5rem;
-            position: relative;
-        }
-
-        .sidebar-nav .nav-link {
-            color: #4a5568;
-            padding: 0.75rem 1.5rem;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            transition: all 0.2s ease;
-            position: relative;
-            font-weight: 500;
-        }
-
-        .sidebar-nav .nav-link:hover {
-            background-color: #e2e8f0;
-            color: #2d3748;
-            transform: translateX(5px);
-        }
-
-        .sidebar-nav .nav-link.active {
-            background-color: #ebf4ff;
-            color: #3b82f6;
-            box-shadow: 2px 2px 8px rgba(59, 130, 246, 0.1);
-        }
-
-        .sidebar-nav .nav-link.active:before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            height: 100%;
-            width: 3px;
-            background-color: #3b82f6;
-            border-radius: 0 4px 4px 0;
-        }
-
-        .sidebar-nav .nav-link i {
-            width: 24px;
-            text-align: center;
-            font-size: 1.1rem;
-        }
-
-        .container {
-            margin-left: 280px;
-            width: calc(100% - 280px);
-            transition: all 0.3s ease;
         }
     </style>
 </head>
@@ -272,7 +96,7 @@ header('Expires: ' . ($isLive
             </div>
         </section>
 
-        <div class="container mt-5 ms-3" style="flex: 1;">
+        <section class="profile-maincontent container mt-5 ms-3" style="flex: 1;">
             <div class="container mt-5">
                 <!-- Profile Header -->
                 <div class="card profile-card">
@@ -358,7 +182,7 @@ header('Expires: ' . ($isLive
                     </div>
                 </div>
             </div>
-        </div>
+        </section>
     </div>
     <!-- External JS libraries -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
