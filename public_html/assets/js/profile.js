@@ -1,4 +1,6 @@
-// ==================== JS untuk Halaman Profile ==================== //
+// === JS UNTUK HALAMAN PROFILE === //
+
+// ==================== JS untuk Edit Profile ==================== //
 document.addEventListener("DOMContentLoaded", function () {
   // Function to validate a field with specific constraints
   function validateField(input, constraints) {
@@ -177,4 +179,98 @@ document.addEventListener("DOMContentLoaded", function () {
   // Expose the functions to global scope for the onclick events in HTML
   window.editProfile = editProfile;
 });
-// ==================== Akhir JS untuk Halaman Profile ==================== //
+
+// ==================== Akhir JS untuk Edit Profile ==================== //
+
+// ==================== JS untuk Change Email Modal ==================== //
+document.addEventListener("DOMContentLoaded", function () {
+  // Function to handle Change Email form submission
+  document.getElementById("profile-changeEmailForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const newEmailInput = document.getElementById("profile-edit-new-email");
+    const violations = validateEmail(newEmailInput);
+
+    if (violations.length > 0) {
+      newEmailInput.classList.add("is-invalid");
+      alert(violations.join("\n"));
+    } else {
+      newEmailInput.classList.remove("is-invalid");
+
+      // Perform form submission (e.g., via AJAX)
+      alert("Email berhasil diubah!");
+      // Close the modal
+      bootstrap.Modal.getInstance(document.getElementById("profile-changeEmailModal")).hide();
+    }
+  });
+
+  // Function to open Change Email Modal
+  function changeEmail() {
+    // Clear previous input and validation
+    const newEmailInput = document.getElementById("profile-edit-new-email");
+    newEmailInput.value = "";
+    newEmailInput.classList.remove("is-invalid");
+
+    // Show modal
+    new bootstrap.Modal(document.getElementById("profile-changeEmailModal")).show();
+  }
+
+  // Expose the function to global scope for the onclick events in HTML
+  window.changeEmail = changeEmail;
+});
+// ==================== Akhir JS untuk Change Email Modal ==================== //
+
+// ==================== JS untuk Change Password Modal ==================== //
+document.addEventListener("DOMContentLoaded", function () {
+  // Function to handle Change Password form submission
+  document.getElementById("profile-resetPasswordForm").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const newPasswordInput = document.getElementById("profile-edit-new-password");
+    const confirmPasswordInput = document.getElementById("profile-edit-confirm-password");
+
+    // Validate new password
+    const passwordViolations = validatePassword(newPasswordInput);
+    if (passwordViolations.length > 0) {
+      newPasswordInput.classList.add("is-invalid");
+      alert(passwordViolations.join("\n"));
+      return;
+    } else {
+      newPasswordInput.classList.remove("is-invalid");
+    }
+
+    // Validate password confirmation
+    if (newPasswordInput.value !== confirmPasswordInput.value) {
+      confirmPasswordInput.classList.add("is-invalid");
+      alert("Password confirmation does not match.");
+      return;
+    } else {
+      confirmPasswordInput.classList.remove("is-invalid");
+    }
+
+    // Perform form submission (e.g., via AJAX)
+    alert("Password berhasil diubah!");
+    // Close the modal
+    bootstrap.Modal.getInstance(document.getElementById("profile-resetPasswordModal")).hide();
+  });
+
+  // Function to open Change Password Modal
+  function resetPassword() {
+    // Clear previous inputs and validation
+    const newPasswordInput = document.getElementById("profile-edit-new-password");
+    const confirmPasswordInput = document.getElementById("profile-edit-confirm-password");
+    newPasswordInput.value = "";
+    confirmPasswordInput.value = "";
+    newPasswordInput.classList.remove("is-invalid");
+    confirmPasswordInput.classList.remove("is-invalid");
+
+    // Show modal
+    new bootstrap.Modal(document.getElementById("profile-resetPasswordModal")).show();
+  }
+
+  // Expose the function to global scope for the onclick events in HTML
+  window.resetPassword = resetPassword;
+});
+// ==================== Akhir JS untuk Change Password Modal ==================== //
+
+// === AKHIR JS UNTUK HALAMAN PROFILE === //
