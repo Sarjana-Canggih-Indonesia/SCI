@@ -314,53 +314,6 @@ header('Expires: ' . ($isLive
                         </ul>
                     </div>
                 </div>
-
-                <!-- Active Orders -->
-                <div class="card profile-card mt-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Pesanan Aktif</h5>
-                        <ul class="list-group order-list">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Desain Presentasi
-                                <span class="badge bg-warning">Sedang Diproses</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Analisis Data
-                                <span class="badge bg-success">Selesai</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Order History -->
-                <div class="card profile-card mt-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Riwayat Pesanan</h5>
-                        <ul class="list-group order-list">
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Pembuatan Website
-                                <span class="badge bg-success">Selesai</span>
-                            </li>
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                Optimasi SEO
-                                <span class="badge bg-success">Selesai</span>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Account Security -->
-                <div class="card profile-card mt-4">
-                    <div class="card-body">
-                        <h5 class="card-title">Keamanan Akun</h5>
-                        <button class="btn btn-warning btn-custom w-100 mb-3" onclick="changeEmail()">
-                            <i class="fas fa-envelope me-2"></i>Ubah Email
-                        </button>
-                        <button class="btn btn-danger btn-custom w-100" onclick="resetPassword()">
-                            <i class="fas fa-key me-2"></i>Reset Password
-                        </button>
-                    </div>
-                </div>
             </div>
 
             <!-- Modal Edit Profil -->
@@ -400,53 +353,6 @@ header('Expires: ' . ($isLive
                                     <input type="date" class="form-control" id="profile-edit-birthday" />
                                 </div>
                                 <button type="submit" class="btn btn-primary w-100">Simpan</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal Change Email -->
-            <div class="modal fade" id="profile-changeEmailModal" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Ubah Email</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id=" profile-changeEmailForm">
-                                <div class="mb-3">
-                                    <label class="form-label">Email Baru</label>
-                                    <input type="email" class="form-control" id="profile-edit-new-email" required>
-                                </div>
-                                <button type="submit" class="btn btn-warning w-100">Simpan</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal Reset Password -->
-            <div class="modal fade" id="profile-resetPasswordModal" tabindex="-1">
-                <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Reset Password</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="profile-resetPasswordForm">
-                                <div class="mb-3">
-                                    <label class="form-label">Password Baru</label>
-                                    <input type="password" class="form-control" id="profile-edit-new-password" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label">Konfirmasi Password</label>
-                                    <input type="password" class="form-control" id="profile-edit-confirm-password"
-                                        required>
-                                </div>
-                                <button type="submit" class="btn btn-danger w-100">Reset</button>
                             </form>
                         </div>
                     </div>
