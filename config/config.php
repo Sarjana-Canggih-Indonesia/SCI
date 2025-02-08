@@ -187,54 +187,89 @@ function validateCsrfToken($token)
 }
 
 /**
- * Combined validation for CSRF token and reCAPTCHA v2 verification.
+ * Validates both CSRF token and Google reCAPTCHA v2 response.
+ *
+ * This function ensures that the request is secure by verifying:
+ * - CSRF token validity to prevent cross-site request forgery.
+ * - Google reCAPTCHA v2 response to mitigate automated bot submissions.
+ *
+ * @param array $data The submitted form data, containing:
+ *                    - `csrf_token` (string): The CSRF token for validation.
+ *                    - `g-recaptcha-response` (string): The reCAPTCHA v2 response.
+ * @param HttpClientInterface $client An HTTP client used to communicate with Google’s reCAPTCHA API.
  * 
- * @param array $data Form submission data containing csrf_token and g-recaptcha-response
- * @param HttpClientInterface $client HTTP client for reCAPTCHA API communication
- * @return mixed True on success, empty string on failure with environment-appropriate error handling
- * @throws Exception Detailed error in local environment, silent fail in production
+ * @return bool|string Returns true if both validations pass. Returns an empty string on failure.
+ * 
+ * @throws Exception If in a local environment and an error occurs, an exception is thrown.
+ *                   In a production environment, errors fail silently.
  */
 function validateCsrfAndRecaptcha($data, HttpClientInterface $client)
 {
-    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
-    validateReCaptchaEnvVariables();
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'; // Determine environment (local or live)
+    validateReCaptchaEnvVariables(); // Ensure reCAPTCHA environment variables are set
 
-    // Validasi CSRF token
-    if (!validateCsrfToken($data['csrf_token'] ?? '')) {
+    if (!validateCsrfToken($data['csrf_token'] ?? '')) { // Validate CSRF token
         handleError('Invalid CSRF token.', $env);
         return '';
     }
 
-    // Validasi reCAPTCHA
-    $recaptchaResponse = $data['g-recaptcha-response'] ?? '';
-    if (empty($recaptchaResponse)) {
+    $recaptchaResponse = $data['g-recaptcha-response'] ?? ''; // Get reCAPTCHA response
+    if (empty($recaptchaResponse)) { // Check if reCAPTCHA is filled
         handleError('Please complete the reCAPTCHA.', $env);
         return '';
     }
 
-    // Kirim permintaan ke Google reCAPTCHA API
+    // Send a request to Google reCAPTCHA API for verification
     $response = $client->request('POST', 'https://www.google.com/recaptcha/api/siteverify', [
         'headers' => ['Content-Type' => 'application/x-www-form-urlencoded'],
         'body' => ['secret' => RECAPTCHA_SECRET_KEY, 'response' => $recaptchaResponse],
     ]);
 
-    $result = $response->toArray();
-    if (!($result['success'] ?? false)) {
+    $result = $response->toArray(); // Convert response to an array
+    if (!($result['success'] ?? false)) { // Check if reCAPTCHA validation was successful
         handleError('reCAPTCHA verification failed.', $env);
         return '';
     }
 
-    return true;
+    return true; // Return true if both CSRF and reCAPTCHA validations pass
 }
 
 /**
- * Sanitize input to prevent XSS attacks by cleaning harmful characters.
+ * Sanitizes user input to prevent XSS (Cross-Site Scripting) attacks.
  *
- * @param string $input The input to sanitize.
- * @return string The sanitized input.
+ * This function utilizes the `AntiXSS` library from voku to filter out 
+ * potentially harmful characters and scripts from user-supplied input.
+ *
+ * @param string $input The raw user input that needs to be sanitized.
+ *                      - This can be data from forms, URLs, or any external sources.
+ * 
+ * @return string The sanitized input string, free from harmful scripts or tags.
  */
 function sanitize_input($input)
 {
-    $xss = new voku\helper\AntiXSS();
-    return $xss->xss_clean($input);
+    $xss = new voku\helper\AntiXSS(); // Initialize AntiXSS library for filtering
+    return $xss->xss_clean($input); // Perform XSS sanitization and return cleaned input
+}
+
+/**
+ * Sets cache-related headers for the response.
+ *
+ * This function configures the `Cache-Control` and `Expires` headers based on 
+ * whether the page is in a live environment or not.
+ *
+ * @param bool $isLive Indicates whether the page is in a live environment.
+ *                     - If true, enables caching for 1 hour.
+ *                     - If false, disables caching.
+ * 
+ * @return void
+ */
+function setCacheHeaders(bool $isLive): void
+{
+    header('Cache-Control: ' . ($isLive
+        ? 'public, max-age=3600, must-revalidate' // Enable caching for 1 hour in live mode
+        : 'no-cache, must-revalidate')); // Disable caching in non-live mode
+
+    header('Expires: ' . ($isLive
+        ? Carbon::now()->addHour()->toRfc7231String() // Set expiration time 1 hour ahead in live mode
+        : Carbon::now()->subYear()->toRfc7231String())); // Set expiration time to a year ago in non-live mode
 }
