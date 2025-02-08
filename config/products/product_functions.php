@@ -290,118 +290,147 @@ function deleteProduct($id)
 }
 
 /**
- * Performs a basic product search based on a keyword.
+ * Searches for products based on a given keyword.
  *
- * @param string $keyword The search keyword.
- * @return array The list of matching products.
+ * This function queries the database to find products whose names or descriptions 
+ * match the provided keyword. The search is performed using a partial match (`LIKE`).
+ *
+ * @param string $keyword The search keyword used to filter products.
+ *                        - The keyword is matched against `product_name` and `description`.
+ * 
+ * @return array Returns an array of matching products. If an error occurs, an empty array is returned.
  */
 function searchProducts($keyword)
 {
     try {
-        $pdo = getPDOConnection();
-        $stmt = $pdo->prepare("SELECT * FROM products WHERE product_name LIKE :keyword OR description LIKE :keyword");
-        $stmt->execute(['keyword' => "%$keyword%"]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $pdo = getPDOConnection(); // Establish database connection
+        $stmt = $pdo->prepare("SELECT * FROM products WHERE product_name LIKE :keyword OR description LIKE :keyword"); // Prepare SQL query
+        $stmt->execute(['keyword' => "%$keyword%"]); // Bind keyword and execute query
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return results as an associative array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
-        return [];
+        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle errors based on environment
+        return []; // Return an empty array in case of failure
     }
 }
 
 /**
- * Performs an advanced product search with multiple filters.
+ * Performs an advanced product search based on multiple filters.
  *
- * @param array $filters An associative array of filters (e.g., category, price range).
- * @return array The filtered list of products.
+ * This function allows filtering products using various criteria such as keyword, category, 
+ * and price range. The SQL query is dynamically constructed based on provided filters.
+ *
+ * @param array $filters An associative array containing the following optional keys:
+ *                       - `keyword` (string): Searches within product names and descriptions.
+ *                       - `category` (int): Filters by category ID.
+ *                       - `min_price` (float): Sets the minimum price limit.
+ *                       - `max_price` (float): Sets the maximum price limit.
+ * 
+ * @return array Returns an array of filtered products. Returns an empty array if an error occurs.
  */
 function advancedProductSearch($filters)
 {
     try {
-        $pdo = getPDOConnection();
-        $query = "SELECT * FROM products WHERE 1=1";
+        $pdo = getPDOConnection(); // Establish database connection
+        $query = "SELECT * FROM products WHERE 1=1"; // Base query, ensures dynamic conditions can be appended
         $params = [];
 
-        if (!empty($filters['keyword'])) {
+        if (!empty($filters['keyword'])) { // Apply keyword filter (search in name and description)
             $query .= " AND (product_name LIKE :keyword OR description LIKE :keyword)";
             $params['keyword'] = "%" . $filters['keyword'] . "%";
         }
-        if (!empty($filters['category'])) {
+        if (!empty($filters['category'])) { // Apply category filter
             $query .= " AND category_id = :category";
             $params['category'] = $filters['category'];
         }
-        if (!empty($filters['min_price'])) {
+        if (!empty($filters['min_price'])) { // Apply minimum price filter
             $query .= " AND price >= :min_price";
             $params['min_price'] = $filters['min_price'];
         }
-        if (!empty($filters['max_price'])) {
+        if (!empty($filters['max_price'])) { // Apply maximum price filter
             $query .= " AND price <= :max_price";
             $params['max_price'] = $filters['max_price'];
         }
 
-        $stmt = $pdo->prepare($query);
-        $stmt->execute($params);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $stmt = $pdo->prepare($query); // Prepare the query
+        $stmt->execute($params); // Execute query with bound parameters
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return filtered results
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
-        return [];
+        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle errors based on environment
+        return []; // Return an empty array in case of failure
     }
 }
 
 /**
- * Provides search suggestions for autocomplete.
+ * Retrieves search suggestions for autocomplete functionality.
  *
- * @param string $keyword The search keyword.
- * @return array The list of suggested product names.
+ * This function queries the database for product names that match the provided 
+ * keyword, returning up to five suggestions. It is useful for real-time search 
+ * suggestions in user interfaces.
+ *
+ * @param string $keyword The search keyword used to find matching product names.
+ *                        - The keyword is matched against the beginning of `product_name`.
+ * 
+ * @return array Returns an array of suggested product names. Returns an empty array on failure.
  */
 function getSearchSuggestions($keyword)
 {
     try {
-        $pdo = getPDOConnection();
-        $stmt = $pdo->prepare("SELECT product_name FROM products WHERE product_name LIKE :keyword LIMIT 5");
-        $stmt->execute(['keyword' => "$keyword%"]);
-        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+        $pdo = getPDOConnection(); // Establish database connection
+        $stmt = $pdo->prepare("SELECT product_name FROM products WHERE product_name LIKE :keyword LIMIT 5"); // Prepare SQL query
+        $stmt->execute(['keyword' => "$keyword%"]); // Bind keyword and execute query
+        return $stmt->fetchAll(PDO::FETCH_COLUMN); // Fetch only product names as an array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
-        return [];
+        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle errors based on environment
+        return []; // Return an empty array in case of failure
     }
 }
 
 /**
- * Performs a fuzzy search for products, allowing for minor typos.
+ * Performs a fuzzy search for products, allowing for minor spelling mistakes.
  *
- * @param string $keyword The search keyword.
- * @return array The list of matching products.
+ * This function compares the product names with the provided keyword using the SOUNDEX 
+ * function, which enables matching even if there are minor typos or phonetic variations 
+ * in the search term.
+ *
+ * @param string $keyword The search keyword that may contain minor spelling errors.
+ * 
+ * @return array Returns an array of matching products. If no products are found, an empty array is returned.
  */
 function fuzzySearchProducts($keyword)
 {
     try {
-        $pdo = getPDOConnection();
-        $stmt = $pdo->prepare("SELECT * FROM products WHERE SOUNDEX(product_name) = SOUNDEX(:keyword)");
-        $stmt->execute(['keyword' => $keyword]);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        $pdo = getPDOConnection(); // Establish database connection
+        $stmt = $pdo->prepare("SELECT * FROM products WHERE SOUNDEX(product_name) = SOUNDEX(:keyword)"); // Prepare SQL query with SOUNDEX for fuzzy matching
+        $stmt->execute(['keyword' => $keyword]); // Bind the keyword and execute the query
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return all matching products as an associative array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
-        return [];
+        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle errors based on environment
+        return []; // Return an empty array if an error occurs
     }
 }
 
 /**
- * Logs a search query for analytics purposes.
+ * Logs a search query for analytics and tracking purposes.
  *
- * @param string $keyword The search keyword.
- * @param int|null $userId The ID of the user performing the search (null for guests).
- * @return void
+ * This function inserts a record into the `search_logs` table to track the keyword search 
+ * made by a user, including the user ID and the search date. This data is useful for 
+ * analyzing search trends and user behavior.
+ *
+ * @param string $keyword The search keyword entered by the user.
+ * @param int|null $userId The ID of the user performing the search. Pass `null` for guests.
+ * 
+ * @return void No value is returned. If an error occurs, it is handled internally.
  */
 function logSearchQuery($keyword, $userId = null)
 {
     try {
-        $pdo = getPDOConnection();
-        $stmt = $pdo->prepare("INSERT INTO search_logs (user_id, keyword, search_date) VALUES (:user_id, :keyword, NOW())");
-        $stmt->execute([
+        $pdo = getPDOConnection(); // Establish a database connection
+        $stmt = $pdo->prepare("INSERT INTO search_logs (user_id, keyword, search_date) VALUES (:user_id, :keyword, NOW())"); // Prepare the insert query
+        $stmt->execute([ // Bind values and execute the insert
             'user_id' => $userId,
             'keyword' => $keyword,
         ]);
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
+        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle any potential error
     }
 }
