@@ -16,12 +16,7 @@ $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $isLive = (isset($_ENV['LIVE_URL']) && $_ENV['LIVE_URL'] === getBaseUrl($config, $_ENV['LIVE_URL']));
 
 // Set header no cache saat local environment
-header('Cache-Control: ' . ($isLive
-    ? 'public, max-age=3600, must-revalidate'
-    : 'no-cache, must-revalidate'));
-header('Expires: ' . ($isLive
-    ? Carbon::now()->addHour()->toRfc7231String()
-    : Carbon::now()->subYear()->toRfc7231String()));
+setCacheHeaders($isLive);
 ?>
 
 <!DOCTYPE html>
