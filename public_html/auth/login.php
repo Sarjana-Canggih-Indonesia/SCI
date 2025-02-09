@@ -25,6 +25,7 @@ validateReCaptchaEnvVariables(); // Validate reCAPTCHA environment variables
 
 redirect_if_logged_in(); // Redirect to the index page if the user is already logged in
 
+setCacheHeaders($isLive); // Set header no cache saat local environment
 ?>
 
 <!DOCTYPE html>

@@ -12,6 +12,8 @@ $config = getEnvironmentConfig(); // Load environment configuration
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
 
 validateReCaptchaEnvVariables(); // Validate reCAPTCHA environment variables
+
+setCacheHeaders($isLive); // Set header no cache saat local environment
 ?>
 
 <!DOCTYPE html>
