@@ -96,14 +96,13 @@ header("X-XSS-Protection: 1; mode=block");
                     </div>
                     <div class="card-body">
                         <ul class="list-unstyled">
-                            <li><strong>Username:</strong> JohnDoe</li>
-                            <li><strong>Email:</strong> johndoe@example.com</li>
-                            <li><strong>Role:</strong> Admin</li>
-                            <li><strong>Last Login:</strong> 2025-02-01 16:00:00</li>
+                            <li><strong>Username:</strong> <?php echo htmlspecialchars($userInfo['username']); ?></li>
+                            <li><strong>Email:</strong> <?php echo htmlspecialchars($userInfo['email']); ?></li>
+                            <li><strong>Role:</strong> <?php echo htmlspecialchars($userInfo['role']); ?></li>
                             <li><strong>Profile Image:</strong></li>
                             <li>
-                                <img src="path_to_image.jpg" alt="Profile Image" class="img-thumbnail"
-                                    style="width: 100px; height: 100px;">
+                                <img src="<?php echo htmlspecialchars($userInfo['profile_image_filename']); ?>"
+                                    alt="Profile Image" class="img-thumbnail" style="width: 100px; height: 100px;">
                             </li>
                         </ul>
                     </div>
