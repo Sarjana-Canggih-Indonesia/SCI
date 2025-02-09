@@ -173,17 +173,33 @@ function validateReCaptchaEnvVariables()
 }
 
 /**
- * Validates CSRF token against session storage.
- * 
- * @param string $token Token received from client form submission
- * @return bool True if token matches session storage, false otherwise
- * @throws Exception If session cannot be started
+ * Validate the CSRF token to prevent Cross-Site Request Forgery (CSRF) attacks.
+ *
+ * This function checks if the provided CSRF token matches the one stored in the session.
+ * If the token is missing, it returns a 400 Bad Request HTTP response.
+ * If the token is invalid, it returns a 403 Forbidden HTTP response.
+ * The function ensures that session handling is properly initialized before validation.
+ *
+ * @param string $token The CSRF token submitted via the request.
+ * @return bool Returns true if the token is valid; otherwise, execution halts with an HTTP response.
  */
-function validateCsrfToken($token)
+function validateCSRFToken(string $token): bool
 {
-    if (session_status() !== PHP_SESSION_ACTIVE)
-        session_start();
-    return isset($_SESSION['csrf_token']) && $_SESSION['csrf_token'] === $token;
+    if (session_status() === PHP_SESSION_NONE) {
+        session_start(); // Start the session if it has not been started
+    }
+
+    if (!isset($_SESSION['csrf_token'])) {
+        http_response_code(400); // Send HTTP 400 Bad Request response
+        exit('400 Bad Request: CSRF token is missing.'); // Stop script execution
+    }
+
+    if (!hash_equals($_SESSION['csrf_token'], $token)) {
+        http_response_code(403); // Send HTTP 403 Forbidden response
+        exit('403 Forbidden: Invalid CSRF token.'); // Stop script execution
+    }
+
+    return true; // CSRF validation successful
 }
 
 /**
@@ -249,6 +265,21 @@ function sanitize_input($input)
 {
     $xss = new voku\helper\AntiXSS(); // Initialize AntiXSS library for filtering
     return $xss->xss_clean($input); // Perform XSS sanitization and return cleaned input
+}
+
+/**
+ * Escapes special HTML characters to prevent XSS (Cross-Site Scripting) attacks.
+ *
+ * This function converts special characters into their corresponding HTML entities, 
+ * ensuring that user-supplied input does not execute unintended JavaScript or HTML code.
+ *
+ * @param string $data The input string that needs to be sanitized for safe HTML output.
+ * @return string The escaped string with special HTML characters converted to entities.
+ */
+function escapeHTML(string $data): string
+{
+    // Convert special characters to HTML entities to prevent XSS attacks
+    return htmlspecialchars($data, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 /**
