@@ -1,5 +1,12 @@
 <?php
 // image_function.php
+require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../user/user_function.php';
+
+use Intervention\Image\ImageManager;
+
+// Inisialisasi manager (bisa menggunakan GD atau Imagick)
+$manager = new ImageManager(['driver' => 'gd']);
 
 /**
  * Validates the file type to ensure it is a JPEG or PNG.
@@ -57,6 +64,39 @@ function uploadImage(array $file)
     }
 
     return false; // Return false if the upload fails
+}
+
+/**
+ * Uploads an image after validating its type and ensuring the upload is successful.
+ * 
+ * @param array $file The uploaded file from the $_FILES array.
+ * @param ImageManager $manager Instance of Intervention ImageManager.
+ * @return string|false The path of the uploaded image if successful, false otherwise.
+ */
+function uploadImageWithIntervention($file, $manager)
+{
+    if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+        return false;
+    }
+
+    try {
+        $image = $manager->make($file['tmp_name']);
+
+        $allowedFormats = ['jpg', 'jpeg', 'png'];
+        if (!in_array(strtolower($image->extension), $allowedFormats)) {
+            return false;
+        }
+
+        $filename = uniqid('product_') . '.' . $image->extension;
+        $path = __DIR__ . '/uploads/' . $filename;
+
+        $image->save($path);
+        return $path;
+
+    } catch (Exception $e) {
+        error_log('Image error: ' . $e->getMessage());
+        return false;
+    }
 }
 
 /**
@@ -125,3 +165,30 @@ function resizeProductImage(string $imagePath, int $maxWidth = 800, int $maxHeig
     return $result !== false; // Return true if the image was saved successfully, false otherwise
 }
 
+/**
+ * Resizes an image using the Intervention Image library.
+ * 
+ * @param string $imagePath The path to the image file.
+ * @param ImageManager $manager Instance of Intervention ImageManager.
+ * @param int $maxWidth The maximum width (default 800px).
+ * @param int $maxHeight The maximum height (default 600px).
+ * @return bool Returns true if the image was successfully resized and saved, false otherwise.
+ */
+function resizeImageWithIntervention($imagePath, $manager, $maxWidth = 800, $maxHeight = 600)
+{
+    try {
+        $image = $manager->make($imagePath);
+
+        $image->resize($maxWidth, $maxHeight, function ($constraint) {
+            $constraint->aspectRatio();
+            $constraint->upsize();
+        });
+
+        $image->save($imagePath, 85);
+        return true;
+
+    } catch (Exception $e) {
+        error_log('Resize error: ' . $e->getMessage());
+        return false;
+    }
+}
