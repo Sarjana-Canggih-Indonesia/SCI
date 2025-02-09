@@ -4,9 +4,10 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../user/user_function.php';
 
 use Intervention\Image\ImageManager;
+use Intervention\Image\ImageManagerStatic as Image;
 
 // Inisialisasi manager (bisa menggunakan GD atau Imagick)
-$manager = new ImageManager(['driver' => 'gd']);
+$manager = new ImageManager('gd');
 
 /**
  * Validates the file type to ensure it is a JPEG or PNG.
@@ -67,35 +68,46 @@ function uploadImage(array $file)
 }
 
 /**
- * Uploads an image after validating its type and ensuring the upload is successful.
+ * Uploads an image after validating its MIME type and ensuring the upload is successful.
+ * 
+ * This function validates the uploaded file by checking for any upload errors and ensures that the file's MIME type is either JPEG or PNG. The image is then saved to the server with a unique filename. If any errors occur during the process, they are logged, and the function returns false.
  * 
  * @param array $file The uploaded file from the $_FILES array.
- * @param ImageManager $manager Instance of Intervention ImageManager.
+ * @param \Intervention\Image\ImageManager $manager Instance of Intervention ImageManager.
  * @return string|false The path of the uploaded image if successful, false otherwise.
  */
 function uploadImageWithIntervention($file, $manager)
 {
-    if (!$file || $file['error'] !== UPLOAD_ERR_OK) {
+    if (!$file || $file['error'] !== UPLOAD_ERR_OK) { // Check if the file is valid and has no upload errors
         return false;
     }
 
     try {
-        $image = $manager->make($file['tmp_name']);
+        // Use Image::make() after importing the class
+        $image = Image::make($file['tmp_name']);
 
-        $allowedFormats = ['jpg', 'jpeg', 'png'];
-        if (!in_array(strtolower($image->extension), $allowedFormats)) {
+        $allowedMimeTypes = ['image/jpeg', 'image/png']; // List of allowed MIME types
+        $mimeType = $image->getMimeType(); // Correct method to get the MIME type
+
+        if (!in_array($mimeType, $allowedMimeTypes)) { // Check if the MIME type is allowed
             return false;
         }
 
-        $filename = uniqid('product_') . '.' . $image->extension;
-        $path = __DIR__ . '/uploads/' . $filename;
+        $extensionMap = [ // Map MIME types to file extensions
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+        ];
+        $extension = $extensionMap[$mimeType] ?? ''; // Get the file extension based on the MIME type
 
-        $image->save($path);
-        return $path;
+        $filename = uniqid('product_') . '.' . $extension; // Generate a unique filename
+        $path = __DIR__ . '/uploads/' . $filename; // Define the path to save the uploaded image
+
+        $image->save($path); // Save the image to the server
+        return $path; // Return the path of the uploaded image
 
     } catch (Exception $e) {
-        error_log('Image error: ' . $e->getMessage());
-        return false;
+        error_log('Image error: ' . $e->getMessage()); // Log any errors encountered during the upload process
+        return false; // Return false if there is an error
     }
 }
 
@@ -166,7 +178,9 @@ function resizeProductImage(string $imagePath, int $maxWidth = 800, int $maxHeig
 }
 
 /**
- * Resizes an image using the Intervention Image library.
+ * Resizes an image while maintaining the aspect ratio using the Intervention Image library.
+ * 
+ * This function resizes the image to fit within the specified maximum width and height, preserving the aspect ratio. It saves the resized image to the same path with a quality setting of 85. If an error occurs, it logs the error and returns false.
  * 
  * @param string $imagePath The path to the image file.
  * @param ImageManager $manager Instance of Intervention ImageManager.
@@ -177,18 +191,18 @@ function resizeProductImage(string $imagePath, int $maxWidth = 800, int $maxHeig
 function resizeImageWithIntervention($imagePath, $manager, $maxWidth = 800, $maxHeight = 600)
 {
     try {
-        $image = $manager->make($imagePath);
+        $image = Image::make($imagePath); // Load the image using the make method from ImageManager
 
-        $image->resize($maxWidth, $maxHeight, function ($constraint) {
-            $constraint->aspectRatio();
-            $constraint->upsize();
+        $image->resize($maxWidth, $maxHeight, function ($constraint) { // Resize the image while maintaining aspect ratio
+            $constraint->aspectRatio(); // Maintain the aspect ratio of the image
+            $constraint->upsize(); // Prevent resizing the image if it is smaller than the specified size
         });
 
-        $image->save($imagePath, 85);
-        return true;
+        $image->save($imagePath, 85); // Save the resized image with 85 quality
+        return true; // Return true if the image was successfully resized
 
     } catch (Exception $e) {
-        error_log('Resize error: ' . $e->getMessage());
-        return false;
+        error_log('Resize error: ' . $e->getMessage()); // Log any errors encountered during the resize process
+        return false; // Return false if there is an error
     }
 }
