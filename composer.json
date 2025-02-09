@@ -11,6 +11,7 @@
         "filp/whoops": "^2.16",
         "symfony/validator": "^7.2",
         "symfony/property-access": "^7.2",
-        "nesbot/carbon": "^3.8"
+        "nesbot/carbon": "^3.8",
+        "intervention/image": "^3.11"
     }
 }
