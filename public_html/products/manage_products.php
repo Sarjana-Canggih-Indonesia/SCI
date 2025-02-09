@@ -33,8 +33,7 @@ $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $isLive = isset($_ENV['LIVE_URL']) && $_ENV['LIVE_URL'] === getBaseUrl($config, $_ENV['LIVE_URL']);
 
-// Set header no cache saat local environment
-setCacheHeaders($isLive);
+setCacheHeaders($isLive); // Set header no cache saat local environment
 
 // Set security headers
 header("X-Frame-Options: DENY");
