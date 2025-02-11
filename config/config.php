@@ -73,6 +73,7 @@ function getEnvironmentConfig()
     $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
     return [
         'local' => [
+            'is_live' => false,
             'BASE_URL' => $_ENV['LOCAL_URL'],
             'DB_HOST' => $_ENV['DB_HOST'],
             'DB_USER' => $_ENV['DB_USER'],
@@ -87,6 +88,7 @@ function getEnvironmentConfig()
             'MAIL_ENCRYPTION' => $_ENV['MAIL_ENCRYPTION'],
         ],
         'live' => [
+            'is_live' => true,
             'BASE_URL' => $_ENV['LIVE_URL'],
             'DB_HOST' => $_ENV['LIVE_DB_HOST'],
             'DB_USER' => $_ENV['LIVE_DB_USER'],

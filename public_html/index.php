@@ -12,19 +12,14 @@ use Carbon\Carbon;
 startSession();
 
 // Memuat konfigurasi URL Dinamis
-$config = getEnvironmentConfig();
-$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+$config = getEnvironmentConfig(); // Load environment configuration
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
+$isLive = $config['is_live'];
 
 // Deteksi environment
 $isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
 
-// Set header no cache saat local environment
-header('Cache-Control: ' . ($isLiveEnvironment
-  ? 'public, max-age=3600, must-revalidate'
-  : 'no-cache, must-revalidate'));
-header('Expires: ' . ($isLiveEnvironment
-  ? Carbon::now()->addHour()->toRfc7231String()
-  : Carbon::now()->subYear()->toRfc7231String()));
+setCacheHeaders($isLive); // Set header no cache saat local environment
 ?>
 
 <!DOCTYPE html>
@@ -85,16 +80,15 @@ header('Expires: ' . ($isLiveEnvironment
       <!-- Konten Carousel -->
       <div class="carousel-inner">
         <div class="carousel-item active">
-          <img src="<?php echo $baseUrl; ?>assets/images/carousel/pk1.webp" class="d-block w-100" alt="Slide 1" />
+          <img src=" <?php echo $baseUrl; ?>assets/images/carousel/pk1.webp" class="d-block w-100" alt="Slide 1" />
           <div class="carousel-caption">
             <h4 class="my-sm-3">Capai yang terbaik</h4>
             <p class="my-sm-5">Jangan tunda lagi, selesaikan tugas akhirmu bersama Penelitian Kita</p>
             <div class="container">
-              <div class="row">
-                <a href="<?php echo $baseUrl; ?>contact/"
-                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                  <i class="fa-solid fa-cart-shopping"></i>
-                  &nbsp;Pesan Sekarang
+              <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
+                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                <i class="fa-solid fa-cart-shopping"></i>
+                &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -107,17 +101,16 @@ header('Expires: ' . ($isLiveEnvironment
           </div>
         </div>
         <div class="carousel-item">
-          <img src="<?php echo $baseUrl; ?>assets/images/carousel/pk2.webp" class="d-block w-100" alt="Slide 2"
-            loading="lazy" />
+          <img src=" <?php echo $baseUrl; ?>assets/images/carousel/pk2.webp" class="d-block w-100" alt="Slide 2"
+          loading="lazy" />
           <div class="carousel-caption">
             <h4 class="my-sm-3">Kami adalah safe space-mu.</h4>
             <p class="my-sm-5">Rasi kami selalu siap sedia menjawab pertanyaan penelitian kamu.</p>
             <div class="container">
-              <div class="row">
-                <a href="<?php echo $baseUrl; ?>contact/"
-                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                  <i class="fa-solid fa-cart-shopping"></i>
-                  &nbsp;Pesan Sekarang
+              <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
+                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                <i class="fa-solid fa-cart-shopping"></i>
+                &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -130,17 +123,16 @@ header('Expires: ' . ($isLiveEnvironment
           </div>
         </div>
         <div class="carousel-item">
-          <img src="<?php echo $baseUrl; ?>assets/images/carousel/pk3.webp" class="d-block w-100" alt="Slide 3"
-            loading="lazy" />
+          <img src=" <?php echo $baseUrl; ?>assets/images/carousel/pk3.webp" class="d-block w-100" alt="Slide 3"
+          loading="lazy" />
           <div class="carousel-caption">
             <h4 class="my-sm-3">Banyak promosi dan layanan spesial untukmu!</h4>
             <p class="my-sm-5">Eksplor layanan tugas akhir dan jurnal Penelitian Kita.</p>
             <div class="container">
-              <div class="row">
-                <a href="<?php echo $baseUrl; ?>contact/"
-                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                  <i class="fa-solid fa-cart-shopping"></i>
-                  &nbsp;Pesan Sekarang
+              <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
+                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                <i class="fa-solid fa-cart-shopping"></i>
+                &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -153,17 +145,16 @@ header('Expires: ' . ($isLiveEnvironment
           </div>
         </div>
         <div class="carousel-item">
-          <img src="<?php echo $baseUrl; ?>assets/images/carousel/pk4.webp" class="d-block w-100" alt="Slide 4"
-            loading="lazy" />
+          <img src=" <?php echo $baseUrl; ?>assets/images/carousel/pk4.webp" class="d-block w-100" alt="Slide 4"
+          loading="lazy" />
           <div class="carousel-caption">
             <h4 class="my-sm-3">Paham sepenuhnya dengan video penjelasan.</h4>
             <p class="my-sm-5">Layanan paling lengkap ini tersedia di Paket Prime.</p>
             <div class="container">
-              <div class="row">
-                <a href="<?php echo $baseUrl; ?>contact/"
-                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                  <i class="fa-solid fa-cart-shopping"></i>
-                  &nbsp;Pesan Sekarang
+              <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
+                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                <i class="fa-solid fa-cart-shopping"></i>
+                &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -176,17 +167,16 @@ header('Expires: ' . ($isLiveEnvironment
           </div>
         </div>
         <div class="carousel-item">
-          <img src="<?php echo $baseUrl; ?>assets/images/carousel/pk5.webp" class="d-block w-100" alt="Slide 5"
-            loading="lazy" />
+          <img src=" <?php echo $baseUrl; ?>assets/images/carousel/pk5.webp" class="d-block w-100" alt="Slide 5"
+          loading="lazy" />
           <div class="carousel-caption">
             <h4 class="my-sm-3">Kejar deadline mepet tepat waktu.</h4>
             <p class="my-sm-5">Kami Menyediakan Layanan Percepatan untuk Tugas Akhir.</p>
             <div class="container">
-              <div class="row">
-                <a href="<?php echo $baseUrl; ?>contact/"
-                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                  <i class="fa-solid fa-cart-shopping"></i>
-                  &nbsp;Pesan Sekarang
+              <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
+                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                <i class="fa-solid fa-cart-shopping"></i>
+                &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -199,17 +189,16 @@ header('Expires: ' . ($isLiveEnvironment
           </div>
         </div>
         <div class="carousel-item">
-          <img src="<?php echo $baseUrl; ?>assets/images/carousel/pk6.webp" class="d-block w-100" alt="Slide 6"
-            loading="lazy" />
+          <img src=" <?php echo $baseUrl; ?>assets/images/carousel/pk6.webp" class="d-block w-100" alt="Slide 6"
+          loading="lazy" />
           <div class="carousel-caption">
             <h4 class="my-sm-3">Masuk bareng, lulus juga bareng!</h4>
             <p class="my-sm-5">Dapatkan promosi spesial untuk tugas akhir bersama teman-teman kamu.</p>
             <div class="container">
-              <div class="row">
-                <a href="<?php echo $baseUrl; ?>contact/"
-                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                  <i class="fa-solid fa-cart-shopping"></i>
-                  &nbsp;Pesan Sekarang
+              <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
+                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                <i class="fa-solid fa-cart-shopping"></i>
+                &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -243,21 +232,21 @@ header('Expires: ' . ($isLiveEnvironment
       <div class="row kenapa_inner">
         <div class="col-lg-3">
           <div class="kenapa_item">
-            <img src="<?php echo $baseUrl; ?>assets/images/knp/1.webp" alt="" />
+            <img src=" <?php echo $baseUrl; ?>assets/images/knp/1.webp" alt="" />
             <h4>Pilihan paket terlengkap.</h4>
             <p>Dari paket basic hingga unlimited, semua ada!</p>
           </div>
         </div>
         <div class="col-lg-3">
           <div class="kenapa_item">
-            <img src="<?php echo $baseUrl; ?>assets/images/knp/2.webp" alt="" />
+            <img src=" <?php echo $baseUrl; ?>assets/images/knp/2.webp" alt="" />
             <h4>Layanan prima.</h4>
             <p>Kami dukung penuh proses penelitian kamu hingga selesai. Rasi kami siap menjawab pertanyaan kamu.</p>
           </div>
         </div>
         <div class="col-lg-3">
           <div class="kenapa_item">
-            <img src="<?php echo $baseUrl; ?>assets/images/knp/3.webp" alt="" />
+            <img src=" <?php echo $baseUrl; ?>assets/images/knp/3.webp" alt="" />
             <h4>Dipercaya di Indonesia hingga UK.</h4>
             <p>
               Kami telah membantu peneliti di berbagai kota dan lintas benua untuk menyelesaikan tugas akhirnya,
@@ -267,7 +256,7 @@ header('Expires: ' . ($isLiveEnvironment
         </div>
         <div class="col-lg-3">
           <div class="kenapa_item">
-            <img src="<?php echo $baseUrl; ?>assets/images/knp/4.webp" alt="" />
+            <img src=" <?php echo $baseUrl; ?>assets/images/knp/4.webp" alt="" />
             <h4>Pioneer paket unlimited dan video penjelasan.</h4>
             <p>Kami memberikan layanan yang paling spesial untuk memastikan kesiapan kamu.</p>
           </div>
@@ -299,8 +288,8 @@ header('Expires: ' . ($isLiveEnvironment
             <div class="w-layout-grid grid">
               <div class="pointcontentwrapper light">
                 <div class="pointnumber">
-                  <img src="<?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                    class="hero-check" />
+                  <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
+                  class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #1</div>
                 </div>
                 <h4 class="pointtitle">Berbagai pilihan alat analisis data.</h4>
@@ -311,8 +300,8 @@ header('Expires: ' . ($isLiveEnvironment
               </div>
               <div class="pointcontentwrapper light">
                 <div class="pointnumber">
-                  <img src="<?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                    class="hero-check" />
+                  <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
+                  class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #2</div>
                 </div>
                 <h4 class="pointtitle">Referensi berkualitas.</h4>
@@ -323,8 +312,8 @@ header('Expires: ' . ($isLiveEnvironment
               </div>
               <div class="pointcontentwrapper light">
                 <div class="pointnumber">
-                  <img src="<?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                    class="hero-check" />
+                  <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
+                  class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #3</div>
                 </div>
                 <h4 class="pointtitle">Jaminan anti plagiasi dengan batasan Turnitin &lt;30%.</h4>
@@ -335,8 +324,8 @@ header('Expires: ' . ($isLiveEnvironment
               </div>
               <div class="pointcontentwrapper light">
                 <div class="pointnumber">
-                  <img src="<?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                    class="hero-check" />
+                  <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
+                  class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #4</div>
                 </div>
                 <h4 class="pointtitle">Hasil karya orisinal, bukan copy paste.</h4>
@@ -347,8 +336,8 @@ header('Expires: ' . ($isLiveEnvironment
               </div>
               <div class="pointcontentwrapper light">
                 <div class="pointnumber">
-                  <img src="<?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                    class="hero-check" />
+                  <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
+                  class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #5</div>
                 </div>
                 <h4 class="pointtitle">Unlimited revisi dan konsultasi (khusus paket unlimited dan Prime).</h4>
@@ -358,8 +347,8 @@ header('Expires: ' . ($isLiveEnvironment
               </div>
               <div class="pointcontentwrapper light" style="padding-bottom: 4rem">
                 <div class="pointnumber">
-                  <img src="<?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                    class="hero-check" />
+                  <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
+                  class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #6</div>
                 </div>
                 <h4 class="pointtitle">Video penjelasan (khusus paket Prime)</h4>
@@ -402,37 +391,37 @@ header('Expires: ' . ($isLiveEnvironment
         <div class="col-md-8">
           <section class="tech-logos slider">
             <div class="slide">
-              <img src="<?php echo $baseUrl; ?>assets/images/logo/EViews.webp" />
+              <img src=" <?php echo $baseUrl; ?>assets/images/logo/EViews.webp" />
             </div>
             <div class="slide">
-              <img src="<?php echo $baseUrl; ?>assets/images/logo/IBMSPSS.webp" />
+              <img src=" <?php echo $baseUrl; ?>assets/images/logo/IBMSPSS.webp" />
             </div>
             <div class="slide">
-              <img src="<?php echo $baseUrl; ?>assets/images/logo/Mendeley.webp" />
+              <img src=" <?php echo $baseUrl; ?>assets/images/logo/Mendeley.webp" />
             </div>
             <div class="slide">
-              <img src="<?php echo $baseUrl; ?>assets/images/logo/NVIVO.webp" />
+              <img src=" <?php echo $baseUrl; ?>assets/images/logo/NVIVO.webp" />
             </div>
             <div class="slide">
-              <img src="<?php echo $baseUrl; ?>assets/images/logo/POP.webp" />
+              <img src=" <?php echo $baseUrl; ?>assets/images/logo/POP.webp" />
             </div>
             <div class="slide">
-              <img src="<?php echo $baseUrl; ?>assets/images/logo/Python.webp" />
+              <img src=" <?php echo $baseUrl; ?>assets/images/logo/Python.webp" />
             </div>
             <div class="slide">
-              <img src="<?php echo $baseUrl; ?>assets/images/logo/R.webp" />
+              <img src=" <?php echo $baseUrl; ?>assets/images/logo/R.webp" />
             </div>
             <div class="slide">
-              <img src="<?php echo $baseUrl; ?>assets/images/logo/SmartPLS.webp" />
+              <img src=" <?php echo $baseUrl; ?>assets/images/logo/SmartPLS.webp" />
             </div>
             <div class="slide">
-              <img src="<?php echo $baseUrl; ?>assets/images/logo/Turnitin.webp" />
+              <img src=" <?php echo $baseUrl; ?>assets/images/logo/Turnitin.webp" />
             </div>
             <div class="slide">
-              <img src="<?php echo $baseUrl; ?>assets/images/logo/VOSViewer.webp" />
+              <img src=" <?php echo $baseUrl; ?>assets/images/logo/VOSViewer.webp" />
             </div>
             <div class="slide">
-              <img src="<?php echo $baseUrl; ?>assets/images/logo/Zotero.webp" />
+              <img src=" <?php echo $baseUrl; ?>assets/images/logo/Zotero.webp" />
             </div>
           </section>
         </div>

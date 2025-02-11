@@ -15,6 +15,7 @@ if (isset($_SESSION['error_message'])) {
 
 $config = getEnvironmentConfig(); // Load environment configuration
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
+$isLive = $config['is_live'];
 
 $user_input = $_GET['input'] ?? ''; // Get user input from the query string
 $sanitized_input = sanitize_input($user_input); // Sanitize the user input to prevent XSS
