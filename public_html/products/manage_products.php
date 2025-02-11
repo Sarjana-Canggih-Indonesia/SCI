@@ -31,7 +31,7 @@ if ($userInfo['role'] !== 'admin') {
 // Memuat konfigurasi URL Dinamis
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
-$isLive = isset($_ENV['LIVE_URL']) && $_ENV['LIVE_URL'] === getBaseUrl($config, $_ENV['LIVE_URL']);
+$isLive = $config['is_live'];
 
 setCacheHeaders($isLive); // Set header no cache saat local environment
 
@@ -125,6 +125,11 @@ header("X-XSS-Protection: 1; mode=block");
                 </div>
             </div>
         </div>
+
+        <!-- Tombol untuk membuka modal Add Product -->
+        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
+            <i class="fas fa-plus"></i> Add Product
+        </button>
 
         <!-- Products Table -->
         <div class="table-responsive mb-4">
@@ -264,6 +269,69 @@ header("X-XSS-Protection: 1; mode=block");
             </div>
         </div>
 
+
+        <!-- Add Product Modal -->
+        <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel"
+            aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addProductModalLabel">Add New Product</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Form untuk menambahkan produk baru -->
+                        <form id="addProductForm">
+                            <div class="mb-3">
+                                <label for="productName" class="form-label">Product Name</label>
+                                <input type="text" class="form-control" id="productName" name="productName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productCategory" class="form-label">Category</label>
+                                <select class="form-select" id="productCategory" name="productCategory" required>
+                                    <option value="" selected disabled>Select Category</option>
+                                    <option value="electronics">Electronics</option>
+                                    <option value="clothing">Clothing</option>
+                                    <option value="books">Books</option>
+                                    <option value="home">Home & Kitchen</option>
+                                    <option value="sports">Sports & Outdoors</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productTags" class="form-label">Tags</label>
+                                <input type="text" class="form-control" id="productTags" name="productTags"
+                                    placeholder="Enter tags separated by commas (e.g., Gadget, Tech)">
+                            </div>
+                            <div class="mb-3">
+                                <label for="productPrice" class="form-label">Price</label>
+                                <input type="number" class="form-control" id="productPrice" name="productPrice"
+                                    step="0.01" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productStock" class="form-label">Stock</label>
+                                <input type="number" class="form-control" id="productStock" name="productStock"
+                                    required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productDescription" class="form-label">Description</label>
+                                <textarea class="form-control" id="productDescription" name="productDescription"
+                                    rows="3"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productImage" class="form-label">Product Image</label>
+                                <input type="file" class="form-control" id="productImage" name="productImage"
+                                    accept="image/*">
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" id="saveProductBtn">Save Product</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Action Confirmation Modals -->
         <div class="modal" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
             <div class="modal-dialog">
@@ -282,7 +350,6 @@ header("X-XSS-Protection: 1; mode=block");
                 </div>
             </div>
         </div>
-
     </div>
 
     <!--================ AREA FOOTER =================-->
