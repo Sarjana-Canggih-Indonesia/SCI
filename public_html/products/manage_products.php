@@ -127,9 +127,11 @@ header("X-XSS-Protection: 1; mode=block");
         </div>
 
         <!-- Tombol untuk membuka modal Add Product -->
-        <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
-            <i class="fas fa-plus"></i> Add Product
-        </button>
+        <div class="button-add-product">
+            <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                <i class="fas fa-plus"></i> Add Product
+            </button>
+        </div>
 
         <!-- Products Table -->
         <div class="table-responsive mb-4">
