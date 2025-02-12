@@ -86,6 +86,27 @@ function getProductById($id)
 }
 
 /**
+ * Retrieves all product categories from the database.
+ * 
+ * This function connects to the database and fetches all records from the `product_categories` table.
+ * If an error occurs during the database query, it catches the exception and handles it appropriately.
+ * The result is returned as an associative array.
+ * 
+ * @return array An associative array containing the product categories data.
+ */
+function getProductCategories()
+{
+    try {
+        $pdo = getPDOConnection(); // Get the PDO database connection
+        $stmt = $pdo->query("SELECT * FROM product_categories"); // Execute the query to fetch all product categories
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Return the fetched data as an associative array
+    } catch (Exception $e) {
+        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle errors if the query fails
+        return []; // Return an empty array in case of an error
+    }
+}
+
+/**
  * Adds a new product to the database.
  *
  * This function establishes a connection to the database using PDO,
