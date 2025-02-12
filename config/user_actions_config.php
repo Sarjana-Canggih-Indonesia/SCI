@@ -694,16 +694,16 @@ function registerUser($username, $email, $password, $env)
     try {
         // Validasi input
         $usernameViolations = validateUsername($username);
-        if (count($usernameViolations) > 0)
-            return $usernameViolations[0]->getMessage();
+        if (!$usernameViolations->isEmpty())
+            return $usernameViolations->get(0)->getMessage();
 
         $emailViolations = validateEmail($email);
-        if (count($emailViolations) > 0)
-            return $emailViolations[0]->getMessage();
+        if (!$emailViolations->isEmpty())
+            return $emailViolations->get(0)->getMessage();
 
         $passwordViolations = validatePassword($password);
-        if (count($passwordViolations) > 0)
-            return $passwordViolations[0]->getMessage();
+        if (!$passwordViolations->isEmpty())
+            return $passwordViolations->get(0)->getMessage();
 
         // Periksa apakah username atau email sudah ada
         $checkQuery = "SELECT 1 FROM users WHERE username = :username OR email = :email";
@@ -790,8 +790,7 @@ function processLoginForm($env, $baseUrl)
         $violations = validateUsername($login_id);
         $errorType = 'Username';
     }
-
-    if (count($violations) > 0) {
+    if (!$violations->isEmpty()) {
         $_SESSION['error_message'] = $errorType . ' tidak valid.';
         header("Location: " . $baseUrl . "auth/login.php");
         exit();
@@ -799,7 +798,7 @@ function processLoginForm($env, $baseUrl)
 
     // Validate password
     $passwordViolations = validatePassword($password);
-    if (count($passwordViolations) > 0) {
+    if (!$passwordViolations->isEmpty()) {
         $_SESSION['error_message'] = 'Password tidak valid.';
         header("Location: " . $baseUrl . "auth/login.php");
         exit();
@@ -1004,14 +1003,14 @@ function processPasswordResetRequest($email_or_username, $recaptcha_response, $c
     $isEmail = filter_var($email_or_username, FILTER_VALIDATE_EMAIL);
     $violations = $isEmail ? validateEmail($email_or_username) : validateUsername($email_or_username);
 
-    if (count($violations) > 0) {
+    if (!$violations->isEmpty()) {
         $errorMessages = [];
         foreach ($violations as $violation) {
             $errorMessages[] = $violation->getMessage();
         }
         handleError(implode('<br>', $errorMessages), $env);
         return ['status' => 'error', 'message' => implode('<br>', $errorMessages)];
-    }
+    }    
 
     // Establish a database connection
     $pdo = getPDOConnection();
