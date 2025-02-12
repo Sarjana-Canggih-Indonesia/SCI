@@ -28,6 +28,46 @@ if ($userInfo['role'] !== 'admin') {
     handleError("Akses ditolak! Role: " . $userInfo['role'], $_ENV['ENVIRONMENT']);
 }
 
+// Ambil data kategori dari database
+$categories = getProductCategories();
+
+// Handle form untuk add product
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
+    validateCSRFToken($_POST['csrf_token']);
+
+    $productData = [
+        'name' => $_POST['productName'],
+        'category' => $_POST['productCategory'],
+        'tags' => $_POST['productTags'],
+        'price' => $_POST['productPrice'],
+        'stock' => $_POST['productStock'],
+        'description' => $_POST['productDescription'],
+        'image_path' => '', // Anda perlu menangani upload file secara terpisah
+        'slug' => strtolower(str_replace(' ', '-', $_POST['productName']))
+    ];
+
+    // Handle file upload
+    if (isset($_FILES['productImage']) && $_FILES['productImage']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = __DIR__ . '/../../uploads/products/';
+        $uploadFile = $uploadDir . basename($_FILES['productImage']['name']);
+        if (move_uploaded_file($_FILES['productImage']['tmp_name'], $uploadFile)) {
+            $productData['image_path'] = $uploadFile;
+        } else {
+            handleError("Gagal mengunggah gambar.", $_ENV['ENVIRONMENT']);
+        }
+    }
+
+    $result = addProduct($productData);
+
+    if ($result['error']) {
+        header("Location: manage_products.php?error=" . urlencode($result['message']));
+        exit;
+    } else {
+        header("Location: manage_products.php?success=1");
+        exit;
+    }
+}
+
 // Memuat konfigurasi URL Dinamis
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
@@ -39,6 +79,23 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
 header("X-Frame-Options: DENY");
 header("X-Content-Type-Options: nosniff");
 header("X-XSS-Protection: 1; mode=block");
+
+// Tampilkan pesan sukses ADD PRODUCT
+if (isset($_GET['success']) && $_GET['success'] == 1) {
+    echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
+            Produk berhasil ditambahkan!
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>';
+}
+
+// Tampilkan pesan error ADD PRODUCT
+if (isset($_GET['error'])) {
+    $errorMessage = htmlspecialchars($_GET['error']); // Sanitasi pesan error
+    echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
+            Error: ' . $errorMessage . '
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>';
+}
 ?>
 
 <!DOCTYPE html>
@@ -271,7 +328,6 @@ header("X-XSS-Protection: 1; mode=block");
             </div>
         </div>
 
-
         <!-- Add Product Modal -->
         <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel"
             aria-hidden="true">
@@ -283,7 +339,8 @@ header("X-XSS-Protection: 1; mode=block");
                     </div>
                     <div class="modal-body">
                         <!-- Form untuk menambahkan produk baru -->
-                        <form id="addProductForm">
+                        <form id="addProductForm" action="manage_products.php" method="POST"
+                            enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label for="productName" class="form-label">Product Name</label>
                                 <input type="text" class="form-control" id="productName" name="productName" required>
@@ -292,11 +349,11 @@ header("X-XSS-Protection: 1; mode=block");
                                 <label for="productCategory" class="form-label">Category</label>
                                 <select class="form-select" id="productCategory" name="productCategory" required>
                                     <option value="" selected disabled>Select Category</option>
-                                    <option value="electronics">Electronics</option>
-                                    <option value="clothing">Clothing</option>
-                                    <option value="books">Books</option>
-                                    <option value="home">Home & Kitchen</option>
-                                    <option value="sports">Sports & Outdoors</option>
+                                    <?php foreach ($categories as $category): ?>
+                                        <option value="<?php echo htmlspecialchars($category['category_id']); ?>">
+                                            <?php echo htmlspecialchars($category['category_name']); ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
                             <div class="mb-3">
@@ -324,11 +381,12 @@ header("X-XSS-Protection: 1; mode=block");
                                 <input type="file" class="form-control" id="productImage" name="productImage"
                                     accept="image/*">
                             </div>
+                            <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary" id="saveProductBtn">Save Product</button>
+                            </div>
                         </form>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary" id="saveProductBtn">Save Product</button>
                     </div>
                 </div>
             </div>
