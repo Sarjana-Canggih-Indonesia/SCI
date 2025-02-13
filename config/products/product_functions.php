@@ -108,6 +108,53 @@ function getProductCategories()
 }
 
 /**
+ * Retrieves all products along with their associated categories and tags.
+ * 
+ * This function fetches all products from the database and includes their associated categories and tags. 
+ * The data is structured as an associative array, where each product contains a concatenated list of its categories and tags.
+ * 
+ * - The function uses LEFT JOIN to connect the products table with the category and tag tables.
+ * - The GROUP_CONCAT function is used to merge multiple categories and tags into a single string per product.
+ * - If an error occurs, it logs the error and returns an empty array.
+ * 
+ * @return array An array of products, each containing product details along with concatenated category and tag names.
+ */
+function getAllProductsWithCategoriesAndTags()
+{
+    try {
+        $pdo = getPDOConnection();
+        $sql = "SELECT 
+                    p.product_id,
+                    p.product_name,
+                    p.description,
+                    p.price_amount,
+                    p.currency,
+                    p.image_path,
+                    p.created_at,
+                    p.updated_at,
+                    GROUP_CONCAT(DISTINCT pc.category_name ORDER BY pc.category_name SEPARATOR ', ') AS categories,
+                    GROUP_CONCAT(DISTINCT t.tag_name ORDER BY t.tag_name SEPARATOR ', ') AS tags
+                FROM 
+                    products p
+                LEFT JOIN 
+                    product_category_mapping pcm ON p.product_id = pcm.product_id
+                LEFT JOIN 
+                    product_categories pc ON pcm.category_id = pc.category_id
+                LEFT JOIN 
+                    product_tag_mapping ptm ON p.product_id = ptm.product_id
+                LEFT JOIN 
+                    tags t ON ptm.tag_id = t.tag_id
+                GROUP BY 
+                    p.product_id";
+        $stmt = $pdo->query($sql);
+        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        handleError($e->getMessage(), getEnvironmentConfig()['local']);
+        return [];
+    }
+}
+
+/**
  * Adds a new product to the database.
  *
  * This function establishes a connection to the database using PDO,
