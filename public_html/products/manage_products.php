@@ -88,6 +88,21 @@ if (isset($_GET['error'])) {
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" />
     <!-- Custom CSS -->
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
+    <style>
+        /* Pastikan z-index lebih tinggi dari modal Bootstrap (biasanya 1050) */
+        .tagify-dropdown {
+            z-index: 1060 !important;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Atur posisi dropdown */
+        .tagify__dropdown {
+            position: absolute;
+            width: 100%;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 
 <body style="background-color: #f7f9fb;">
@@ -330,7 +345,7 @@ if (isset($_GET['error'])) {
                             <div class="mb-3">
                                 <label for="productTags" class="form-label">Tags</label>
                                 <input type="text" class="form-control" id="productTags" name="productTags"
-                                    list="tagList" placeholder="Enter tags separated by commas (e.g., Gadget, Tech)">
+                                    placeholder="Masukkan tags atau tekan spasi langsung untuk melihat tags yang sudah ada.">
                                 <!-- Datalist untuk autocomplete tags -->
                                 <datalist id="tagList">
                                     <?php foreach ($tags as $tag): ?>
@@ -405,6 +420,58 @@ if (isset($_GET['error'])) {
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/manage_products.js"></script>
+    <!-- SCRIPT UNTUK MULTISELECT DROPDOWN TAGS -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            let tagify = null;
+
+            $('#addProductModal').on('shown.bs.modal', function () {
+                const input = document.getElementById('productTags');
+
+                if (tagify) tagify.destroy();
+
+                tagify = new Tagify(input, {
+                    whitelist: [
+                        <?php foreach ($tags as $tag): ?>
+                                                    "<?php echo htmlspecialchars($tag['tag_name']); ?>",
+                        <?php endforeach; ?>
+                    ],
+                    dropdown: {
+                        enabled: 1,
+                        maxItems: 50,
+                        closeOnSelect: false,
+                        highlightFirst: true,
+                        searchKeys: ['value'],
+                        position: 'all',
+                        classname: 'tagify-dropdown'
+                    },
+                    enforceWhitelist: false,
+                    editTags: true,
+                    duplicates: false,
+                    placeholder: "Enter tags",
+                    maxTags: 10,
+                    pattern: /^[a-zA-Z0-9\s\-_]+$/,
+                });
+
+                input.addEventListener('click', function () {
+                    tagify.dropdown.show();
+                });
+
+                // Event listeners untuk validasi
+                tagify.on('add', function (e) {
+                    const tagValue = e.detail.data.value;
+                    if (!/^[a-zA-Z0-9\s\-_]+$/.test(tagValue)) {
+                        alert(`Invalid tag: ${tagValue}`);
+                        tagify.removeTag(e.detail.tag);
+                    }
+                    if (tagify.value.length > 10) {
+                        alert('Max 10 tags allowed');
+                        tagify.removeTag(e.detail.tag);
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 
 </html>
