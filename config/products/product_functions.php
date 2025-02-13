@@ -11,6 +11,7 @@ use Brick\Money\Money;
 use Brick\Money\Currency;
 use Brick\Money\Context\CustomContext;
 use Brick\Money\Exception\UnknownCurrencyException;
+use Brick\Math\RoundingMode;
 
 /**
  * Sanitizes product data to prevent XSS attacks.
@@ -191,39 +192,57 @@ function addProduct($data)
 /**
  * Processes the add product form submission.
  * 
- * This function validates the CSRF token, extracts product data from the form, 
- * handles image upload, and inserts the product into the database. If the operation 
- * is successful, it redirects to the product management page; otherwise, 
- * it redirects with an error message.
+ * This function validates the CSRF token, processes the product price and currency, 
+ * validates the price using the Brick/Money library, extracts product data from the form, 
+ * handles the image upload, and inserts the product into the database. In case of an error, 
+ * an error message is generated and the user is redirected back to the product management page.
  */
 function handleAddProductForm()
 {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
         validateCSRFToken($_POST['csrf_token']);
 
-        // Extract product data from form submission
-        $productData = [
-            'name' => $_POST['productName'],
-            'category' => $_POST['productCategory'],
-            'tags' => $_POST['productTags'],
-            'price' => $_POST['productPrice'],
-            'stock' => $_POST['productStock'],
-            'description' => $_POST['productDescription'],
-            'image_path' => '',
-            'slug' => strtolower(str_replace(' ', '-', $_POST['productName']))
-        ];
+        try {
+            // Process currency and amount from form input
+            $priceAmount = $_POST['productPriceAmount'];
+            $currencyCode = $_POST['productCurrency'];
 
-        // Handle image upload and store the image path
-        $productData['image_path'] = handleProductImageUpload();
+            // Validating the price using Brick/Money library
+            $money = Money::of($priceAmount, $currencyCode, null, RoundingMode::DOWN);
+            $amountMinor = $money->getMinorAmount()->toInt();
+            $currency = $money->getCurrency()->getCurrencyCode();
 
-        // Insert product into database
-        $result = addProduct($productData);
+            // Build product data for insertion into the database
+            $productData = [
+                'name' => $_POST['productName'],
+                'category' => $_POST['productCategory'],
+                'tags' => $_POST['productTags'],
+                'price_amount' => $amountMinor,  // Amount in minor unit (e.g., cents)
+                'currency' => $currency,        // ISO currency code
+                'stock' => $_POST['productStock'],
+                'description' => $_POST['productDescription'],
+                'image_path' => '',
+                'slug' => slugify($_POST['productName'])  // Generate product slug
+            ];
 
-        // Redirect based on operation success or failure
-        if ($result['error']) {
-            redirectWithMessage('manage_products.php', ['error' => $result['message']]);
-        } else {
+            // Handle image upload and store the image path
+            $productData['image_path'] = handleProductImageUpload();
+
+            // Insert product data into the database
+            $result = addProduct($productData);
+
+            if ($result['error']) {
+                throw new Exception($result['message']);
+            }
+
+            // Redirect to the product management page with success message
             redirectWithMessage('manage_products.php', ['success' => 1]);
+
+        } catch (Exception $e) {
+            // Handle errors, log them, and redirect with an error message
+            $errorMessage = "Failed to add product: " . $e->getMessage();
+            handleError($errorMessage, $_ENV['ENVIRONMENT']);
+            redirectWithMessage('manage_products.php', ['error' => $errorMessage]);
         }
     }
 }
@@ -783,4 +802,32 @@ function formatPrice($amount, $currencyCode = 'IDR', $locale = 'id_ID')
     } catch (UnknownCurrencyException $e) {
         return "Error: Currency code '$currencyCode' is not valid."; // Handle invalid currency codes
     }
+}
+
+/**
+ * Converts a given string into a URL-friendly slug.
+ * 
+ * This function performs the following transformations:
+ * 1. Replaces non-letter or non-digit characters with hyphens.
+ * 2. Transliterates characters into ASCII characters.
+ * 3. Removes unwanted characters (such as punctuation marks).
+ * 4. Trims leading and trailing hyphens.
+ * 5. Replaces multiple consecutive hyphens with a single hyphen.
+ * 6. Converts the string to lowercase.
+ * 
+ * If the resulting string is empty, it returns 'untitled-product' as a fallback.
+ *
+ * @param string $text The input string to be converted.
+ * @return string The generated URL-friendly slug.
+ */
+function slugify($text)
+{
+    $text = preg_replace('~[^\pL\d]+~u', '-', $text); // Replaces non-letter and non-digit characters with hyphens
+    $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text); // Transliterates characters to ASCII
+    $text = preg_replace('~[^-\w]+~', '', $text); // Removes unwanted characters (like punctuation)
+    $text = trim($text, '-'); // Trims leading and trailing hyphens
+    $text = preg_replace('~-+~', '-', $text); // Replaces multiple consecutive hyphens with one
+    $text = strtolower($text); // Converts the string to lowercase
+
+    return $text ?: 'untitled-product'; // Returns 'untitled-product' if the result is empty
 }
