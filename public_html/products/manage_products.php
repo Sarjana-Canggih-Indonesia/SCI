@@ -186,7 +186,6 @@ if (isset($_GET['error'])) {
                         <th>Category</th>
                         <th>Tags</th>
                         <th>Price</th>
-                        <th>Stock</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -198,7 +197,6 @@ if (isset($_GET['error'])) {
                         <td>Electronics</td>
                         <td>Gadget, Tech</td>
                         <td>Rp 150,000</td>
-                        <td>100</td>
                         <td>
                             <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
                             <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
@@ -210,7 +208,6 @@ if (isset($_GET['error'])) {
                         <td>Clothing</td>
                         <td>Fashion, Casual</td>
                         <td>Rp 250,000</td>
-                        <td>50</td>
                         <td>
                             <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
                             <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
@@ -354,23 +351,29 @@ if (isset($_GET['error'])) {
                                 </datalist>
                             </div>
                             <div class="mb-3">
-                                <label for="productPriceAmount" class="form-label">Price Amount</label>
-                                <input type="number" class="form-control" id="productPriceAmount"
-                                    name="productPriceAmount" step="0.01" min="0" required>
-                            </div>
-                            <div class="mb-3">
-                                <label for="productCurrency" class="form-label">Currency</label>
-                                <select class="form-select" id="productCurrency" name="productCurrency" required>
-                                    <option value="IDR" selected>Indonesian Rupiah (IDR)</option>
-                                    <option value="USD">US Dollar (USD)</option>
-                                    <option value="EUR">Euro (EUR)</option>
-                                    <!-- Tambahkan mata uang lain sesuai kebutuhan -->
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="productStock" class="form-label">Stock</label>
-                                <input type="number" class="form-control" id="productStock" name="productStock"
-                                    required>
+                                <label class="form-label">Harga</label>
+                                <div class="row g-2 align-items-end">
+                                    <!-- Currency Display -->
+                                    <div class="col-3">
+                                        <label class="form-label small text-muted">Mata Uang</label>
+                                        <select class="form-select" disabled>
+                                            <option selected>IDR</option>
+                                        </select>
+                                        <input type="hidden" name="productCurrency" value="IDR">
+                                    </div>
+
+                                    <!-- Price Input -->
+                                    <div class="col-9">
+                                        <label for="productPriceAmount"
+                                            class="form-label small text-muted">Jumlah</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="productPriceAmount"
+                                                name="productPriceAmount" step="5000" min="0" placeholder="50000"
+                                                required>
+                                            <span class="input-group-text">,00</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <label for="productDescription" class="form-label">Description</label>
@@ -405,7 +408,7 @@ if (isset($_GET['error'])) {
                         Are you sure you want to delete this product?
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type=" button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-danger">Delete</button>
                     </div>
                 </div>
@@ -442,7 +445,7 @@ if (isset($_GET['error'])) {
                 tagify = new Tagify(input, {
                     whitelist: [
                         <?php foreach ($tags as $tag): ?>
-                                                            "<?php echo htmlspecialchars($tag['tag_name']); ?>",
+                                                "<?php echo htmlspecialchars($tag['tag_name']); ?>",
                         <?php endforeach; ?>
                     ],
                     dropdown: {
