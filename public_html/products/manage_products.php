@@ -354,9 +354,18 @@ if (isset($_GET['error'])) {
                                 </datalist>
                             </div>
                             <div class="mb-3">
-                                <label for="productPrice" class="form-label">Price</label>
-                                <input type="number" class="form-control" id="productPrice" name="productPrice"
-                                    step="0.01" required>
+                                <label for="productPriceAmount" class="form-label">Price Amount</label>
+                                <input type="number" class="form-control" id="productPriceAmount"
+                                    name="productPriceAmount" step="0.01" min="0" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productCurrency" class="form-label">Currency</label>
+                                <select class="form-select" id="productCurrency" name="productCurrency" required>
+                                    <option value="IDR" selected>Indonesian Rupiah (IDR)</option>
+                                    <option value="USD">US Dollar (USD)</option>
+                                    <option value="EUR">Euro (EUR)</option>
+                                    <!-- Tambahkan mata uang lain sesuai kebutuhan -->
+                                </select>
                             </div>
                             <div class="mb-3">
                                 <label for="productStock" class="form-label">Stock</label>
@@ -433,7 +442,7 @@ if (isset($_GET['error'])) {
                 tagify = new Tagify(input, {
                     whitelist: [
                         <?php foreach ($tags as $tag): ?>
-                                                    "<?php echo htmlspecialchars($tag['tag_name']); ?>",
+                                                            "<?php echo htmlspecialchars($tag['tag_name']); ?>",
                         <?php endforeach; ?>
                     ],
                     dropdown: {
