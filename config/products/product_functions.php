@@ -189,6 +189,87 @@ function addProduct($data)
 }
 
 /**
+ * Processes the add product form submission.
+ * 
+ * This function validates the CSRF token, extracts product data from the form, 
+ * handles image upload, and inserts the product into the database. If the operation 
+ * is successful, it redirects to the product management page; otherwise, 
+ * it redirects with an error message.
+ */
+function handleAddProductForm()
+{
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
+        validateCSRFToken($_POST['csrf_token']);
+
+        // Extract product data from form submission
+        $productData = [
+            'name' => $_POST['productName'],
+            'category' => $_POST['productCategory'],
+            'tags' => $_POST['productTags'],
+            'price' => $_POST['productPrice'],
+            'stock' => $_POST['productStock'],
+            'description' => $_POST['productDescription'],
+            'image_path' => '',
+            'slug' => strtolower(str_replace(' ', '-', $_POST['productName']))
+        ];
+
+        // Handle image upload and store the image path
+        $productData['image_path'] = handleProductImageUpload();
+
+        // Insert product into database
+        $result = addProduct($productData);
+
+        // Redirect based on operation success or failure
+        if ($result['error']) {
+            redirectWithMessage('manage_products.php', ['error' => $result['message']]);
+        } else {
+            redirectWithMessage('manage_products.php', ['success' => 1]);
+        }
+    }
+}
+
+/**
+ * Handles the upload of a product image.
+ * 
+ * This function checks if a product image file is uploaded, validates the upload,
+ * and moves it to the designated directory. If the upload is successful, it returns
+ * the file path; otherwise, it logs an error and returns an empty string.
+ * 
+ * @return string The uploaded file path if successful, otherwise an empty string.
+ */
+function handleProductImageUpload()
+{
+    if (isset($_FILES['productImage']) && $_FILES['productImage']['error'] === UPLOAD_ERR_OK) {
+        $uploadDir = __DIR__ . '/../../uploads/products/'; // Define the upload directory
+        $uploadFile = $uploadDir . basename($_FILES['productImage']['name']); // Set the destination path
+        if (move_uploaded_file($_FILES['productImage']['tmp_name'], $uploadFile)) {
+            return $uploadFile; // Return file path if upload is successful
+        } else {
+            handleError("Failed to upload image.", $_ENV['ENVIRONMENT']); // Log error if upload fails
+        }
+    }
+    return ''; // Return an empty string if no valid file is uploaded
+}
+
+/**
+ * Redirects the user to a specified location with optional query parameters.
+ * 
+ * This function constructs a URL using the provided location and query parameters,
+ * then sends an HTTP header to redirect the user. It ensures that execution stops
+ * immediately after redirection.
+ * 
+ * @param string $location The URL or relative path to redirect to.
+ * @param array $params Optional associative array of query parameters to append to the URL.
+ * @return void
+ */
+function redirectWithMessage($location, $params = [])
+{
+    $queryString = http_build_query($params); // Convert parameters into URL-encoded query string
+    header("Location: $location" . (!empty($queryString) ? "?$queryString" : "")); // Perform redirection
+    exit; // Ensure script execution stops after redirection
+}
+
+/**
  * Updates an existing product in the database by its ID.
  *
  * This function establishes a connection to the database using PDO,

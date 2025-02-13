@@ -32,41 +32,7 @@ if ($userInfo['role'] !== 'admin') {
 $categories = getProductCategories();
 
 // Handle form untuk add product
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
-    validateCSRFToken($_POST['csrf_token']);
-
-    $productData = [
-        'name' => $_POST['productName'],
-        'category' => $_POST['productCategory'],
-        'tags' => $_POST['productTags'],
-        'price' => $_POST['productPrice'],
-        'stock' => $_POST['productStock'],
-        'description' => $_POST['productDescription'],
-        'image_path' => '', // Anda perlu menangani upload file secara terpisah
-        'slug' => strtolower(str_replace(' ', '-', $_POST['productName']))
-    ];
-
-    // Handle file upload
-    if (isset($_FILES['productImage']) && $_FILES['productImage']['error'] === UPLOAD_ERR_OK) {
-        $uploadDir = __DIR__ . '/../../uploads/products/';
-        $uploadFile = $uploadDir . basename($_FILES['productImage']['name']);
-        if (move_uploaded_file($_FILES['productImage']['tmp_name'], $uploadFile)) {
-            $productData['image_path'] = $uploadFile;
-        } else {
-            handleError("Gagal mengunggah gambar.", $_ENV['ENVIRONMENT']);
-        }
-    }
-
-    $result = addProduct($productData);
-
-    if ($result['error']) {
-        header("Location: manage_products.php?error=" . urlencode($result['message']));
-        exit;
-    } else {
-        header("Location: manage_products.php?success=1");
-        exit;
-    }
-}
+handleAddProductForm();
 
 // Memuat konfigurasi URL Dinamis
 $config = getEnvironmentConfig();
