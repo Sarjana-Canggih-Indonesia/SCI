@@ -31,6 +31,8 @@ if ($userInfo['role'] !== 'admin') {
 
 // Ambil data kategori dari database
 $categories = getProductCategories();
+// Ambil data produk dari database beserta kategori dan tag
+$products = getAllProductsWithCategoriesAndTags();
 
 // Handle form untuk add product
 handleAddProductForm();
@@ -160,8 +162,12 @@ if (isset($_GET['error'])) {
                     </div>
                     <div class="card-body">
                         <ul class="list-unstyled">
-                            <li><strong>Total Products:</strong> 150</li>
-                            <li><strong>Total Categories:</strong> 5</li>
+                            <li><strong>Total Products:</strong>
+                                <?php echo count($products); ?>
+                            </li>
+                            <li><strong>Total Categories:</strong>
+                                <?php echo count($categories); ?>
+                            </li>
                             <li><strong>Total Revenue:</strong> Rp 150,000,000</li>
                         </ul>
                     </div>
@@ -190,29 +196,19 @@ if (isset($_GET['error'])) {
                     </tr>
                 </thead>
                 <tbody>
-                    <!-- Add dynamic rows for your products -->
-                    <tr>
-                        <td>1</td>
-                        <td>Product A</td>
-                        <td>Electronics</td>
-                        <td>Gadget, Tech</td>
-                        <td>Rp 150,000</td>
-                        <td>
-                            <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-                            <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>2</td>
-                        <td>Product B</td>
-                        <td>Clothing</td>
-                        <td>Fashion, Casual</td>
-                        <td>Rp 250,000</td>
-                        <td>
-                            <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-                            <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-                        </td>
-                    </tr>
+                    <?php foreach ($products as $product): ?>
+                        <tr>
+                            <td><?php echo htmlspecialchars($product['product_id']); ?></td>
+                            <td><?php echo htmlspecialchars($product['product_name']); ?></td>
+                            <td><?php echo htmlspecialchars($product['categories'] ?? 'Uncategorized'); ?></td>
+                            <td><?php echo htmlspecialchars($product['tags'] ?? 'No tags'); ?></td>
+                            <td>Rp <?php echo number_format($product['price_amount'], 0, ',', '.'); ?>,00</td>
+                            <td>
+                                <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
+                                <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
                 </tbody>
             </table>
         </div>
@@ -445,7 +441,7 @@ if (isset($_GET['error'])) {
                 tagify = new Tagify(input, {
                     whitelist: [
                         <?php foreach ($tags as $tag): ?>
-                                                "<?php echo htmlspecialchars($tag['tag_name']); ?>",
+                                                            "<?php echo htmlspecialchars($tag['tag_name']); ?>",
                         <?php endforeach; ?>
                     ],
                     dropdown: {
