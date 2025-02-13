@@ -4,6 +4,7 @@
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
 require_once __DIR__ . '/../../config/products/product_functions.php';
+require_once __DIR__ . '/../../config/products/tag_functions.php';
 
 use Carbon\Carbon;
 
@@ -39,6 +40,7 @@ $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $isLive = $config['is_live'];
 $pdo = getPDOConnection();
+$tags = getAllTags($pdo); // Ambil semua tags dari database
 
 setCacheHeaders($isLive); // Set header no cache saat local environment
 
@@ -326,7 +328,13 @@ if (isset($_GET['error'])) {
                             <div class="mb-3">
                                 <label for="productTags" class="form-label">Tags</label>
                                 <input type="text" class="form-control" id="productTags" name="productTags"
-                                    placeholder="Enter tags separated by commas (e.g., Gadget, Tech)">
+                                    list="tagList" placeholder="Enter tags separated by commas (e.g., Gadget, Tech)">
+                                <!-- Datalist untuk autocomplete tags -->
+                                <datalist id="tagList">
+                                    <?php foreach ($tags as $tag): ?>
+                                        <option value="<?php echo htmlspecialchars($tag['tag_name']); ?>">
+                                        <?php endforeach; ?>
+                                </datalist>
                             </div>
                             <div class="mb-3">
                                 <label for="productPrice" class="form-label">Price</label>
