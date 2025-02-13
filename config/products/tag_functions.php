@@ -1,4 +1,6 @@
 <?php
+// tag_functions.php
+
 /**
  * Creates a new tag in the database.
  *
