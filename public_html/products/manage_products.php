@@ -190,7 +190,6 @@ if (isset($_GET['error'])) {
                         <th>ID</th>
                         <th>Product Name</th>
                         <th>Category</th>
-                        <th>Tags</th>
                         <th>Price</th>
                         <th>Actions</th>
                     </tr>
@@ -201,7 +200,6 @@ if (isset($_GET['error'])) {
                             <td><?php echo htmlspecialchars($product['product_id']); ?></td>
                             <td><?php echo htmlspecialchars($product['product_name']); ?></td>
                             <td><?php echo htmlspecialchars($product['categories'] ?? 'Uncategorized'); ?></td>
-                            <td><?php echo htmlspecialchars($product['tags'] ?? 'No tags'); ?></td>
                             <td>Rp <?php echo number_format($product['price_amount'], 0, ',', '.'); ?>,00</td>
                             <td>
                                 <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
@@ -441,7 +439,7 @@ if (isset($_GET['error'])) {
                 tagify = new Tagify(input, {
                     whitelist: [
                         <?php foreach ($tags as $tag): ?>
-                                                            "<?php echo htmlspecialchars($tag['tag_name']); ?>",
+                                                                "<?php echo htmlspecialchars($tag['tag_name']); ?>",
                         <?php endforeach; ?>
                     ],
                     dropdown: {
