@@ -184,7 +184,7 @@ if (isset($_GET['error'])) {
 
         <!-- Products Table -->
         <div class="table-responsive mb-4">
-            <table class="table table-bordered table-striped">
+            <table class="table table-bordered table-sm table-hover">
                 <thead class="table-dark">
                     <tr>
                         <th>ID</th>
@@ -439,7 +439,7 @@ if (isset($_GET['error'])) {
                 tagify = new Tagify(input, {
                     whitelist: [
                         <?php foreach ($tags as $tag): ?>
-                                                                "<?php echo htmlspecialchars($tag['tag_name']); ?>",
+                                                                            "<?php echo htmlspecialchars($tag['tag_name']); ?>",
                         <?php endforeach; ?>
                     ],
                     dropdown: {
