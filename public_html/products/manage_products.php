@@ -84,6 +84,8 @@ if (isset($_GET['error'])) {
     <!-- Font Awesome -->
     <link rel="stylesheet" type="text/css"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <!-- Tagify CSS -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" />
     <!-- Custom CSS -->
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
 </head>
@@ -396,7 +398,10 @@ if (isset($_GET['error'])) {
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/slick.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.1.0"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/fusejs.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.min.js"></script>
+    <script type="text/javascript"
+        src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/manage_products.js"></script>
