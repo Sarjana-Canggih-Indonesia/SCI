@@ -89,7 +89,7 @@ $profileImageUrl = default_profile_image($profileImage);
                             <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 <img src="<?php echo htmlspecialchars($profileImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                                    alt="Profile" width="40" height="40" class="rounded-circle" />
+                                    alt="Profile Image" width="40" height="40" class="rounded-circle" />
                                 <?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
