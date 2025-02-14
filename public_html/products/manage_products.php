@@ -8,60 +8,70 @@ require_once __DIR__ . '/../../config/products/tag_functions.php';
 
 use Carbon\Carbon;
 
-// Pastikan sesi dimulai
 startSession();
 
-// Cek apakah sesi berjalan dengan benar
+// Step 1: Check if the user is logged in. If not, redirect to the login page.
 if (!isset($_SESSION['user_id'])) {
-    handleError("Session user_id tidak ditemukan. Redirecting...", $_ENV['ENVIRONMENT']);
+    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+    header("Location: " . $baseUrl . "auth/login.php");
+    exit();
 }
 
-// Ambil info user
+// Step 2: Retrieve user information from the session and database.
 $userInfo = getUserInfo($_SESSION['user_id']);
+$profileImage = null;
 
-// Jika user tidak ditemukan
+// Step 3: Handle cases where the user is not found in the database.
 if (!$userInfo) {
-    handleError("User tidak ditemukan di database. Redirecting...", $_ENV['ENVIRONMENT']);
+    handleError("User not found in the database. Redirecting...", $_ENV['ENVIRONMENT']);
+    exit();
 }
 
-// Block akses untuk non-admin
+// Step 4: Set the user profile image. If not available, use a default image.
+$profileImage = $userInfo['image_filename'] ?? 'default_profile_image.jpg';
+$profileImageUrl = $baseUrl . "uploads/profile_images/" . $profileImage;
+
+// Restrict access to non-admin users.
 if ($userInfo['role'] !== 'admin') {
-    handleError("Akses ditolak! Role: " . $userInfo['role'], $_ENV['ENVIRONMENT']);
+    handleError("Access denied! Role: " . $userInfo['role'], $_ENV['ENVIRONMENT']);
+    exit();
 }
 
-// Ambil data kategori dari database
+// Retrieve product categories from the database.
 $categories = getProductCategories();
-// Ambil data produk dari database beserta kategori dan tag
+
+// Retrieve all products along with categories and tags.
 $products = getAllProductsWithCategoriesAndTags();
 
-// Handle form untuk add product
+// Handle the add product form submission.
 handleAddProductForm();
 
-// Memuat konfigurasi URL Dinamis
+// Load dynamic URL configuration.
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $isLive = $config['is_live'];
 $pdo = getPDOConnection();
-$tags = getAllTags($pdo); // Ambil semua tags dari database
+$tags = getAllTags($pdo);
 
-setCacheHeaders($isLive); // Set header no cache saat local environment
+// Set no-cache headers in the local environment.
+setCacheHeaders($isLive);
 
-// Set security headers
+// Set security headers.
 header("X-Frame-Options: DENY");
 header("X-Content-Type-Options: nosniff");
 header("X-XSS-Protection: 1; mode=block");
 
-// Tampilkan pesan sukses ADD PRODUCT
+// Display success message when a product is added.
 if (isset($_GET['success']) && $_GET['success'] == 1) {
     echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
-            Produk berhasil ditambahkan!
+            Product successfully added!
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
           </div>';
 }
 
-// Tampilkan pesan error ADD PRODUCT
+// Display error message for product addition failure.
 if (isset($_GET['error'])) {
-    $errorMessage = htmlspecialchars($_GET['error']); // Sanitasi pesan error
+    $errorMessage = htmlspecialchars($_GET['error']); // Sanitize error message.
     echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
             Error: ' . $errorMessage . '
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -439,7 +449,7 @@ if (isset($_GET['error'])) {
                 tagify = new Tagify(input, {
                     whitelist: [
                         <?php foreach ($tags as $tag): ?>
-                                                                            "<?php echo htmlspecialchars($tag['tag_name']); ?>",
+                                                                                "<?php echo htmlspecialchars($tag['tag_name']); ?>",
                         <?php endforeach; ?>
                     ],
                     dropdown: {
