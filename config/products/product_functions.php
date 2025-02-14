@@ -188,7 +188,7 @@ function addProduct($data)
 
     // Validate price
     try {
-        $price = validatePrice($data['price']);
+        $price = validatePrice($data['price_amount'], $data['currency']);
     } catch (\InvalidArgumentException $e) {
         // Log the error for debugging purposes
         handleError("Invalid price format: " . $e->getMessage(), getEnvironmentConfig()['local']);
@@ -282,9 +282,6 @@ function handleAddProductForm()
                 throw new Exception($result['message']);
             }
 
-            // Redirect to the product management page with success message
-            redirectWithMessage('manage_products.php', ['success' => 1]);
-
         } catch (Exception $e) {
             // Handle errors, log them, and redirect with an error message
             $errorMessage = "Failed to add product: " . $e->getMessage();
@@ -315,24 +312,6 @@ function handleProductImageUpload()
         }
     }
     return ''; // Return an empty string if no valid file is uploaded
-}
-
-/**
- * Redirects the user to a specified location with optional query parameters.
- * 
- * This function constructs a URL using the provided location and query parameters,
- * then sends an HTTP header to redirect the user. It ensures that execution stops
- * immediately after redirection.
- * 
- * @param string $location The URL or relative path to redirect to.
- * @param array $params Optional associative array of query parameters to append to the URL.
- * @return void
- */
-function redirectWithMessage($location, $params = [])
-{
-    $queryString = http_build_query($params); // Convert parameters into URL-encoded query string
-    header("Location: $location" . (!empty($queryString) ? "?$queryString" : "")); // Perform redirection
-    exit; // Ensure script execution stops after redirection
 }
 
 /**
@@ -370,7 +349,7 @@ function updateProduct($id, $data)
 
     // Validate price
     try {
-        $price = validatePrice($data['price']);
+        $price = validatePrice($data['price_amount'], $data['currency']);
     } catch (\InvalidArgumentException $e) {
         // Log the error for debugging purposes
         handleError("Invalid price format: " . $e->getMessage(), getEnvironmentConfig()['local']);
