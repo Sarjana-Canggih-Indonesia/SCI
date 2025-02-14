@@ -159,18 +159,24 @@ function getAllProductsWithCategoriesAndTags()
 /**
  * Adds a new product to the database.
  * 
- * This function validates and sanitizes the provided product data, 
- * ensures the price format is correct, and inserts the product into the database. 
- * If any errors occur, they are logged and returned in the response.
+ * This function validates the product data, sanitizes inputs, and ensures that 
+ * the price is correctly formatted. It then inserts the product into the `products` table 
+ * and maps the product to a category in the `product_category_mapping` table.
  * 
- * - The function first validates the product data.
- * - If validation passes, the data is sanitized.
- * - The price is validated to ensure it is in the correct format.
- * - The sanitized product data is inserted into the `products` table.
- * - If the insertion fails, an error response is returned.
+ * If any step fails, the function rolls back the transaction to maintain data integrity.
  * 
- * @param array $data The product data including name, price, currency, description, image path, and slug.
- * @return array An associative array containing 'error' (boolean) and 'message' (string).
+ * @param array $data Associative array containing product details:
+ *                    - name (string): Product name.
+ *                    - price_amount (int): Price amount in smallest currency unit.
+ *                    - currency (string): Currency code (e.g., "USD").
+ *                    - description (string): Product description.
+ *                    - image_path (string): Path to the uploaded product image.
+ *                    - slug (string): URL-friendly slug for the product.
+ *                    - category (int): Category ID of the product.
+ * 
+ * @return array An associative array with:
+ *               - 'error' (bool): Whether an error occurred.
+ *               - 'message' (string): Success or error message.
  */
 function addProduct($data)
 {
@@ -183,6 +189,7 @@ function addProduct($data)
     $data = sanitizeProductData($data);
 
     try {
+        // Validate price format and currency
         $price = validatePrice($data['price_amount'], $data['currency']);
     } catch (\InvalidArgumentException $e) {
         handleError("Invalid price format: " . $e->getMessage(), getEnvironmentConfig()['local']);
@@ -191,8 +198,10 @@ function addProduct($data)
 
     try {
         $pdo = getPDOConnection();
-        $stmt = $pdo->prepare("INSERT INTO products (product_name, price_amount, currency, description, image_path, slug) VALUES (:name, :price_amount, :currency, :description, :image_path, :slug)");
+        $pdo->beginTransaction(); // Start transaction
 
+        // Insert product into the `products` table
+        $stmt = $pdo->prepare("INSERT INTO products (product_name, price_amount, currency, description, image_path, slug) VALUES (:name, :price_amount, :currency, :description, :image_path, :slug)");
         $success = $stmt->execute([
             'name' => $data['name'],
             'price_amount' => $data['price_amount'],
@@ -202,20 +211,44 @@ function addProduct($data)
             'slug' => $data['slug'],
         ]);
 
-        return $success ? ['error' => false, 'message' => 'Product added successfully.'] : ['error' => true, 'message' => 'Failed to add product. Please try again later.'];
+        if (!$success) {
+            $pdo->rollBack(); // Rollback on failure
+            return ['error' => true, 'message' => 'Failed to add product. Please try again later.'];
+        }
+
+        // Retrieve the last inserted product ID
+        $product_id = $pdo->lastInsertId();
+
+        // Map the product to a category in `product_category_mapping`
+        $stmt = $pdo->prepare("INSERT INTO product_category_mapping (product_id, category_id) VALUES (:product_id, :category_id)");
+        $success = $stmt->execute([
+            'product_id' => $product_id,
+            'category_id' => $data['category'],
+        ]);
+
+        if (!$success) {
+            $pdo->rollBack(); // Rollback if category mapping fails
+            return ['error' => true, 'message' => 'Failed to map product to category.'];
+        }
+
+        $pdo->commit(); // Commit transaction if all operations succeed
+        return ['error' => false, 'message' => 'Product added successfully.'];
+
     } catch (Exception $e) {
+        $pdo->rollBack(); // Rollback transaction on error
         handleError($e->getMessage(), getEnvironmentConfig()['local']);
         return ['error' => true, 'message' => 'An error occurred while adding the product. Please contact the administrator.'];
     }
 }
 
 /**
- * Processes the add product form submission.
+ * Handles the addition of a new product from the form submission.
  * 
- * This function validates the CSRF token, processes the product price and currency, 
- * validates the price using the Brick/Money library, extracts product data from the form, 
- * handles the image upload, and inserts the product into the database. In case of an error, 
- * an error message is generated and the user is redirected back to the product management page.
+ * This function processes the submitted product data, validates the CSRF token,
+ * ensures that all required fields are set, and attempts to add the product to the database.
+ * It also handles image uploads and error logging.
+ * 
+ * @return void
  */
 function handleAddProductForm()
 {
@@ -223,28 +256,20 @@ function handleAddProductForm()
         validateCSRFToken($_POST['csrf_token']);
 
         try {
-            // Debugging: Check if form data is received
-            error_log("Form data received: " . print_r($_POST, true));
-
-            // Process currency and amount from form input
             $priceAmount = $_POST['productPriceAmount'];
             $currencyCode = $_POST['productCurrency'];
 
-            // Debugging: Check price and currency values
-            error_log("Price Amount: " . $priceAmount);
-            error_log("Currency Code: " . $currencyCode);
-
-            // Validating the price using Brick/Money library
+            // Convert price input into a Money object and extract its integer amount and currency code
             $money = Money::of($priceAmount, $currencyCode, null, RoundingMode::DOWN);
             $amount = $money->getAmount()->toInt();
             $currency = $money->getCurrency()->getCurrencyCode();
 
-            // Debugging: Check the result of Money validation
-            error_log("Money Object: " . print_r($money, true));
-            error_log("Amount: " . $amount); // 50000
-            error_log("Currency: " . $currency);
+            // Ensure that the product category is set
+            if (!isset($_POST['productCategory']) || empty($_POST['productCategory'])) {
+                throw new Exception("Product category is required.");
+            }
 
-            // Build product data for insertion into the database
+            // Prepare product data for insertion
             $productData = [
                 'name' => $_POST['productName'],
                 'category' => $_POST['productCategory'],
@@ -253,35 +278,26 @@ function handleAddProductForm()
                 'currency' => $currency,
                 'description' => $_POST['productDescription'],
                 'image_path' => '',
-                'slug' => slugify($_POST['productName'])  // Generate product slug
+                'slug' => slugify($_POST['productName'])
             ];
 
-            // Debugging: Check the product data array
-            error_log("Product Data: " . print_r($productData, true));
-
-            // Handle image upload and store the image path
+            // Handle product image upload and update image path
             $productData['image_path'] = handleProductImageUpload();
 
-            // Debugging: Check the image path after upload
-            error_log("Image Path: " . $productData['image_path']);
-
-            // Insert product data into the database
+            // Insert product into the database
             $result = addProduct($productData);
 
-            // Debugging: Check the result of the database insertion
-            error_log("Database Insertion Result: " . print_r($result, true));
-
+            // Handle potential errors from the database insertion process
             if ($result['error']) {
                 throw new Exception($result['message']);
             }
 
         } catch (Exception $e) {
             $errorMessage = "Failed to add product: " . $e->getMessage();
-            error_log("Error: " . $errorMessage); // Debugging: Log the error message
+            error_log("Error: " . $errorMessage);
             handleError($errorMessage, $_ENV['ENVIRONMENT']);
         }
     } else {
-        // Debugging: Log if the request method is not POST or CSRF token is not set
         error_log("Invalid request method or CSRF token not set.");
     }
 }
