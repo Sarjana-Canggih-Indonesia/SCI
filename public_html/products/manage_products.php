@@ -176,14 +176,7 @@ if (isset($_GET['error'])) {
                     </div>
                 </div>
             </div>
-        </div>
-
-        <!-- Tombol untuk membuka modal Add Product -->
-        <div class="button-add-product">
-            <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
-                <i class="fas fa-plus"></i> Add Product
-            </button>
-        </div>
+        </div>        
 
         <!-- Search Bar -->
         <div class="mb-4 d-flex">
@@ -191,6 +184,30 @@ if (isset($_GET['error'])) {
             <button class="btn btn-primary ms-3 d-inline-flex align-items-center">
                 <i class="fas fa-search me-2"></i>
                 Search
+            </button>
+        </div>
+
+        <!-- Filter by Category Section -->
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header bg-primary-subtle">
+                <h5 class="mb-0">Filter by Category</h5>
+            </div>
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <select class="form-select w-45" id="categoryFilter" aria-label="Filter by Category">
+                    <option value="" selected>All Categories</option>
+                    <?php foreach ($categories as $category): ?>
+                        <option value="<?= htmlspecialchars($category['category_id']) ?>">
+                            <?= htmlspecialchars($category['category_name']) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+        </div>
+
+        <!-- Tombol untuk membuka modal Add Product -->
+        <div class="button-add-product">
+            <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
+                <i class="fas fa-plus"></i> Add Product
             </button>
         </div>
 
@@ -230,23 +247,6 @@ if (isset($_GET['error'])) {
             <button class="mx-1 btn btn-success"><i class="fas fa-download"></i> Export Data</button>
             <button class="mx-1 btn btn-primary btn-sm"><i class="fas fa-eye"></i> View Details</button>
             <button class="mx-1 btn btn-warning btn-sm"><i class="fas fa-pencil-alt"></i> Quick Edit</button>
-        </div>
-
-        <!-- Filter by Category Section -->
-        <div class="card mb-4 shadow-sm">
-            <div class="card-header bg-primary-subtle">
-                <h5 class="mb-0">Filter by Category</h5>
-            </div>
-            <div class="card-body d-flex justify-content-center align-items-center">
-                <select class="form-select w-45" id="categoryFilter" aria-label="Filter by Category">
-                    <option value="" selected>All Categories</option>
-                    <?php foreach ($categories as $category): ?>
-                        <option value="<?= htmlspecialchars($category['category_id']) ?>">
-                            <?= htmlspecialchars($category['category_name']) ?>
-                        </option>
-                    <?php endforeach; ?>
-                </select>
-            </div>
         </div>
 
         <!-- Pagination with Product Count -->
