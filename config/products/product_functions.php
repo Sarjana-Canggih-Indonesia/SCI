@@ -28,6 +28,8 @@ function sanitizeProductData($data)
 
     // Sanitize the relevant fields
     $data['name'] = $antiXSS->xss_clean(trim($data['name']));
+    $data['price_amount'] = (float) $data['price_amount']; // Ensure price_amount is a float
+    $data['currency'] = strtoupper(trim($data['currency'])); // Ensure currency is uppercase
     $data['description'] = $antiXSS->xss_clean(trim($data['description']));
     $data['slug'] = strtolower(trim($data['slug']));  // Convert slug to lowercase
 
@@ -154,18 +156,6 @@ function getAllProductsWithCategoriesAndTags()
     }
 }
 
-/**
- * Adds a new product to the database.
- *
- * This function establishes a connection to the database using PDO,
- * prepares an SQL query to insert a new product into the 'products' table,
- * and executes the query with the provided product data.
- * It returns an array with a success message or an error message.
- *
- * @param array $data An associative array containing the product data (name, price, description, image_path, slug).
- * @return array Returns an array with a success message on successful insertion,
- *               or an array with an error message on failure.
- */
 function addProduct($data)
 {
     // Validate product data
@@ -202,12 +192,13 @@ function addProduct($data)
 
     try {
         $pdo = getPDOConnection();
-        $stmt = $pdo->prepare("INSERT INTO products (product_name, price, description, image_path, slug) VALUES (:name, :price, :description, :image_path, :slug)");
+        $stmt = $pdo->prepare("INSERT INTO products (product_name, price_amount, currency, description, image_path, slug) VALUES (:name, :price_amount, :currency, :description, :image_path, :slug)");
 
         // Execute the query
         $success = $stmt->execute([
             'name' => $data['name'],
-            'price' => $price->getAmount(), // Store the amount in cents
+            'price_amount' => $data['price_amount'], // Store the amount in minor unit (e.g., cents)
+            'currency' => $data['currency'],
             'description' => $data['description'],
             'image_path' => $data['image_path'],
             'slug' => $data['slug'],
@@ -250,14 +241,26 @@ function handleAddProductForm()
         validateCSRFToken($_POST['csrf_token']);
 
         try {
+            // Debugging: Check if form data is received
+            error_log("Form data received: " . print_r($_POST, true));
+
             // Process currency and amount from form input
             $priceAmount = $_POST['productPriceAmount'];
             $currencyCode = $_POST['productCurrency'];
+
+            // Debugging: Check price and currency values
+            error_log("Price Amount: " . $priceAmount);
+            error_log("Currency Code: " . $currencyCode);
 
             // Validating the price using Brick/Money library
             $money = Money::of($priceAmount, $currencyCode, null, RoundingMode::DOWN);
             $amountMinor = $money->getMinorAmount()->toInt();
             $currency = $money->getCurrency()->getCurrencyCode();
+
+            // Debugging: Check the result of Money validation
+            error_log("Money Object: " . print_r($money, true));
+            error_log("Amount in Minor Unit: " . $amountMinor);
+            error_log("Currency: " . $currency);
 
             // Build product data for insertion into the database
             $productData = [
@@ -265,29 +268,39 @@ function handleAddProductForm()
                 'category' => $_POST['productCategory'],
                 'tags' => $_POST['productTags'],
                 'price_amount' => $amountMinor,  // Amount in minor unit (e.g., cents)
-                'currency' => $currency,        // ISO currency code
-                'stock' => $_POST['productStock'],
+                'currency' => $currency,        // ISO currency code                
                 'description' => $_POST['productDescription'],
                 'image_path' => '',
                 'slug' => slugify($_POST['productName'])  // Generate product slug
             ];
 
+            // Debugging: Check the product data array
+            error_log("Product Data: " . print_r($productData, true));
+
             // Handle image upload and store the image path
             $productData['image_path'] = handleProductImageUpload();
 
+            // Debugging: Check the image path after upload
+            error_log("Image Path: " . $productData['image_path']);
+
             // Insert product data into the database
             $result = addProduct($productData);
+
+            // Debugging: Check the result of the database insertion
+            error_log("Database Insertion Result: " . print_r($result, true));
 
             if ($result['error']) {
                 throw new Exception($result['message']);
             }
 
         } catch (Exception $e) {
-            // Handle errors, log them, and redirect with an error message
             $errorMessage = "Failed to add product: " . $e->getMessage();
+            error_log("Error: " . $errorMessage); // Debugging: Log the error message
             handleError($errorMessage, $_ENV['ENVIRONMENT']);
-            redirectWithMessage('manage_products.php', ['error' => $errorMessage]);
         }
+    } else {
+        // Debugging: Log if the request method is not POST or CSRF token is not set
+        error_log("Invalid request method or CSRF token not set.");
     }
 }
 

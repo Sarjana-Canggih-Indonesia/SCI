@@ -122,7 +122,7 @@ function validateEmail($email)
  * This function validates the product name, price, description, and slug.
  * It returns an array of violations or an empty array if the data is valid.
  *
- * @param array $data An associative array containing the product data (name, price, description, image_path, slug).
+ * @param array $data An associative array containing the product data (name, price_amount, currency, description, image_path, slug).
  * @return array Returns an array of validation violations or an empty array if the data is valid.
  */
 function validateProductData($data)
@@ -133,7 +133,12 @@ function validateProductData($data)
     // Define constraints for the data
     $constraints = [
         'name' => new Assert\NotBlank(['message' => 'Product name cannot be blank']),
-        'price' => new Assert\Range(['min' => 0, 'minMessage' => 'Price must be a positive number']),
+        'price_amount' => [
+            new Assert\NotBlank(['message' => 'Price amount cannot be blank']),
+            new Assert\Type(['type' => 'numeric', 'message' => 'Price amount must be a number']),
+            new Assert\PositiveOrZero(['message' => 'Price amount must be a positive number or zero']),
+        ],
+        'currency' => new Assert\NotBlank(['message' => 'Currency cannot be blank']),
         'description' => new Assert\NotBlank(['message' => 'Description cannot be blank']),
         'slug' => new Assert\Regex([
             'pattern' => '/^[a-z0-9-]+$/',
@@ -145,7 +150,8 @@ function validateProductData($data)
 
     // Validate each field
     $violations = array_merge($violations, iterator_to_array($validator->validate($data['name'], $constraints['name'])));
-    $violations = array_merge($violations, iterator_to_array($validator->validate($data['price'], $constraints['price'])));
+    $violations = array_merge($violations, iterator_to_array($validator->validate($data['price_amount'], $constraints['price_amount'])));
+    $violations = array_merge($violations, iterator_to_array($validator->validate($data['currency'], $constraints['currency'])));
     $violations = array_merge($violations, iterator_to_array($validator->validate($data['description'], $constraints['description'])));
     $violations = array_merge($violations, iterator_to_array($validator->validate($data['slug'], $constraints['slug'])));
 
