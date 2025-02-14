@@ -176,11 +176,12 @@ if (isset($_GET['error'])) {
                     </div>
                 </div>
             </div>
-        </div>        
+        </div>
 
         <!-- Search Bar -->
         <div class="mb-4 d-flex">
-            <input type="text" class="form-control flex-grow-1" id="searchInput" placeholder="Cari produk...">
+            <input type="text" class="form-control flex-grow-1" id="searchInput"
+                placeholder="Cari produk berdasarkan nama atau kategori">
             <button class="btn btn-primary ms-3 d-inline-flex align-items-center">
                 <i class="fas fa-search me-2"></i>
                 Search
