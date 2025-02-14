@@ -238,11 +238,13 @@ if (isset($_GET['error'])) {
                 <h5 class="mb-0">Filter by Category</h5>
             </div>
             <div class="card-body d-flex justify-content-center align-items-center">
-                <!-- Filter by Category -->
-                <select class="form-select w-45" aria-label="Filter by Category">
-                    <option selected>Filter by Category</option>
-                    <option value="electronics">Electronics</option>
-                    <option value="clothing">Clothing</option>
+                <select class="form-select w-45" id="categoryFilter" aria-label="Filter by Category">
+                    <option value="" selected>All Categories</option>
+                    <?php foreach ($categories as $category): ?>
+                        <option value="<?= htmlspecialchars($category['category_id']) ?>">
+                            <?= htmlspecialchars($category['category_name']) ?>
+                        </option>
+                    <?php endforeach; ?>
                 </select>
             </div>
         </div>
