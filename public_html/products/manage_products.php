@@ -135,12 +135,6 @@ if (isset($_GET['error'])) {
     <div class="container jarak-kustom">
         <h2 class="mb-4 text-center">Manage Products</h2>
 
-        <!-- Search Bar -->
-        <div class="mb-4 d-flex justify-content-between align-items-center">
-            <input type="text" class="form-control w-75" placeholder="Search products..." id="searchInput">
-            <button class="btn btn-primary ms-3"><i class="fas fa-search"></i> Search</button>
-        </div>
-
         <!-- Product Summary and User Info Section -->
         <div class="row mb-4">
             <!-- User Info -->
@@ -188,6 +182,15 @@ if (isset($_GET['error'])) {
         <div class="button-add-product">
             <button class="btn btn-success mb-3" data-bs-toggle="modal" data-bs-target="#addProductModal">
                 <i class="fas fa-plus"></i> Add Product
+            </button>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="mb-4 d-flex">
+            <input type="text" class="form-control flex-grow-1" id="searchInput" placeholder="Cari produk...">
+            <button class="btn btn-primary ms-3 d-inline-flex align-items-center">
+                <i class="fas fa-search me-2"></i>
+                Search
             </button>
         </div>
 
@@ -447,9 +450,7 @@ if (isset($_GET['error'])) {
 
                 tagify = new Tagify(input, {
                     whitelist: [
-                        <?php foreach ($tags as $tag): ?>
-                            "<?php echo htmlspecialchars($tag['tag_name']); ?>",
-                        <?php endforeach; ?>
+                        <?php foreach ($tags as $tag): ?>"<?php echo htmlspecialchars($tag['tag_name']); ?>", <?php endforeach; ?>
                     ],
                     dropdown: {
                         enabled: 1,
