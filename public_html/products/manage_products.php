@@ -426,57 +426,14 @@ header("X-XSS-Protection: 1; mode=block");
     <script>
         const BASE_URL = '<?= $baseUrl ?>';
     </script>
-    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/manage_products.js"></script>
-    <!-- SCRIPT UNTUK MULTISELECT DROPDOWN TAGS -->
+    <!-- Script terkait dengan tagify -->
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            let tagify = null;
-
-            $('#addProductModal').on('shown.bs.modal', function () {
-                const input = document.getElementById('productTags');
-
-                if (tagify) tagify.destroy();
-
-                tagify = new Tagify(input, {
-                    whitelist: [
-                        <?php foreach ($tags as $tag): ?>"<?php echo htmlspecialchars($tag['tag_name']); ?>", <?php endforeach; ?>
-                    ],
-                    dropdown: {
-                        enabled: 1,
-                        maxItems: 50,
-                        closeOnSelect: false,
-                        highlightFirst: true,
-                        searchKeys: ['value'],
-                        position: 'all',
-                        classname: 'tagify-dropdown'
-                    },
-                    enforceWhitelist: false,
-                    editTags: true,
-                    duplicates: false,
-                    placeholder: "Enter tags",
-                    maxTags: 10,
-                    pattern: /^[a-zA-Z0-9\s\-_]+$/,
-                });
-
-                input.addEventListener('click', function () {
-                    tagify.dropdown.show();
-                });
-
-                // Event listeners untuk validasi
-                tagify.on('add', function (e) {
-                    const tagValue = e.detail.data.value;
-                    if (!/^[a-zA-Z0-9\s\-_]+$/.test(tagValue)) {
-                        alert(`Invalid tag: ${tagValue}`);
-                        tagify.removeTag(e.detail.tag);
-                    }
-                    if (tagify.value.length > 10) {
-                        alert('Max 10 tags allowed');
-                        tagify.removeTag(e.detail.tag);
-                    }
-                });
-            });
-        });
+        const TAGS_WHITELIST = [
+            <?php foreach ($tags as $tag): ?> "<?php echo htmlspecialchars($tag['tag_name']); ?>",
+            <?php endforeach; ?>
+        ];
     </script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/manage_products.js"></script>
 </body>
 
 </html>

@@ -101,4 +101,52 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // ==================== Akhir JS untuk Filter Category ==================== //
 
+// ==================== JS untuk Tagify ==================== //
+document.addEventListener("DOMContentLoaded", function () {
+  let tagify = null;
+
+  $("#addProductModal").on("shown.bs.modal", function () {
+    const input = document.getElementById("productTags");
+
+    if (tagify) tagify.destroy();
+
+    tagify = new Tagify(input, {
+      whitelist: TAGS_WHITELIST, // Gunakan variabel TAGS_WHITELIST
+      dropdown: {
+        enabled: 1,
+        maxItems: 50,
+        closeOnSelect: false,
+        highlightFirst: true,
+        searchKeys: ["value"],
+        position: "all",
+        classname: "tagify-dropdown",
+      },
+      enforceWhitelist: false,
+      editTags: true,
+      duplicates: false,
+      placeholder: "Enter tags",
+      maxTags: 10,
+      pattern: /^[a-zA-Z0-9\s\-_]+$/,
+    });
+
+    input.addEventListener("click", function () {
+      tagify.dropdown.show();
+    });
+
+    // Event listeners untuk validasi
+    tagify.on("add", function (e) {
+      const tagValue = e.detail.data.value;
+      if (!/^[a-zA-Z0-9\s\-_]+$/.test(tagValue)) {
+        alert(`Invalid tag: ${tagValue}`);
+        tagify.removeTag(e.detail.tag);
+      }
+      if (tagify.value.length > 10) {
+        alert("Max 10 tags allowed");
+        tagify.removeTag(e.detail.tag);
+      }
+    });
+  });
+});
+// ==================== Akhir JS untuk Tagify ==================== //
+
 // === AKHIR JS UNTUK HALAMAN MANAGE PRODUCTS === //
