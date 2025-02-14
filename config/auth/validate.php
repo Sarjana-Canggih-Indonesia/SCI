@@ -159,16 +159,19 @@ function validateProductData($data)
  * It returns the validated Money object or throws an exception if invalid.
  *
  * @param float|string $price The price to validate.
+ * @param string $currency The currency code (e.g., 'IDR', 'USD').
  * @return Money Returns a validated Money object.
- * @throws \InvalidArgumentException if the price is invalid.
+ * @throws \InvalidArgumentException if the price or currency is invalid.
  */
-function validatePrice($price)
+function validatePrice($price, $currency)
 {
     try {
-        // Validate price using Brick Money (assuming IDR currency)
-        $currency = Currency::of('IDR');
-        return Money::of($price, $currency);
+        // Validate currency
+        $currencyObject = Currency::of($currency);
+
+        // Validate price using Brick Money
+        return Money::of($price, $currencyObject);
     } catch (\InvalidArgumentException $e) {
-        throw new \InvalidArgumentException("Invalid price format: " . $e->getMessage());
+        throw new \InvalidArgumentException("Invalid price or currency format: " . $e->getMessage());
     }
 }
