@@ -156,74 +156,56 @@ function getAllProductsWithCategoriesAndTags()
     }
 }
 
+/**
+ * Adds a new product to the database.
+ * 
+ * This function validates and sanitizes the provided product data, 
+ * ensures the price format is correct, and inserts the product into the database. 
+ * If any errors occur, they are logged and returned in the response.
+ * 
+ * - The function first validates the product data.
+ * - If validation passes, the data is sanitized.
+ * - The price is validated to ensure it is in the correct format.
+ * - The sanitized product data is inserted into the `products` table.
+ * - If the insertion fails, an error response is returned.
+ * 
+ * @param array $data The product data including name, price, currency, description, image path, and slug.
+ * @return array An associative array containing 'error' (boolean) and 'message' (string).
+ */
 function addProduct($data)
 {
-    // Validate product data
     $violations = validateProductData($data);
-
-    // If there are any violations, handle the error
     if (count($violations) > 0) {
-        // Log the error for debugging purposes
         handleError("Validation failed: " . implode(", ", array_map(fn($v) => $v->getMessage(), $violations)), getEnvironmentConfig()['local']);
-
-        // Return a user-friendly error message
-        return [
-            'error' => true,
-            'message' => 'Data produk tidak valid. Silakan periksa kembali data yang Anda masukkan.'
-        ];
+        return ['error' => true, 'message' => 'Invalid product data. Please check your input.'];
     }
 
-    // Sanitize data using the sanitizeProductData function
     $data = sanitizeProductData($data);
 
-    // Validate price
     try {
         $price = validatePrice($data['price_amount'], $data['currency']);
     } catch (\InvalidArgumentException $e) {
-        // Log the error for debugging purposes
         handleError("Invalid price format: " . $e->getMessage(), getEnvironmentConfig()['local']);
-
-        // Return a user-friendly error message
-        return [
-            'error' => true,
-            'message' => 'Format harga tidak valid. Harap masukkan harga yang benar.'
-        ];
+        return ['error' => true, 'message' => 'Invalid price format. Please enter a correct value.'];
     }
 
     try {
         $pdo = getPDOConnection();
         $stmt = $pdo->prepare("INSERT INTO products (product_name, price_amount, currency, description, image_path, slug) VALUES (:name, :price_amount, :currency, :description, :image_path, :slug)");
 
-        // Execute the query
         $success = $stmt->execute([
             'name' => $data['name'],
-            'price_amount' => $data['price_amount'], // Store the amount in minor unit (e.g., cents)
+            'price_amount' => $data['price_amount'],
             'currency' => $data['currency'],
             'description' => $data['description'],
             'image_path' => $data['image_path'],
             'slug' => $data['slug'],
         ]);
 
-        if ($success) {
-            return [
-                'error' => false,
-                'message' => 'Produk berhasil ditambahkan.'
-            ];
-        } else {
-            return [
-                'error' => true,
-                'message' => 'Gagal menambahkan produk. Silakan coba lagi nanti.'
-            ];
-        }
+        return $success ? ['error' => false, 'message' => 'Product added successfully.'] : ['error' => true, 'message' => 'Failed to add product. Please try again later.'];
     } catch (Exception $e) {
-        // Log the error for debugging purposes
         handleError($e->getMessage(), getEnvironmentConfig()['local']);
-
-        // Return a user-friendly error message
-        return [
-            'error' => true,
-            'message' => 'Terjadi kesalahan saat menambahkan produk. Silakan hubungi admin.'
-        ];
+        return ['error' => true, 'message' => 'An error occurred while adding the product. Please contact the administrator.'];
     }
 }
 
