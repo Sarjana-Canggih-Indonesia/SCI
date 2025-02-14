@@ -156,7 +156,7 @@ if (isset($_GET['error'])) {
                             <li><strong>Role:</strong> <?php echo htmlspecialchars($userInfo['role']); ?></li>
                             <li><strong>Profile Image:</strong></li>
                             <li>
-                                <img src="<?php echo htmlspecialchars($userInfo['profile_image_filename']); ?>"
+                                <img src="<?php echo htmlspecialchars($profileImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
                                     alt="Profile Image" class="img-thumbnail" style="width: 100px; height: 100px;">
                             </li>
                         </ul>
@@ -449,7 +449,7 @@ if (isset($_GET['error'])) {
                 tagify = new Tagify(input, {
                     whitelist: [
                         <?php foreach ($tags as $tag): ?>
-                                                                                "<?php echo htmlspecialchars($tag['tag_name']); ?>",
+                                                                                    "<?php echo htmlspecialchars($tag['tag_name']); ?>",
                         <?php endforeach; ?>
                     ],
                     dropdown: {
