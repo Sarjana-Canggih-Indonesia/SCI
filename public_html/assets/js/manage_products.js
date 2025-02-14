@@ -1,61 +1,5 @@
 // === JS UNTUK HALAMAN MANAGE PRODUCTS === //
 
-// ==================== JS untuk Fuzzy Search ==================== //
-document.getElementById("searchInput").addEventListener("input", function () {
-  // Ambil nilai input pengguna dan ubah menjadi lowercase untuk pencocokan case-insensitive
-  var searchValue = this.value.toLowerCase();
-
-  // Validasi input untuk mencegah karakter yang berpotensi berbahaya (misalnya skrip)
-  // Ini memastikan input hanya berisi huruf dan angka
-  var sanitizedSearchValue = searchValue.replace(/[^a-z0-9\s]/gi, "");
-
-  // Select all rows in the table body (tbody)
-  var tableRows = document.querySelectorAll("tbody tr");
-
-  // Convert the table rows into an array of product objects, each containing data from the columns
-  var products = Array.from(tableRows).map(function (row) {
-    return {
-      id: row.cells[0].textContent, // Get data from the first column (ID)
-      name: row.cells[1].textContent, // Get data from the second column (Name)
-      category: row.cells[2].textContent, // Get data from the third column (Category)
-      tags: row.cells[3].textContent, // Get data from the fourth column (Tags)
-      price: row.cells[4].textContent, // Get data from the fifth column (Price)
-      stock: row.cells[5].textContent, // Get data from the sixth column (Stock)
-      row: row, // Keep a reference to the row element for later manipulation
-    };
-  });
-
-  // Jika input pencarian kosong, tampilkan semua baris
-  if (sanitizedSearchValue === "") {
-    tableRows.forEach(function (row) {
-      row.style.display = ""; // Tampilkan semua baris
-    });
-    return; // Keluar dari fungsi untuk mencegah pencarian Fuse.js saat input kosong
-  }
-
-  // Initialize Fuse.js dengan data produk dan pengaturan pencarian
-  var fuse = new Fuse(products, {
-    keys: ["name", "category", "tags"], // Tentukan kolom mana yang akan dipertimbangkan untuk pencarian (name, category, tags)
-    includeScore: true, // Sertakan skor pencocokan (skor lebih rendah berarti kecocokan lebih baik)
-    threshold: 0.3, // Tentukan ambang pencocokan (nilai lebih rendah berarti pencocokan lebih ketat)
-  });
-
-  // Lakukan pencarian berdasarkan nilai input pengguna
-  var result = fuse.search(sanitizedSearchValue);
-
-  // Iterasi melalui setiap baris tabel untuk memeriksa apakah itu cocok dengan hasil pencarian
-  tableRows.forEach(function (row) {
-    var product = products.find((p) => p.row === row); // Temukan produk terkait dengan baris
-    // Tampilkan atau sembunyikan baris berdasarkan apakah itu cocok dengan hasil pencarian
-    if (result.some((res) => res.item.row === row)) {
-      row.style.display = ""; // Tampilkan baris jika ada kecocokan
-    } else {
-      row.style.display = "none"; // Sembunyikan baris jika tidak ada kecocokan
-    }
-  });
-});
-// ==================== Akhir JS untuk Fuzzy Search ==================== //
-
 // ==================== JS untuk Modal Delete ==================== //
 document.addEventListener("DOMContentLoaded", function () {
   // Fungsi untuk menampilkan modal konfirmasi saat klik tombol Delete
@@ -76,5 +20,85 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 // ==================== Akhir JS untuk Modal Delete ==================== //
+
+// ==================== JS untuk Filter Category ==================== //
+document.addEventListener("DOMContentLoaded", function () {
+  const categoryFilter = document.getElementById("categoryFilter");
+
+  categoryFilter.addEventListener("change", function () {
+    const categoryId = this.value === "" ? null : this.value;
+
+    // Ubah semua fetch menjadi:
+    let url = `${BASE_URL}api/get_products_by_category.php`;
+    if (categoryId !== null) {
+      url += `?category_id=${categoryId}`;
+    }
+
+    fetch(url, {
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.success) {
+          updateTable(data.products);
+        } else {
+          console.error("Server Error:", data.message);
+          alert("Gagal memuat data: " + data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Fetch Error:", error);
+        alert("Terjadi kesalahan jaringan");
+      });
+  });
+
+  function updateTable(products) {
+    const tbody = document.getElementById("productsTableBody");
+    tbody.innerHTML = ""; // Clear existing rows
+
+    products.forEach((product) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+              <td>${escapeHtml(product.product_id)}</td>
+              <td>${escapeHtml(product.product_name)}</td>
+              <td>${escapeHtml(product.categories || "Uncategorized")}</td>
+              <td>Rp ${formatPrice(product.price_amount)}</td>
+              <td>
+                  <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
+                  <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
+              </td>
+          `;
+      tbody.appendChild(row);
+    });
+  }
+
+  function escapeHtml(unsafe) {
+    return unsafe
+      ? unsafe
+          .toString()
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;")
+      : "";
+  }
+
+  function formatPrice(amount) {
+    return (
+      Number(amount).toLocaleString("id-ID", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }) + ",00"
+    );
+  }
+});
+
+// ==================== Akhir JS untuk Filter Category ==================== //
 
 // === AKHIR JS UNTUK HALAMAN MANAGE PRODUCTS === //

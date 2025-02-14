@@ -206,13 +206,13 @@ if (isset($_GET['error'])) {
                         <th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="productsTableBody">
                     <?php foreach ($products as $product): ?>
                         <tr>
-                            <td><?php echo htmlspecialchars($product['product_id']); ?></td>
-                            <td><?php echo htmlspecialchars($product['product_name']); ?></td>
-                            <td><?php echo htmlspecialchars($product['categories'] ?? 'Uncategorized'); ?></td>
-                            <td>Rp <?php echo number_format($product['price_amount'], 0, ',', '.'); ?>,00</td>
+                            <td><?= htmlspecialchars($product['product_id']) ?></td>
+                            <td><?= htmlspecialchars($product['product_name']) ?></td>
+                            <td><?= htmlspecialchars($product['categories'] ?? 'Uncategorized') ?></td>
+                            <td>Rp <?= number_format($product['price_amount'], 0, ',', '.') ?>,00</td>
                             <td>
                                 <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
                                 <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
@@ -439,6 +439,9 @@ if (isset($_GET['error'])) {
         src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
+    <script>
+        const BASE_URL = '<?= $baseUrl ?>';
+    </script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/manage_products.js"></script>
     <!-- SCRIPT UNTUK MULTISELECT DROPDOWN TAGS -->
     <script>
