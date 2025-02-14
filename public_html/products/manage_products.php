@@ -151,14 +151,13 @@ if (isset($_GET['error'])) {
                     </div>
                     <div class="card-body">
                         <ul class="list-unstyled">
-                            <li><strong>Username:</strong> <?php echo htmlspecialchars($userInfo['username']); ?></li>
-                            <li><strong>Email:</strong> <?php echo htmlspecialchars($userInfo['email']); ?></li>
-                            <li><strong>Role:</strong> <?php echo htmlspecialchars($userInfo['role']); ?></li>
-                            <li><strong>Profile Image:</strong></li>
                             <li>
                                 <img src="<?php echo htmlspecialchars($profileImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
                                     alt="Profile Image" class="img-thumbnail" style="width: 100px; height: 100px;">
                             </li>
+                            <li><strong>Username:</strong> <?php echo htmlspecialchars($userInfo['username']); ?></li>
+                            <li><strong>Email:</strong> <?php echo htmlspecialchars($userInfo['email']); ?></li>
+                            <li><strong>Role:</strong> <?php echo htmlspecialchars($userInfo['role']); ?></li>
                         </ul>
                     </div>
                 </div>
@@ -449,7 +448,7 @@ if (isset($_GET['error'])) {
                 tagify = new Tagify(input, {
                     whitelist: [
                         <?php foreach ($tags as $tag): ?>
-                                                                                    "<?php echo htmlspecialchars($tag['tag_name']); ?>",
+                            "<?php echo htmlspecialchars($tag['tag_name']); ?>",
                         <?php endforeach; ?>
                     ],
                     dropdown: {
