@@ -28,10 +28,10 @@ function sanitizeProductData($data)
 
     // Sanitize the relevant fields
     $data['name'] = $antiXSS->xss_clean(trim($data['name']));
-    $data['price_amount'] = (float) $data['price_amount']; // Ensure price_amount is a float
-    $data['currency'] = strtoupper(trim($data['currency'])); // Ensure currency is uppercase
+    $data['price_amount'] = (int) $data['price_amount'];
+    $data['currency'] = strtoupper(trim($data['currency']));
     $data['description'] = $antiXSS->xss_clean(trim($data['description']));
-    $data['slug'] = strtolower(trim($data['slug']));  // Convert slug to lowercase
+    $data['slug'] = strtolower(trim($data['slug']));
 
     return $data;
 }
@@ -236,12 +236,12 @@ function handleAddProductForm()
 
             // Validating the price using Brick/Money library
             $money = Money::of($priceAmount, $currencyCode, null, RoundingMode::DOWN);
-            $amountMinor = $money->getMinorAmount()->toInt();
+            $amount = $money->getAmount()->toInt();
             $currency = $money->getCurrency()->getCurrencyCode();
 
             // Debugging: Check the result of Money validation
             error_log("Money Object: " . print_r($money, true));
-            error_log("Amount in Minor Unit: " . $amountMinor);
+            error_log("Amount: " . $amount); // 50000
             error_log("Currency: " . $currency);
 
             // Build product data for insertion into the database
@@ -249,8 +249,8 @@ function handleAddProductForm()
                 'name' => $_POST['productName'],
                 'category' => $_POST['productCategory'],
                 'tags' => $_POST['productTags'],
-                'price_amount' => $amountMinor,  // Amount in minor unit (e.g., cents)
-                'currency' => $currency,        // ISO currency code                
+                'price_amount' => $amount,
+                'currency' => $currency,
                 'description' => $_POST['productDescription'],
                 'image_path' => '',
                 'slug' => slugify($_POST['productName'])  // Generate product slug

@@ -135,7 +135,7 @@ function validateProductData($data)
         'name' => new Assert\NotBlank(['message' => 'Product name cannot be blank']),
         'price_amount' => [
             new Assert\NotBlank(['message' => 'Price amount cannot be blank']),
-            new Assert\Type(['type' => 'numeric', 'message' => 'Price amount must be a number']),
+            new Assert\Type(['type' => 'integer', 'message' => 'Price amount must be an integer']),
             new Assert\PositiveOrZero(['message' => 'Price amount must be a positive number or zero']),
         ],
         'currency' => new Assert\NotBlank(['message' => 'Currency cannot be blank']),
