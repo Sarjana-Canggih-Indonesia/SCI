@@ -60,23 +60,6 @@ setCacheHeaders($isLive);
 header("X-Frame-Options: DENY");
 header("X-Content-Type-Options: nosniff");
 header("X-XSS-Protection: 1; mode=block");
-
-// Display success message when a product is added.
-if (isset($_GET['success']) && $_GET['success'] == 1) {
-    echo '<div class="alert alert-success alert-dismissible fade show" role="alert">
-            Product successfully added!
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>';
-}
-
-// Display error message for product addition failure.
-if (isset($_GET['error'])) {
-    $errorMessage = htmlspecialchars($_GET['error']); // Sanitize error message.
-    echo '<div class="alert alert-danger alert-dismissible fade show" role="alert">
-            Error: ' . $errorMessage . '
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-          </div>';
-}
 ?>
 
 <!DOCTYPE html>
