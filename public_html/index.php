@@ -39,7 +39,6 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
   <!-- Font Awesome -->
   <link rel="stylesheet" type="text/css"
     href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-
   <!-- Custom CSS -->
   <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
 </head>
@@ -86,9 +85,9 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
             <p class="my-sm-5">Jangan tunda lagi, selesaikan tugas akhirmu bersama Penelitian Kita</p>
             <div class="container">
               <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
-                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                <i class="fa-solid fa-cart-shopping"></i>
-                &nbsp;Pesan Sekarang
+                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                  <i class="fa-solid fa-cart-shopping"></i>
+                  &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -102,15 +101,15 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
         </div>
         <div class="carousel-item">
           <img src=" <?php echo $baseUrl; ?>assets/images/carousel/pk2.webp" class="d-block w-100" alt="Slide 2"
-          loading="lazy" />
+            loading="lazy" />
           <div class="carousel-caption">
             <h4 class="my-sm-3">Kami adalah safe space-mu.</h4>
             <p class="my-sm-5">Rasi kami selalu siap sedia menjawab pertanyaan penelitian kamu.</p>
             <div class="container">
               <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
-                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                <i class="fa-solid fa-cart-shopping"></i>
-                &nbsp;Pesan Sekarang
+                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                  <i class="fa-solid fa-cart-shopping"></i>
+                  &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -124,15 +123,15 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
         </div>
         <div class="carousel-item">
           <img src=" <?php echo $baseUrl; ?>assets/images/carousel/pk3.webp" class="d-block w-100" alt="Slide 3"
-          loading="lazy" />
+            loading="lazy" />
           <div class="carousel-caption">
             <h4 class="my-sm-3">Banyak promosi dan layanan spesial untukmu!</h4>
             <p class="my-sm-5">Eksplor layanan tugas akhir dan jurnal Penelitian Kita.</p>
             <div class="container">
               <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
-                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                <i class="fa-solid fa-cart-shopping"></i>
-                &nbsp;Pesan Sekarang
+                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                  <i class="fa-solid fa-cart-shopping"></i>
+                  &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -146,15 +145,15 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
         </div>
         <div class="carousel-item">
           <img src=" <?php echo $baseUrl; ?>assets/images/carousel/pk4.webp" class="d-block w-100" alt="Slide 4"
-          loading="lazy" />
+            loading="lazy" />
           <div class="carousel-caption">
             <h4 class="my-sm-3">Paham sepenuhnya dengan video penjelasan.</h4>
             <p class="my-sm-5">Layanan paling lengkap ini tersedia di Paket Prime.</p>
             <div class="container">
               <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
-                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                <i class="fa-solid fa-cart-shopping"></i>
-                &nbsp;Pesan Sekarang
+                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                  <i class="fa-solid fa-cart-shopping"></i>
+                  &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -168,15 +167,15 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
         </div>
         <div class="carousel-item">
           <img src=" <?php echo $baseUrl; ?>assets/images/carousel/pk5.webp" class="d-block w-100" alt="Slide 5"
-          loading="lazy" />
+            loading="lazy" />
           <div class="carousel-caption">
             <h4 class="my-sm-3">Kejar deadline mepet tepat waktu.</h4>
             <p class="my-sm-5">Kami Menyediakan Layanan Percepatan untuk Tugas Akhir.</p>
             <div class="container">
               <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
-                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                <i class="fa-solid fa-cart-shopping"></i>
-                &nbsp;Pesan Sekarang
+                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                  <i class="fa-solid fa-cart-shopping"></i>
+                  &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -190,15 +189,15 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
         </div>
         <div class="carousel-item">
           <img src=" <?php echo $baseUrl; ?>assets/images/carousel/pk6.webp" class="d-block w-100" alt="Slide 6"
-          loading="lazy" />
+            loading="lazy" />
           <div class="carousel-caption">
             <h4 class="my-sm-3">Masuk bareng, lulus juga bareng!</h4>
             <p class="my-sm-5">Dapatkan promosi spesial untuk tugas akhir bersama teman-teman kamu.</p>
             <div class="container">
               <div class="row"> <a href="<?php echo $baseUrl; ?>contact/"
-                class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
-                <i class="fa-solid fa-cart-shopping"></i>
-                &nbsp;Pesan Sekarang
+                  class="btn btn-primary carousel-btn d-none d-sm-inline-block btn-pesan" role="button">
+                  <i class="fa-solid fa-cart-shopping"></i>
+                  &nbsp;Pesan Sekarang
                 </a>
                 &nbsp;
                 <a href="https://dub.sh/repqBk8" class="btn btn-success carousel-btn d-none d-sm-inline-block btn-wa"
@@ -289,7 +288,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
               <div class="pointcontentwrapper light">
                 <div class="pointnumber">
                   <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                  class="hero-check" />
+                    class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #1</div>
                 </div>
                 <h4 class="pointtitle">Berbagai pilihan alat analisis data.</h4>
@@ -301,7 +300,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
               <div class="pointcontentwrapper light">
                 <div class="pointnumber">
                   <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                  class="hero-check" />
+                    class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #2</div>
                 </div>
                 <h4 class="pointtitle">Referensi berkualitas.</h4>
@@ -313,7 +312,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
               <div class="pointcontentwrapper light">
                 <div class="pointnumber">
                   <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                  class="hero-check" />
+                    class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #3</div>
                 </div>
                 <h4 class="pointtitle">Jaminan anti plagiasi dengan batasan Turnitin &lt;30%.</h4>
@@ -325,7 +324,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
               <div class="pointcontentwrapper light">
                 <div class="pointnumber">
                   <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                  class="hero-check" />
+                    class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #4</div>
                 </div>
                 <h4 class="pointtitle">Hasil karya orisinal, bukan copy paste.</h4>
@@ -337,7 +336,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
               <div class="pointcontentwrapper light">
                 <div class="pointnumber">
                   <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                  class="hero-check" />
+                    class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #5</div>
                 </div>
                 <h4 class="pointtitle">Unlimited revisi dan konsultasi (khusus paket unlimited dan Prime).</h4>
@@ -348,7 +347,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
               <div class="pointcontentwrapper light" style="padding-bottom: 4rem">
                 <div class="pointnumber">
                   <img src=" <?php echo $baseUrl; ?>assets/images/path.svg" loading="lazy" alt="Checkmark icon"
-                  class="hero-check" />
+                    class="hero-check" />
                   <div class="pointnumbertxt">You Will Get #6</div>
                 </div>
                 <h4 class="pointtitle">Video penjelasan (khusus paket Prime)</h4>
