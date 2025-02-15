@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (tagify) tagify.destroy();
 
     tagify = new Tagify(input, {
-      whitelist: TAGS_WHITELIST, // Gunakan variabel TAGS_WHITELIST
+      whitelist: TAGS_WHITELIST,
       dropdown: {
         enabled: 1,
         maxItems: 50,
