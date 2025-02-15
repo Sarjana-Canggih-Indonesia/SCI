@@ -1,3 +1,23 @@
+<?php
+// aboutUs.php
+
+// Memuat config dan dependensi
+require_once __DIR__ . '/../vendor/autoload.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/user_actions_config.php';
+
+// Memulai sesi apabila tidak ada
+startSession();
+
+// Memuat konfigurasi URL Dinamis
+$config = getEnvironmentConfig(); // Load environment configuration
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
+$isLive = $config['is_live'];
+// Deteksi environment
+$isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
+setCacheHeaders($isLive); // Set header no cache saat local environment
+?>
+
 <!DOCTYPE html>
 <html>
 
@@ -5,131 +25,33 @@
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Tentang Kami - Penelitian Kita</title>
-    <!-- add icon link -->
-    <link rel="icon" href="images/logopkputih.png" type="image/x-icon" />
-    <!-- bikin icon -->
-    <!--CSS-->
-    <link rel="stylesheet" href="../css/styles.css" />
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <!--Font Awesome-->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
-    <!-- Slick Slider css -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css" />
-    <!-- OWL CAROUSEL -->
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.carousel.min.css" />
-    <link rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.3.4/assets/owl.theme.default.css" />
-    <!-- ROBOTO -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap"
-        rel="stylesheet" />
-    <style>
-        body {
-            font-family: "Roboto", sans-serif;
-        }
-
-        footer {
-            font-family: "Roboto", sans-serif;
-        }
-    </style>
+    <title>Tentang Kami - Sarjana Canggih Indonesia</title>
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="<?php echo $baseUrl; ?>favicon.ico" />
+    <!-- Bootstrap css -->
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/bootstrap.min.css" />
+    <!-- Font Awesome -->
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <!-- Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
 </head>
 
 <body>
-    <!--================Area Navigasi =================-->
-    <section class="navbar_area">
-        <nav class="navbar navbar-expand-lg fixed-top py-3">
-            <div class="container">
-                <a class="navbar-brand fw-bolder navbar-logo-pk" href="index.html">
-                    <img src="images/logopkcolor.png" alt="logo" style="width: 42px; height: 42px" /></a>
-                <button type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-                    aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation"
-                    class="navbar-toggler navbar-toggler-right">
-                    <i class="fa-solid fa-bars"></i>
-                </button>
-                <div class="collapse navbar-collapse" id="navbarSupportedContent">
-                    <ul class="navbar-nav ml-auto">
-                        <li class="nav-item">
-                            <a href="index.html" class="nav-link fw-bolder">Home </a>
-                        </li>
-                        <li class="nav-item active">
-                            <a href="tentangkami.html" class="nav-link fw-bolder">Tentang Kami
-                            </a>
-                        </li>
-                        <!--DROPDOWN ASISTENSI PENELITIAN-->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle fw-bolder" href="#" role="button"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                                Asistensi Penelitian
-                            </a>
-                            <ul class="dropdown-menu" style="background-color: #fff">
-                                <li>
-                                    <a class="dropdown-item" href="asistensi/penelitian/skripsi.html">Skripsi</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="asistensi/penelitian/tesis.html">Tesis</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item" href="asistensi/penelitian/disertasi.html">Disertasi</a>
-                                </li>
-                                <hr class="dropdown-divider" style="border-color: black" />
-                                <li>
-                                    <a class="dropdown-item" href="asistensi/penelitian/jurnal.html">Jurnal</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <!--end of DROPDOWN ASISTENSI PENELITIAN-->
-                        <!--DROPDOWN ASISTENSI PENULISAN-->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle fw-bolder" href="#" role="button"
-                                data-bs-toggle="dropdown" aria-expanded="false">
-                                Asistensi Penulisan
-                            </a>
-                            <ul class="dropdown-menu" style="background-color: #fff">
-                                <li>
-                                    <a class="dropdown-item"
-                                        href="asistensi/penulisan/penulisan.html#asistensipenulisan">Artikel</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item"
-                                        href="asistensi/penulisan/penulisan.html#asistensipenulisan">Proofreading</a>
-                                </li>
-                                <li>
-                                    <a class="dropdown-item"
-                                        href="asistensi/penulisan/penulisan.html#asistensipenulisan">Edting Naskah
-                                        Buku</a>
-                                </li>
-                                <hr class="dropdown-divider" style="border-color: black" />
-                                <li>
-                                    <a class="dropdown-item"
-                                        href="asistensi/penulisan/penulisan.html#asistensipenulisan">Translate</a>
-                                </li>
-                            </ul>
-                        </li>
-                        <!--end of DROPDOWN ASISTENSI PENULISAN-->
-                        <li class="nav-item">
-                            <a href="promo/promo.html" class="nav-link fw-bolder">Promo</a>
-                        </li>
-                        <li class="nav-item">
-                            <a href="karir.html" class="nav-link fw-bolder">Karir</a>
-                        </li>
-                    </ul>
-                    <div class="d-flex ms-auto">
-                        <a class="nav-link ms-2 fw-bolder px-lg-2" href="https://sarjana-canggih-indonesia.myr.id">Pesan
-                            Sekarang</a>
-                        <a class="nav-link ms-2 fw-bolder px-lg-2" href="https://linktr.ee/sarjanacanggih">Kontak
-                            Kami</a>
-                        <a class="nav-link ms-2 fw-bolder px-lg-2" href="#">Sarjana Canggih</a>
-                    </div>
-                </div>
-            </div>
-        </nav>
+    <!--========== INSERT HEADER.PHP ==========-->
+    <?php include __DIR__ . '/includes/header.php'; ?>
+    <!--========== AKHIR INSERT HEADER.PHP ==========-->
+
+    <!--========== AREA SCROLL TO TOP ==========-->
+    <section class="scroll">
+        <!-- Scroll to Top Button -->
+        <a href="#" class="scroll-to-top" id="scrollToTopBtn">
+            <i class="fa-solid fa-angles-up"></i>
+        </a>
     </section>
-    <!--================Akhir Area Navigasi=================-->
-    <!--================Area Jumbotron=================-->
+    <!--========== AKHIR AREA SCROLL TO TOP ==========-->
+
+    <!--================ AREA JUMBOTRON =================-->
     <section class="jumbotron-pk tentang-kami">
         <div class="container py-4">
             <div class="jumbotron bg p-5 mb-4 rounded-3">
@@ -208,107 +130,19 @@
     </section>
     <!--================Akhir Area Our Values=================-->
     <br /><br /><br />
+
+    <!--================ AREA FOOTER =================-->
+    <?php include __DIR__ . '/includes/footer.php'; ?>
+    <!--================ AKHIR AREA FOOTER =================-->
+
+    <!--================ Area External JS libraries =================-->
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/jquery-slim.min.js"></script>
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
+    <!--================ Akhir Area External JS libraries =================-->
 </body>
-<!--================ Area Footer =================-->
-<footer class="footer footer_pk">
-    <div class="container">
-        <div class="row">
-            <!-- Logo and Company Name -->
-            <div class="col-md-3 footer-logo">
-                <img src="images/logopkputih.png" alt="" />
-            </div>
-            <!-- Info Kontak -->
-            <div class="col-md-3 footer-info">
-                <h5>Hubungi Kami</h5>
-                <p>Alamat:</p>
-                <p>Kecamatan Singosari, Kabupaten Malang, 65153</p>
-                <p>Telepon:</p>
-                <p>+62815-8500-0640</p>
-            </div>
-            <!-- Layanan-->
-            <div class="col-md-3 footer-info">
-                <h5>Layanan Kami</h5>
-                <h5 class="py-2">Asistensi Penelitian</h5>
-                <p>
-                    <a href="asistensi/penelitian/skripsi.html" class="footernodecor">Skripsi</a>
-                </p>
-                <p>
-                    <a href="asistensi/penelitian/tesis.html" class="footernodecor">Tesis</a>
-                </p>
-                <p>
-                    <a href="asistensi/penelitian/disertasi.html" class="footernodecor">Disertasi</a>
-                </p>
-                <p>
-                    <a href="asistensi/penelitian/jurnal.html" class="footernodecor">Jurnal</a>
-                </p>
-                <h5 class="py-2">Asistensi Penulisan</h5>
-                <p>
-                    <a href="asistensi/penulisan/penulisan.html#asistensipenulisan" class="footernodecor">Makalah /
-                        Artikel</a>
-                </p>
-                <p>
-                    <a href="asistensi/penulisan/penulisan.html#asistensipenulisan"
-                        class="footernodecor">Proofreading</a>
-                </p>
-                <p>
-                    <a href="asistensi/penulisan/penulisan.html#asistensipenulisan" class="footernodecor">Editing
-                        Nashkah Buku</a>
-                </p>
-                <p>
-                    <a href="asistensi/penulisan/penulisan.html#asistensipenulisan" class="footernodecor">Translate</a>
-                </p>
-            </div>
-            <!--End of Layanan-->
-            <!-- Social Media -->
-            <div class="col-md-3 footer-social">
-                <h5>Ikuti Kami</h5>
-                <a href="https://facebook.com/PenelitianKita" target="_blank">
-                    <i class="social-icons fab fa-facebook-f"></i><span class="social-text">Facebook</span>
-                </a>
-                <a href="https://www.instagram.com/penelitian_kita/" target="_blank">
-                    <i class="social-icons fab fa-instagram"></i><span class="social-text">Instagram</span>
-                </a>
-                <a href="https://wa.me/+6281585000640" target="_blank">
-                    <i class="social-icons fab fa-whatsapp"></i><span class="social-text">Whatsapp</span>
-                </a>
-                <a href="#" target="_blank">
-                    <i class="social-icons fab fa-youtube"></i><span class="social-text">Youtube</span>
-                </a>
-                <a href="#" target="_blank">
-                    <i class="social-icons fab fa-linkedin-in"></i><span class="social-text">Linkedin</span>
-                </a>
-            </div>
-        </div>
-        <hr />
-        <!-- Navigasi Links -->
-        <div class="row mt-3">
-            <div class="col-md-12 text-center footer-nav">
-                <a href="index.html">Home</a>
-                <a href="tentangkami.html">Tentang Kami</a>
-                <a href="https://linktr.ee/sarjanacanggih">Kontak Kami</a>
-                <a href="#">FAQ</a>
-            </div>
-        </div>
-        <!-- Copyright -->
-        <div class="row mt-3">
-            <div class="col-lg-6 offset-lg-3 text-center text-white-50">
-                <p>
-                    Copyright &copy; 2024 &middot; Sarjana Canggih Indonesia<a href="#">&nbsp;</a>
-                </p>
-            </div>
-        </div>
-    </div>
-</footer>
-<!--================ End of Area Footer =================-->
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<!-- Include all compiled plugins (below), or include individual files as needed -->
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/js/bootstrap.bundle.min.js"></script>
-<!-- Slick Slider JS -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.9.0/slick.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/OwlCarousel2/2.2.1/owl.carousel.js"></script>
-<script src="../js/custom.js"></script>
 
 </html>
