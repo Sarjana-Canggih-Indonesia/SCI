@@ -56,8 +56,8 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
         <div class="container py-4">
             <div class="jumbotron bg p-5 mb-4 rounded-3">
                 <div class="container-fluid py-5 tk_text">
-                    <h1 class="display-5 fw-bold">Tentang</h1>
-                    <h1 class="display-5 fw-bold">Kami</h1>
+                    <h1 class="display-5 fw-bold text-white">Tentang</h1>
+                    <h1 class="display-5 fw-bold text-white">Kami</h1>
                     <p class="col-md-8 fs-4"></p>
                 </div>
             </div>
@@ -124,7 +124,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
     <section class="ourvalues">
         <div class="container">
             <div class="row">
-                <img src="images/tentangkami/Our Values.webp" alt="" />
+                <img src="<?php echo $baseUrl; ?>assets/images/ourValues.webp" alt="" />
             </div>
         </div>
     </section>
