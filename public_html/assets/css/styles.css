@@ -1177,3 +1177,24 @@ body.login-page {
 }
 /* AREA HALAMAN PROFILE
 ================================================================================ */
+
+/* AREA JUMBOTRON
+================================================================================ */
+
+.jumbotron-pk.tentang-kami {
+  background-image: linear-gradient(to bottom, #09203f 0%, #537895 100%);
+  background-size: cover !important;
+  width: 100% !important;
+  min-height: 480px !important;
+}
+
+/* MENGATUR LEBAR BUTTON PADA JUMBOTRON TENTANGKAMI & KARIR */
+.jumbotron-pk .container .row a {
+  display: inline-block;
+  min-height: 58px;
+  max-width: 220px;
+  align-content: center;
+  border-radius: 30px;
+}
+/* AKHIR AREA JUMBOTRON
+================================================================================ */
