@@ -423,9 +423,7 @@ header("X-XSS-Protection: 1; mode=block");
         src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
-    <script>
-        const BASE_URL = '<?= $baseUrl ?>';
-    </script>
+    <script> const BASE_URL = '<?= $baseUrl ?>';</script>
     <!-- Script terkait dengan tagify -->
     <script>
         const TAGS_WHITELIST = [
