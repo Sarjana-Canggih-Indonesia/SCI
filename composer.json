@@ -12,7 +12,6 @@
         "symfony/validator": "^7.2",
         "symfony/property-access": "^7.2",
         "nesbot/carbon": "^3.8",
-        "intervention/image": "^3.11",
-        "league/route": "^6.2"
+        "intervention/image": "^3.11"
     }
 }
