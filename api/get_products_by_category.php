@@ -1,8 +1,8 @@
 <?php
 // fetch_products.php
 
-require_once __DIR__ . '/../../config/config.php';
-require_once __DIR__ . '/../../config/products/product_functions.php';
+require_once __DIR__ . '/../config/config.php';
+require_once __DIR__ . '/../config/products/product_functions.php';
 
 // Start session sebelum header
 if (session_status() === PHP_SESSION_NONE) {
