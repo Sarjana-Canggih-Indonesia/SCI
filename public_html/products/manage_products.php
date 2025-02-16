@@ -164,7 +164,7 @@ header("X-XSS-Protection: 1; mode=block");
         <!-- Search Bar -->
         <div class="mb-4 d-flex">
             <input type="text" class="form-control flex-grow-1" id="searchInput"
-                placeholder="Cari produk berdasarkan nama atau kategori">
+                placeholder="Cari produk berdasarkan nama">
             <button class="btn btn-primary ms-3 d-inline-flex align-items-center">
                 <i class="fas fa-search me-2"></i>
                 Search
