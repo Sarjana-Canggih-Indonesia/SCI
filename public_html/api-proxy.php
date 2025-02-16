@@ -9,9 +9,9 @@ header("Content-Type: application/json");
 $action = $_GET['action'] ?? '';
 
 $allowedActions = [
-    'get_products_by_category' => '../api/get_products_by_category.php',
-    'get_search_products' => '../api/get_search_products.php',
     'get_all_products' => '../api/get_all_products.php',
+    'get_search_products' => '../api/get_search_products.php',
+    'get_products_by_category' => '../api/get_products_by_category.php',
 ];
 
 // Periksa apakah action valid
