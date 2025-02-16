@@ -29,9 +29,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const categoryId = this.value === "" ? null : this.value;
 
     // Ubah semua fetch menjadi:
-    let url = `${BASE_URL}api-proxy.php`;
+    let url = `${BASE_URL}api-proxy.php?action=get_products_by_category`;
     if (categoryId !== null) {
-      url += `?category_id=${categoryId}`;
+      url += `&category_id=${categoryId}`;
     }
 
     fetch(url, {
@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function updateTable(products) {
     const tbody = document.getElementById("productsTableBody");
-    tbody.innerHTML = ""; // Clear existing rows
+    tbody.innerHTML = "";
 
     products.forEach((product) => {
       const row = document.createElement("tr");
@@ -100,6 +100,136 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 // ==================== Akhir JS untuk Filter Category ==================== //
+
+// ==================== JS untuk Search Bar ==================== //
+document.addEventListener("DOMContentLoaded", function () {
+  const searchInput = document.getElementById("searchInput");
+  const searchButton = document.querySelector("button.btn-primary");
+
+  // Variabel untuk debounce
+  let debounceTimer;
+
+  // Muat semua produk saat halaman pertama kali dimuat
+  loadAllProducts();
+
+  // Event listener untuk tombol search
+  searchButton.addEventListener("click", function () {
+    const keyword = searchInput.value.trim();
+    if (keyword) {
+      searchProducts(keyword);
+    }
+  });
+
+  // Event listener untuk input search dengan debounce
+  searchInput.addEventListener("input", function () {
+    const keyword = searchInput.value.trim();
+
+    if (keyword) {
+      // Jika ada keyword, lakukan pencarian dengan debounce
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        searchProducts(keyword);
+      }, 300); // Delay 300ms
+    } else {
+      // Jika input kosong, muat semua produk
+      loadAllProducts();
+    }
+  });
+
+  function searchProducts(keyword) {
+    let url = `${BASE_URL}api-proxy.php?action=get_search_products&keyword=${encodeURIComponent(keyword)}`;
+
+    fetch(url, {
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.success) {
+          updateTable(data.products);
+        } else {
+          console.error("Server Error:", data.message);
+          alert("Gagal memuat data: " + data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Fetch Error:", error);
+        alert("Terjadi kesalahan jaringan");
+      });
+  }
+
+  function loadAllProducts() {
+    let url = `${BASE_URL}api-proxy.php?action=get_all_products`;
+
+    fetch(url, {
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then((data) => {
+        if (data.success) {
+          updateTable(data.products);
+        } else {
+          console.error("Server Error:", data.message);
+          alert("Gagal memuat data: " + data.message);
+        }
+      })
+      .catch((error) => {
+        console.error("Fetch Error:", error);
+        alert("Terjadi kesalahan jaringan");
+      });
+  }
+
+  function updateTable(products) {
+    const tbody = document.getElementById("productsTableBody");
+    tbody.innerHTML = "";
+
+    products.forEach((product) => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+              <td>${escapeHtml(product.product_id)}</td>
+              <td>${escapeHtml(product.product_name)}</td>
+              <td>${escapeHtml(product.categories || "Uncategorized")}</td>
+              <td>Rp ${formatPrice(product.price_amount)}</td>
+              <td>
+                  <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
+                  <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
+              </td>
+          `;
+      tbody.appendChild(row);
+    });
+  }
+
+  function escapeHtml(unsafe) {
+    return unsafe
+      ? unsafe
+          .toString()
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;")
+      : "";
+  }
+
+  function formatPrice(amount) {
+    return (
+      Number(amount).toLocaleString("id-ID", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }) + ",00"
+    );
+  }
+});
+// ==================== Akhir JS untuk Search Bar ==================== //
 
 // ==================== JS untuk Tagify ==================== //
 document.addEventListener("DOMContentLoaded", function () {
