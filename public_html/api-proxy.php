@@ -5,11 +5,24 @@
 header("Access-Control-Allow-Origin: *");
 header("Content-Type: application/json");
 
-// Ambil query string dari request (misalnya, ?category_id=1)
-$queryString = $_SERVER['QUERY_STRING'];
+// Ambil parameter 'action' untuk menentukan API mana yang akan dipanggil
+$action = $_GET['action'] ?? '';
 
-// Path ke file API di luar public_html
-$apiFilePath = __DIR__ . '/../api/get_products_by_category.php';
+// Daftar API yang tersedia
+$allowedActions = [
+    'get_products_by_category' => '../api/get_products_by_category.php',
+    'get_search' => '../api/get_search.php',
+];
+
+// Periksa apakah action valid
+if (!isset($allowedActions[$action])) {
+    http_response_code(400); // Bad Request
+    echo json_encode(['success' => false, 'message' => 'Invalid action']);
+    exit;
+}
+
+// Path ke file API yang sesuai
+$apiFilePath = $allowedActions[$action];
 
 // Pastikan file API ada
 if (!file_exists($apiFilePath)) {
