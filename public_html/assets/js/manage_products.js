@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const categoryId = this.value === "" ? null : this.value;
 
     // Ubah semua fetch menjadi:
-    let url = `${BASE_URL}api/get_products_by_category.php`;
+    let url = `${BASE_URL}api-proxy.php`;
     if (categoryId !== null) {
       url += `?category_id=${categoryId}`;
     }
