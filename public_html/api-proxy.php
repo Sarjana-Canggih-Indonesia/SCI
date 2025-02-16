@@ -8,10 +8,10 @@ header("Content-Type: application/json");
 // Ambil parameter 'action' untuk menentukan API mana yang akan dipanggil
 $action = $_GET['action'] ?? '';
 
-// Daftar API yang tersedia
 $allowedActions = [
     'get_products_by_category' => '../api/get_products_by_category.php',
-    'get_search' => '../api/get_search.php',
+    'get_search_products' => '../api/get_search_products.php',
+    'get_all_products' => '../api/get_all_products.php',
 ];
 
 // Periksa apakah action valid
