@@ -30,14 +30,14 @@ try {
 
     if ($categoryId !== null) {
         if (!ctype_digit($categoryId) || (int) $categoryId <= 0) {
-            http_response_code(400); // Bad Request
+            http_response_code(400);
             echo json_encode([
                 'success' => false,
                 'message' => 'Invalid category_id. Must be a positive integer.'
             ]);
             exit();
         }
-        $categoryId = (int) $categoryId; // Konversi setelah validasi sukses
+        $categoryId = (int) $categoryId;
     } else {
         $categoryId = null;
     }
