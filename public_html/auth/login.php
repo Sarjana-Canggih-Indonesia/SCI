@@ -97,7 +97,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
             <div class="form-group">
               <div class="d-flex justify-content-between">
                 <label for="login_+password" class="form-label">Password <span style="color: red">*</span></label>
-                <a href="forgot_password.php" class="text-end text-decoration-none">Lupa Password?</a>
+                <a href="forgot_password" class="text-end text-decoration-none">Lupa Password?</a>
               </div>
               <div style="position:relative" id="posisi-login-password-0">
                 <input id="password" type="password" class="form-control" name="password" required
@@ -128,7 +128,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
             </div>
             <!-- Link Registrasi -->
             <div class="mt-4 text-center">
-              Belum punya akun? <a href="<?php echo $baseUrl; ?>auth/register.php">Buat
+              Belum punya akun? <a href="<?php echo $baseUrl; ?>register">Buat
                 Akun</a>
             </div>
           </form>
