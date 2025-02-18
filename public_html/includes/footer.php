@@ -25,24 +25,20 @@ $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
                         <span>Get connected with us on social networks:</span>
                     </div>
                     <div>
-                        <a href="https://www.facebook.com/SarjanaCanggihPage" class="text-white me-4"
-                            style="text-decoration: none;">
-                            <i class="fab fa-facebook-f"></i>
+                        <a href="<?php echo $_ENV['SOCIAL_FACEBOOK']; ?>" class="text-white me-4"
+                            style="text-decoration: none;"> <i class="fab fa-facebook-f"></i>
                         </a>
-                        <a href="https://x.com/Sarjana_Canggih" class="text-white me-4" style="text-decoration: none;">
-                            <i class="fab fa-twitter"></i>
+                        <a href="<?php echo $_ENV['SOCIAL_TWITTER']; ?>" class="text-white me-4"
+                            style="text-decoration: none;"><i class="fab fa-twitter"></i>
                         </a>
-                        <a href="https://www.instagram.com/sarjanacanggih/" class="text-white me-4"
-                            style="text-decoration: none;">
-                            <i class="fab fa-instagram"></i>
+                        <a href="<?php echo $_ENV['SOCIAL_INSTAGRAM']; ?>" class="text-white me-4"
+                            style="text-decoration: none;"><i class="fab fa-instagram"></i>
                         </a>
-                        <a href="https://www.linkedin.com/company/sarjana-canggih-indonesia/" class="text-white me-4"
-                            style="text-decoration: none;">
-                            <i class="fab fa-linkedin"></i>
+                        <a href="<?php echo $_ENV['SOCIAL_LINKEDIN']; ?>" class="text-white me-4"
+                            style="text-decoration: none;"><i class="fab fa-linkedin"></i>
                         </a>
-                        <a href="https://github.com/SarjanaCanggih" class="text-white me-4"
-                            style="text-decoration: none;">
-                            <i class="fab fa-github"></i>
+                        <a href="<?php echo $_ENV['SOCIAL_GITHUB']; ?>" class="text-white me-4"
+                            style="text-decoration: none;"><i class="fab fa-github"></i>
                         </a>
                     </div>
                 </section>
