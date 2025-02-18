@@ -12,6 +12,10 @@ startSession();
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+$isLive = $config['is_live'];
+// Deteksi environment
+$isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
+setCacheHeaders($isLive); // Set header no cache saat local environment
 
 // Validate reCAPTCHA environment variables
 validateReCaptchaEnvVariables();
@@ -80,7 +84,7 @@ if (empty($_SESSION['csrf_token'])) {
                 <div class="card-body">
                     <!-- Kembali ke halaman login -->
                     <div class="d-flex text-start mb-2">
-                        <a href="<?php echo $baseUrl; ?>auth/login.php" class="btn btn-outline-primary"
+                        <a href="<?php echo $baseUrl; ?>login" class="btn btn-outline-primary"
                             onclick="return confirm('Are you sure you want to go back?');">
                             <i class="fa fa-arrow-left"></i> Back to Login</a>
                     </div>
