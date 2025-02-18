@@ -8,6 +8,10 @@ startSession();
 
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+$isLive = $config['is_live'];
+// Deteksi environment
+$isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
+setCacheHeaders($isLive); // Set header no cache saat local environment
 
 $user_input = $_GET['input'] ?? '';
 $sanitized_input = sanitize_input($user_input);
