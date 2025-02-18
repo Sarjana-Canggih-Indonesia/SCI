@@ -9,7 +9,8 @@ startSession();
 
 // Memuat konfigurasi URL Dinamis
 $config = getEnvironmentConfig(); // Load environment configuration
-$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+$isLive = $config['is_live'];
 
 validateReCaptchaEnvVariables(); // Validate reCAPTCHA environment variables
 
@@ -59,7 +60,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
             <div class="card fat">
                 <div class="card-body">
                     <h4 class="card-title">Form Kontak</h4>
-                    <form action="process_contact.php" method="POST">
+                    <form action="<?php echo rtrim($baseUrl, '/'); ?>/process_contact" method="POST">
                         <!-- Nama (Alias atau Nama) -->
                         <div class="mb-3">
                             <label for="form-wa-nama" class="form-label">Nama</label>
