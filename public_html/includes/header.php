@@ -68,7 +68,7 @@ $profileImageUrl = default_profile_image($profileImage);
                         <a class="nav-link active" aria-current="page" href="<?php echo $baseUrl; ?>">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $baseUrl; ?>products/">Products</a>
+                        <a class="nav-link" href="<?php echo $baseUrl; ?>products">Products</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<?php echo $baseUrl; ?>promo/">Promo</a>
@@ -127,7 +127,7 @@ $profileImageUrl = default_profile_image($profileImage);
                     <a class="nav-link active" aria-current="page" href="<?php echo $baseUrl; ?>">Home</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo $baseUrl; ?>products/">Products</a>
+                    <a class="nav-link" href="<?php echo $baseUrl; ?>products">Products</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>promo/">Promo</a>
