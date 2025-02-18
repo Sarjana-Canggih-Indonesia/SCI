@@ -11,6 +11,10 @@ use voku\helper\AntiXSS;
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+$isLive = $config['is_live'];
+// Deteksi environment
+$isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
+setCacheHeaders($isLive); // Set header no cache saat local environment
 
 // Sanitize user input
 $user_input = $_GET['input'] ?? '';
@@ -29,13 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($validationResult !== true) {
         $_SESSION['error_message'] = 'Invalid CSRF token or reCAPTCHA. Please try again.';
-        header("Location: register.php");
+        header("Location: " . $baseUrl . "register");
         exit();
     } else {
         // Honeypot Field Check
         if (!empty($_POST['honeypot'])) {
             $_SESSION['error_message'] = 'Bot detected. Submission rejected.';
-            header("Location: register.php");
+            header("Location: " . $baseUrl . "register");
             exit();
         } else {
             // Sanitize and validate form inputs
@@ -47,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Validate password confirmation
             if ($password !== $confirm_password) {
                 $_SESSION['error_message'] = 'Passwords do not match.';
-                header("Location: register.php");
+                header("Location: " . $baseUrl . "register");
                 exit();
             }
 
@@ -76,7 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             // Redirect ke halaman yang sama untuk menghindari resubmission
-            header("Location: register.php");
+            header("Location: " . $baseUrl . "register");
             exit();
         }
     }
@@ -190,10 +194,11 @@ redirect_if_logged_in();
                             required></div>
 
                         <div class="form-group m-0">
-                            <button type="submit" class="btn btn-primary btn-lg w-100 mt-3">Register</button>
+                            <button type="submit" class="btn btn-primary w-100 mt-3">Register</button>
                         </div>
-                        <div class="mt-4 text-center">
-                            Sudah punya akun? <a href="<?php echo $baseUrl; ?>/auth/login.php">Masuk</a>
+                        <div class="mt-4 text-center btn btn-secondary w-100 mt-3">
+                            <a href="<?php echo $baseUrl; ?>login" style="text-decoration: none; color: white;">Sudah
+                                punya akun? Login</a>
                         </div>
                     </form>
                     <!-- Akhir Bagian Form -->
