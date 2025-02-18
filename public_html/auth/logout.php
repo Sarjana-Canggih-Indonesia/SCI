@@ -4,6 +4,10 @@ require_once __DIR__ . '/../../config/user_actions_config.php';
 
 $config = getEnvironmentConfig(); // Load environment configuration
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
+$isLive = $config['is_live'];
+// Deteksi environment
+$isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
+setCacheHeaders($isLive); // Set header no cache saat local environment
 
 // Call the logout function
 $logoutMessage = logoutUser();
@@ -14,8 +18,6 @@ $isLogoutSuccessful = $logoutMessage === 'Logged out successfully.';
 // Determine the modal message
 $modalTitle = $isLogoutSuccessful ? 'Logged Out' : 'Logout Failed';
 $modalMessage = $isLogoutSuccessful ? htmlspecialchars($logoutMessage) : 'An error occurred while logging out. Please try again later.';
-
-$config = getEnvironmentConfig();
 ?>
 
 <!DOCTYPE html>
@@ -58,7 +60,7 @@ $config = getEnvironmentConfig();
                     <?php echo $modalMessage; ?>
                 </div>
                 <div class="modal-footer">
-                    <a href="<?php echo $baseUrl; ?>auth/login.php" type="button" class="btn btn-secondary">
+                    <a href="<?php echo $baseUrl; ?>login" type="button" class="btn btn-secondary">
                         <i class="fa fa-user"></i> Login
                     </a>
                     <?php if ($isLogoutSuccessful): ?>
