@@ -763,7 +763,7 @@ function processLoginForm($env, $baseUrl)
     // Honeypot check
     if (!empty($_POST['honeypot'])) {
         $_SESSION['error_message'] = 'Bot detected. Submission rejected.';
-        header("Location: " . $baseUrl . "auth/login.php");
+        header("Location: " . $baseUrl . "login");
         exit();
     }
 
@@ -773,7 +773,7 @@ function processLoginForm($env, $baseUrl)
 
     if ($error_message !== true) {
         $_SESSION['error_message'] = $error_message; // Error reCAPTCHA/CSRF
-        header("Location: " . $baseUrl . "auth/login.php");
+        header("Location: " . $baseUrl . "login");
         exit();
     }
 
@@ -793,7 +793,7 @@ function processLoginForm($env, $baseUrl)
 
     if (count($violations) > 0) {
         $_SESSION['error_message'] = $errorType . ' tidak valid.';
-        header("Location: " . $baseUrl . "auth/login.php");
+        header("Location: " . $baseUrl . "login");
         exit();
     }
 
@@ -801,7 +801,7 @@ function processLoginForm($env, $baseUrl)
     $passwordViolations = validatePassword($password);
     if (count($passwordViolations) > 0) {
         $_SESSION['error_message'] = 'Password tidak valid.';
-        header("Location: " . $baseUrl . "auth/login.php");
+        header("Location: " . $baseUrl . "login");
         exit();
     }
 
@@ -824,7 +824,7 @@ function processLoginForm($env, $baseUrl)
             'error' => 'Terjadi kesalahan sistem. Silakan coba lagi nanti.'
         ];
         $_SESSION['error_message'] = $error_messages[$login_result] ?? 'Login gagal. Silakan coba lagi.';
-        header("Location: " . $baseUrl . "auth/login.php");
+        header("Location: " . $baseUrl . "login");
         exit();
     }
 }
