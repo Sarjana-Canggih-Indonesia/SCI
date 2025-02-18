@@ -80,7 +80,7 @@ $profileImageUrl = default_profile_image($profileImage);
                         <a class="nav-link" href="<?php echo $baseUrl; ?>about">About Us</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $baseUrl; ?>contact/">Contact
+                        <a class="nav-link" href="<?php echo $baseUrl; ?>contact">Contact
                             Us</a>
                     </li>
                     <?php if (!empty($username)): ?>
@@ -101,14 +101,14 @@ $profileImageUrl = default_profile_image($profileImage);
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
-                                <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>auth/logout.php">Logout</a>
+                                <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>logout">Logout</a>
                                 </li>
                             </ul>
                         </li>
                     <?php else: ?>
                         <!-- Menampilkan tombol login jika belum login -->
                         <li class="nav-item">
-                            <a class="nav-link" href="<?php echo $baseUrl; ?>auth/login.php">Login</a>
+                            <a class="nav-link" href="<?php echo $baseUrl; ?>login">Login</a>
                         </li>
                     <?php endif; ?>
                 </ul>
@@ -139,7 +139,7 @@ $profileImageUrl = default_profile_image($profileImage);
                     <a class="nav-link" href="<?php echo $baseUrl; ?>about">About Us</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo $baseUrl; ?>contact/">Contact
+                    <a class="nav-link" href="<?php echo $baseUrl; ?>contact">Contact
                         Us</a>
                 </li>
                 <!-- Menampilkan profile dan logout -->
@@ -160,12 +160,12 @@ $profileImageUrl = default_profile_image($profileImage);
                             Saya</a></li>
                     <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>cart.php">Pesanan Saya</a>
                     </li>
-                    <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>auth/logout.php">Logout</a>
+                    <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>logout">Logout</a>
                     </li>
                 <?php else: ?>
                     <!-- Menampilkan login jika belum login -->
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $baseUrl; ?>auth/login.php">Login</a>
+                        <a class="nav-link" href="<?php echo $baseUrl; ?>login">Login</a>
                     </li>
                 <?php endif; ?>
             </ul>
