@@ -193,13 +193,12 @@ redirect_if_logged_in();
                         <div class="g-recaptcha" data-sitekey="<?php echo htmlspecialchars(RECAPTCHA_SITE_KEY); ?>"
                             required></div>
 
-                        <div class="form-group m-0">
-                            <button type="submit" class="btn btn-primary w-100 mt-3">Register</button>
-                        </div>
-                        <div class="mt-4 text-center btn btn-secondary w-100 mt-3">
-                            <a href="<?php echo $baseUrl; ?>login" style="text-decoration: none; color: white;">Sudah
-                                punya akun? Login</a>
-                        </div>
+                        <button type="submit" class="btn btn-primary w-100 mt-3">Register</button>
+                        <a href="<?php echo $baseUrl; ?>login"
+                            class="mt-4 text-center btn btn-outline-primary w-100 d-block text-decoration-none"
+                            role="button">
+                            Sudah punya akun? Login
+                        </a>
                     </form>
                     <!-- Akhir Bagian Form -->
                 </div>
