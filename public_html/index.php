@@ -15,10 +15,8 @@ startSession();
 $config = getEnvironmentConfig(); // Load environment configuration
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
 $isLive = $config['is_live'];
-
 // Deteksi environment
 $isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
-
 setCacheHeaders($isLive); // Set header no cache saat local environment
 ?>
 
