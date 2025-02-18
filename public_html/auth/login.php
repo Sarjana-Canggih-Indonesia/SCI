@@ -16,6 +16,9 @@ if (isset($_SESSION['error_message'])) {
 $config = getEnvironmentConfig(); // Load environment configuration
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
 $isLive = $config['is_live'];
+// Deteksi environment
+$isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
+setCacheHeaders($isLive); // Set header no cache saat local environment
 
 $user_input = $_GET['input'] ?? ''; // Get user input from the query string
 $sanitized_input = sanitize_input($user_input); // Sanitize the user input to prevent XSS
@@ -25,8 +28,6 @@ autoLogin(); // Perform auto-login if applicable
 validateReCaptchaEnvVariables(); // Validate reCAPTCHA environment variables
 
 redirect_if_logged_in(); // Redirect to the index page if the user is already logged in
-
-setCacheHeaders($isLive); // Set header no cache saat local environment
 ?>
 
 <!DOCTYPE html>
@@ -61,9 +62,8 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
   <section class="h-100 d-flex justify-content-center align-items-center">
     <div class="card-wrapper">
       <!-- Brand / Logo Section  -->
-      <div class="brand">
-        <a href="<?php echo $baseUrl; ?>">
-          <img src="<?php echo $baseUrl; ?>assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia">
+      <div class="brand"> <a href="<?php echo $baseUrl; ?>">
+          <img src=" <?php echo $baseUrl; ?>assets/images/logoscblue.png" alt="Logo Sarjana Canggih Indonesia">
         </a>
       </div>
       <div class="card fat">
@@ -73,66 +73,66 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
           <?php if (!empty($error_message)): ?>
             <div class="alert alert-danger">
               <?php echo $error_message; ?>
-            </div>
-          <?php endif; ?>
-          <!-- Bagian Form -->
-          <form action="process_login.php" method="POST" class="my-login-validation">
-            <!-- CSRF Token -->
-            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
-            <!-- Input Username -->
-            <div class="form-group">
-              <label for="username">Username atau Email <span style="color: red">*</span></label>
-              <input id="username" type="text" class="form-control" name="username"
-                value="<?php echo isset($_COOKIE['username']) ? $_COOKIE['username'] : ''; ?>" required autofocus>
-              <div class="invalid-feedback">Username atau Email diperlukan</div>
-            </div>
-
-            <!-- Pesan error -->
-            <?php if (!empty($error_message)): ?>
-              <div class="alert alert-danger">
-                <?php echo $error_message; ?>
-              </div>
-            <?php endif; ?>
-            <!-- Input Password -->
-            <div class="form-group">
-              <div class="d-flex justify-content-between">
-                <label for="login_+password" class="form-label">Password <span style="color: red">*</span></label>
-                <a href="forgot_password" class="text-end text-decoration-none">Lupa Password?</a>
-              </div>
-              <div style="position:relative" id="posisi-login-password-0">
-                <input id="password" type="password" class="form-control" name="password" required
-                  style="padding-right: 60px;">
-                <div class="invalid-feedback">Password is required</div>
-                <div class="btn btn-sm" id="toggle-login-password-0"
-                  style="position: absolute; right: 10px; top: 7px; padding: 2px 7px; font-size: 16px; cursor: pointer;">
-                  <i class="fas fa-eye"></i>
                 </div>
+            <?php endif; ?>
+            <!-- Bagian Form -->
+            <form action="process_login.php" method="POST" class="my-login-validation">
+              <!-- CSRF Token -->
+              <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($_SESSION['csrf_token']); ?>">
+              <!-- Input Username -->
+              <div class="form-group">
+                <label for="username">Username atau Email <span style="color: red">*</span></label>
+                <input id="username" type="text" class="form-control" name="username"
+                  value="<?php echo isset($_COOKIE['username']) ? $_COOKIE['username'] : ''; ?>" required autofocus>
+                <div class="invalid-feedback">Username atau Email diperlukan</div>
               </div>
-            </div>
-            <!-- Remember Me Checkbox -->
-            <div class="form-check">
-              <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe" <?php echo isset($_COOKIE['username']) ? 'checked' : ''; ?>>
-              <label class="form-check-label" for="rememberMe">Remember Me</label>
-            </div>
-            <br>
-            <!-- Honeypot Field -->
-            <input type="text" name="honeypot" class="honeypot" style="display: none;">
-            <!-- reCAPTCHA -->
-            <div class="g-recaptcha" data-sitekey="<?php echo htmlspecialchars(RECAPTCHA_SITE_KEY); ?>" required></div>
-            <br>
-            <!-- Submit Button -->
-            <div class="form-group m-0">
-              <button type="submit" class="btn btn-primary btn-lg w-100">
-                Masuk
-              </button>
-            </div>
-            <!-- Link Registrasi -->
-            <div class="mt-4 text-center">
-              Belum punya akun? <a href="<?php echo $baseUrl; ?>register">Buat
-                Akun</a>
-            </div>
-          </form>
-          <!-- Akhir Bagian Form -->
+
+              <!-- Pesan error -->
+              <?php if (!empty($error_message)): ?>
+                <div class="alert alert-danger">
+                  <?php echo $error_message; ?>
+                    </div>
+                <?php endif; ?>
+                <!-- Input Password -->
+                <div class="form-group">
+                  <div class="d-flex justify-content-between">
+                    <label for="login_+password" class="form-label">Password <span style="color: red">*</span></label>
+                    <a href="forgot_password" class="text-end text-decoration-none">Lupa Password?</a>
+                  </div>
+                  <div style="position:relative" id="posisi-login-password-0">
+                    <input id="password" type="password" class="form-control" name="password" required
+                      style="padding-right: 60px;">
+                    <div class="invalid-feedback">Password is required</div>
+                    <div class="btn btn-sm" id="toggle-login-password-0"
+                      style="position: absolute; right: 10px; top: 7px; padding: 2px 7px; font-size: 16px; cursor: pointer;">
+                      <i class="fas fa-eye"></i>
+                    </div>
+                  </div>
+                </div>
+                <!-- Remember Me Checkbox -->
+                <div class="form-check">
+                  <input type="checkbox" class="form-check-input" id="rememberMe" name="rememberMe" <?php echo isset($_COOKIE['username']) ? 'checked' : ''; ?>>
+                  <label class="form-check-label" for="rememberMe">Remember Me</label>
+                </div>
+                <br>
+                <!-- Honeypot Field -->
+                <input type="text" name="honeypot" class="honeypot" style="display: none;">
+                <!-- reCAPTCHA -->
+                <div class="g-recaptcha" data-sitekey="<?php echo htmlspecialchars(RECAPTCHA_SITE_KEY); ?>" required>
+                </div>
+                <br>
+                <!-- Submit Button -->
+                <div class="form-group m-0">
+                  <button type="submit" class="btn btn-primary btn-lg w-100">
+                    Masuk
+                  </button>
+                </div>
+                <!-- Link Registrasi -->
+                <div class="mt-4 text-center" > Belum punya akun? <a href="<?php echo $baseUrl; ?>register">Buat
+                  Akun</a>
+                </div>
+            </form>
+            <!-- Akhir Bagian Form -->
         </div>
       </div>
     </div>
