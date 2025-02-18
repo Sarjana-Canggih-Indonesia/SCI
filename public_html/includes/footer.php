@@ -66,7 +66,7 @@ $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 
                         <!-- Column 2 -->
                         <div class="col-md-2 col-lg-2 col-xl-2 mx-auto mb-4">
-                            <h6 class="text-uppercase fw-bold"><a href="<?php echo $baseUrl; ?>products/"
+                            <h6 class="text-uppercase fw-bold"><a href="<?php echo $baseUrl; ?>products"
                                     style="text-decoration: none; color:inherit;">Products</a></h6>
                             <hr class="mb-4 mt-0 d-inline-block mx-auto"
                                 style="width: 60px; background-color: #7c4dff; height: 2px;">
@@ -91,8 +91,8 @@ $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
                             <p><a href="<?php echo $baseUrl; ?>dashboard/" class="text-white">Your Account</a></p>
                             <p><a href="<?php echo $baseUrl; ?>promo/" class="text-white">Promo</a></p>
                             <p><a href="<?php echo $baseUrl; ?>blog/" class="text-white">Blogs</a></p>
-                            <p><a href="<?php echo $baseUrl; ?>about_us/" class="text-white">About Us</a></p>
-                            <p><a href="<?php echo $baseUrl; ?>contact/" class="text-white">Contact Us</a>
+                            <p><a href="<?php echo $baseUrl; ?>about" class="text-white">About Us</a></p>
+                            <p><a href="<?php echo $baseUrl; ?>contact" class="text-white">Contact Us</a>
                             </p>
                         </div>
 
