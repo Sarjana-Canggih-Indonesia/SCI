@@ -77,8 +77,7 @@ $profileImageUrl = default_profile_image($profileImage);
                         <a class="nav-link" href="<?php echo $baseUrl; ?>blogs/">Blogs</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $baseUrl; ?>aboutUs.php">About
-                            Us</a>
+                        <a class="nav-link" href="<?php echo $baseUrl; ?>about">About Us</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<?php echo $baseUrl; ?>contact/">Contact
@@ -125,7 +124,7 @@ $profileImageUrl = default_profile_image($profileImage);
         <div class="offcanvas-body">
             <ul class="navbar-nav flex-grow-1">
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="<?php echo $baseUrl; ?>#">Home</a>
+                    <a class="nav-link active" aria-current="page" href="<?php echo $baseUrl; ?>">Home</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>products/">Products</a>
@@ -137,8 +136,7 @@ $profileImageUrl = default_profile_image($profileImage);
                     <a class="nav-link" href="<?php echo $baseUrl; ?>blogs/">Blogs</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo $baseUrl; ?>aboutUs.php">About
-                        Us</a>
+                    <a class="nav-link" href="<?php echo $baseUrl; ?>about">About Us</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>contact/">Contact
