@@ -71,7 +71,7 @@ $profileImageUrl = default_profile_image($profileImage);
                         <a class="nav-link" href="<?php echo $baseUrl; ?>products">Products</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $baseUrl; ?>promo/">Promo</a>
+                        <a class="nav-link" href="<?php echo $baseUrl; ?>promo">Promo</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="<?php echo $baseUrl; ?>blogs/">Blogs</a>
