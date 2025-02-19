@@ -134,8 +134,8 @@ $profileImageUrl = default_profile_image($profileImage);
     </nav>
     <!-- OFFCANVAS MENU -->
     <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
-        <div class="offcanvas-header">
-            <h5 id="offcanvasNavbarLabel">Menu</h5>
+        <div class="offcanvas-header bg-light">
+            <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Menu</h5>
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
         <div class="offcanvas-body">
@@ -149,22 +149,21 @@ $profileImageUrl = default_profile_image($profileImage);
                 <li class="nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>promo/">Promo</a>
                 </li>
-                <li class=" nav-item">
+                <li class="nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>blogs/">Blogs</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>about">About Us</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo $baseUrl; ?>contact">Contact
-                        Us</a>
+                    <a class="nav-link" href="<?php echo $baseUrl; ?>contact">Contact Us</a>
                 </li>
                 <!-- Menampilkan profile dan logout -->
                 <?php if (!empty($username)): ?>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link d-flex align-items-center" href="#">
                             <img src="<?php echo htmlspecialchars($profileImageUrl, ENT_QUOTES, 'UTF-8'); ?>" alt="Profile"
-                                width="40" height="40" class="rounded-circle" />
+                                width="40" height="40" class="rounded-circle me-2" />
                             <?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>
                         </a>
                     </li>
@@ -172,32 +171,29 @@ $profileImageUrl = default_profile_image($profileImage);
                         <hr class="dropdown-divider">
                     </li>
                     <?php if ($userRole === 'admin'): ?>
-                        <li>
-                            <a class="dropdown-item" href="<?php echo $baseUrl; ?>admin_dashboard.php">Dashboard</a>
+                        <li class="nav-item">
+                            <a class="nav-link" href="<?php echo $baseUrl; ?>admin_dashboard.php">Dashboard</a>
                         </li>
                     <?php endif; ?>
-                    <li>
-                        <a class="dropdown-item" href="<?php echo $baseUrl; ?>user-profile.php">Profil Saya</a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo $baseUrl; ?>user-profile.php">Profil Saya</a>
                     </li>
-                    <li>
-                        <a class="dropdown-item" href="<?php echo $baseUrl; ?>settings.php">Pengaturan</a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo $baseUrl; ?>settings.php">Pengaturan</a>
                     </li>
-                    <li>
-                        <a class="dropdown-item" href="<?php echo $baseUrl; ?>cart.php">Pesanan Saya</a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?php echo $baseUrl; ?>cart.php">Pesanan Saya</a>
                     </li>
-                    <li>
-                        <a class="dropdown-item" href="
-                    <?php echo $baseUrl; ?>logout">Logout</a>
+                    <li class="nav-item">
+                        <a class="nav-link text-danger" href="<?php echo $baseUrl; ?>logout">Logout</a>
                     </li>
                 <?php else: ?>
                     <!-- Menampilkan login jika belum login -->
                     <li class="nav-item">
-                        <a class="nav-link" href="
-                <?php echo $baseUrl; ?>login">Login</a>
+                        <a class="nav-link btn btn-primary text-white" href="<?php echo $baseUrl; ?>login">Login</a>
                     </li>
                 <?php endif; ?>
             </ul>
-
         </div>
     </div>
     <!-- AKHIR OFFCANVAS MENU -->
