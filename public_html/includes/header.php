@@ -19,8 +19,9 @@ $userId = $_SESSION['user_id'] ?? null;
 $isLoggedIn = isset($_SESSION['username']);
 $username = $_SESSION['username'] ?? '';
 
-// Set default value for $profileImage
+// Set default values
 $profileImage = null;
+$userRole = null; // Menyimpan role user
 
 // Only process if user is logged in and has an ID
 if ($isLoggedIn && $userId) {
@@ -28,7 +29,10 @@ if ($isLoggedIn && $userId) {
 
     if ($userInfo) {
         // Set profile image filename if available in the database
-        $profileImage = $userInfo['image_filename'] ?? null;
+        $profileImage = $userInfo['profile_image_filename'] ?? null;
+
+        // Ambil role user
+        $userRole = $userInfo['role'] ?? 'customer';
     } else {
         // Handle case if user is not found
         $error = 'User not found.';
@@ -88,20 +92,32 @@ $profileImageUrl = default_profile_image($profileImage);
                             <a class="nav-link dropdown-toggle" href="#" id="profileDropdown" role="button"
                                 data-bs-toggle="dropdown" aria-expanded="false">
                                 <img src="<?php echo htmlspecialchars($profileImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                                    alt="Profile Image" width="40" height="40" class="rounded-circle" />
+                                    alt=" Profile Image" width="40" height="40" class="rounded-circle" />
                                 <?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="profileDropdown">
-                                <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>admin_dashboard.php">Dashboard</a>
+                                <?php if ($userRole === 'admin'): ?>
+                                    <li>
+                                        <a class="dropdown-item" href="<?php echo $baseUrl; ?>admin-dashboard">Dashboard</a>
+                                    </li>
+                                    <li>
+                                        <hr class="dropdown-divider">
+                                    </li>
+                                <?php endif; ?>
+                                <li>
+                                    <a class="dropdown-item" href="<?php echo $baseUrl; ?>user-profile">User Profile</a>
                                 </li>
-                                <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>settings.php">Akun
-                                        Saya</a></li>
-                                <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>cart.php">Pesanan
-                                        Saya</a></li>
+                                <li>
+                                    <a class="dropdown-item" href="<?php echo $baseUrl; ?>settings.php">Akun Saya</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" href="<?php echo $baseUrl; ?>cart.php">Pesanan Saya</a>
+                                </li>
                                 <li>
                                     <hr class="dropdown-divider">
                                 </li>
-                                <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>logout">Logout</a>
+                                <li>
+                                    <a class="dropdown-item" href="<?php echo $baseUrl; ?>logout">Logout</a>
                                 </li>
                             </ul>
                         </li>
@@ -112,6 +128,7 @@ $profileImageUrl = default_profile_image($profileImage);
                         </li>
                     <?php endif; ?>
                 </ul>
+
             </div>
         </div>
     </nav>
@@ -132,7 +149,7 @@ $profileImageUrl = default_profile_image($profileImage);
                 <li class="nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>promo/">Promo</a>
                 </li>
-                <li class="nav-item">
+                <li class=" nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>blogs/">Blogs</a>
                 </li>
                 <li class="nav-item">
@@ -154,25 +171,38 @@ $profileImageUrl = default_profile_image($profileImage);
                     <li>
                         <hr class="dropdown-divider">
                     </li>
-                    <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>admin_dashboard.php">Dashboard</a>
+                    <?php if ($userRole === 'admin'): ?>
+                        <li>
+                            <a class="dropdown-item" href="<?php echo $baseUrl; ?>admin_dashboard.php">Dashboard</a>
+                        </li>
+                    <?php endif; ?>
+                    <li>
+                        <a class="dropdown-item" href="<?php echo $baseUrl; ?>user-profile.php">Profil Saya</a>
                     </li>
-                    <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>settings.php">Profil
-                            Saya</a></li>
-                    <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>cart.php">Pesanan Saya</a>
+                    <li>
+                        <a class="dropdown-item" href="<?php echo $baseUrl; ?>settings.php">Pengaturan</a>
                     </li>
-                    <li><a class="dropdown-item" href="<?php echo $baseUrl; ?>logout">Logout</a>
+                    <li>
+                        <a class="dropdown-item" href="<?php echo $baseUrl; ?>cart.php">Pesanan Saya</a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="
+                    <?php echo $baseUrl; ?>logout">Logout</a>
                     </li>
                 <?php else: ?>
                     <!-- Menampilkan login jika belum login -->
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $baseUrl; ?>login">Login</a>
+                        <a class="nav-link" href="
+                <?php echo $baseUrl; ?>login">Login</a>
                     </li>
                 <?php endif; ?>
             </ul>
+
         </div>
     </div>
     <!-- AKHIR OFFCANVAS MENU -->
     <!-- ==========AKHIR AREA NAVIGASI========== -->
 </body>
+
 
 </html>
