@@ -52,6 +52,9 @@ $profileImageUrl = default_profile_image($profileImage);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" type="text/css"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
 </head>
 
 <body>
@@ -138,27 +141,42 @@ $profileImageUrl = default_profile_image($profileImage);
             <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Menu</h5>
             <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
-        <div class="offcanvas-body">
+        <div class="offcanvas-body d-flex flex-column h-100">
             <ul class="navbar-nav flex-grow-1">
                 <li class="nav-item">
-                    <a class="nav-link active" aria-current="page" href="<?php echo $baseUrl; ?>">Home</a>
+                    <a class="nav-link active" aria-current="page" href="<?php echo $baseUrl; ?>">
+                        <i class="fa-solid fa-house"></i> Home
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo $baseUrl; ?>products">Products</a>
+                    <a class="nav-link" href="<?php echo $baseUrl; ?>products">
+                        <i class="fa-solid fa-box"></i> Products
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo $baseUrl; ?>promo/">Promo</a>
+                    <a class="nav-link" href="<?php echo $baseUrl; ?>promo/">
+                        <i class="fa-solid fa-tags"></i> Promo
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo $baseUrl; ?>blogs/">Blogs</a>
+                    <a class="nav-link" href="<?php echo $baseUrl; ?>blogs/">
+                        <i class="fa-solid fa-blog"></i> Blogs
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo $baseUrl; ?>about">About Us</a>
+                    <a class="nav-link" href="<?php echo $baseUrl; ?>about">
+                        <i class="fa-solid fa-users"></i> About Us
+                    </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="<?php echo $baseUrl; ?>contact">Contact Us</a>
+                    <a class="nav-link" href="<?php echo $baseUrl; ?>contact">
+                        <i class="fa-solid fa-envelope"></i> Contact Us
+                    </a>
                 </li>
-                <!-- Menampilkan profile dan logout -->
+            </ul>
+
+            <!-- Bagian profil dan logout di bawah -->
+            <ul class="navbar-nav mt-auto">
                 <?php if (!empty($username)): ?>
                     <li class="nav-item">
                         <a class="nav-link d-flex align-items-center" href="#">
@@ -169,25 +187,36 @@ $profileImageUrl = default_profile_image($profileImage);
                     </li>
                     <?php if ($userRole === 'admin'): ?>
                         <li class="nav-item">
-                            <a class="nav-link" href="<?php echo $baseUrl; ?>admin_dashboard.php">Dashboard</a>
+                            <a class="nav-link" href="<?php echo $baseUrl; ?>admin_dashboard.php">
+                                <i class="fa-solid fa-chart-line"></i> Dashboard
+                            </a>
                         </li>
                     <?php endif; ?>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $baseUrl; ?>user-profile.php">Profil Saya</a>
+                        <a class="nav-link" href="<?php echo $baseUrl; ?>user-profile.php">
+                            <i class="fa-solid fa-user"></i> Profil Saya
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $baseUrl; ?>settings.php">Pengaturan</a>
+                        <a class="nav-link" href="<?php echo $baseUrl; ?>settings.php">
+                            <i class="fa-solid fa-gear"></i> Pengaturan
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="<?php echo $baseUrl; ?>cart.php">Pesanan Saya</a>
+                        <a class="nav-link" href="<?php echo $baseUrl; ?>cart.php">
+                            <i class="fa-solid fa-shopping-cart"></i> Pesanan Saya
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-danger" href="<?php echo $baseUrl; ?>logout">Logout</a>
+                        <a class="nav-link text-danger" href="<?php echo $baseUrl; ?>logout">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logout
+                        </a>
                     </li>
                 <?php else: ?>
-                    <!-- Menampilkan login jika belum login -->
                     <li class="nav-item">
-                        <a class="nav-link btn btn-primary text-white" href="<?php echo $baseUrl; ?>login">Login</a>
+                        <a class="nav-link btn btn-primary text-white" href="<?php echo $baseUrl; ?>login">
+                            <i class="fa-solid fa-sign-in-alt"></i> Login
+                        </a>
                     </li>
                 <?php endif; ?>
             </ul>
