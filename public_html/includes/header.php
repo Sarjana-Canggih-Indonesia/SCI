@@ -167,9 +167,6 @@ $profileImageUrl = default_profile_image($profileImage);
                             <?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?>
                         </a>
                     </li>
-                    <li>
-                        <hr class="dropdown-divider">
-                    </li>
                     <?php if ($userRole === 'admin'): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="<?php echo $baseUrl; ?>admin_dashboard.php">Dashboard</a>
