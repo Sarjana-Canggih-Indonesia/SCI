@@ -98,6 +98,13 @@ header("X-XSS-Protection: 1; mode=block");
             width: 100%;
             margin-top: 5px;
         }
+
+        .product-checkbox {
+            margin-right: 0.5rem;
+            /* Jarak antara checkbox dan nomor urut */
+            cursor: pointer;
+            /* Ubah kursor saat dihover */
+        }
     </style>
 </head>
 
@@ -216,7 +223,11 @@ header("X-XSS-Protection: 1; mode=block");
                         $counter = 1;
                         foreach ($products as $product): ?>
                             <tr>
-                                <td><?= $counter++ ?></td>
+                                <td>
+                                    <input type="checkbox" name="selected_products[]" value="<?= $product['product_id'] ?>"
+                                        class="product-checkbox">
+                                    <?= $counter++ ?> <!-- Nomor urut tetap ditampilkan -->
+                                </td>
                                 <td><?= htmlspecialchars($product['product_name']) ?></td>
                                 <td><?= htmlspecialchars($product['categories'] ?? 'Uncategorized') ?></td>
                                 <td>Rp <?= number_format($product['price_amount'], 0, ',', '.') ?>,00</td>
@@ -232,7 +243,8 @@ header("X-XSS-Protection: 1; mode=block");
 
             <!-- Bulk Actions Section -->
             <div class="mb-4 d-flex">
-                <button class="me-1 btn btn-secondary"><i class="fas fa-check-circle"></i> Select All</button>
+                <button class="me-1 btn btn-secondary" id="manage_products-selectAllButton"><i
+                        class="fas fa-check-circle"></i> Select All</button>
                 <button class="mx-1 btn btn-danger"><i class="fas fa-trash"></i> Delete Selected</button>
                 <button class="mx-1 btn btn-success"><i class="fas fa-download"></i> Export Data</button>
                 <button class="mx-1 btn btn-primary btn-sm"><i class="fas fa-eye"></i> View Details</button>

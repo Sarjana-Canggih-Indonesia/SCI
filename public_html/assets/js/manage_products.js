@@ -1,5 +1,44 @@
 // === JS UNTUK HALAMAN MANAGE PRODUCTS === //
 
+// ==================== JS untuk Checkboxes ==================== //
+// Function to attach event listeners for checkboxes and Select All button
+function attachCheckboxListeners() {
+  const selectAllButton = document.getElementById("manage_products-selectAllButton");
+  const checkboxes = document.querySelectorAll(".product-checkbox");
+
+  // Select All functionality
+  if (selectAllButton) {
+    selectAllButton.addEventListener("click", function () {
+      const isAnyUnchecked = [...checkboxes].some((cb) => !cb.checked);
+
+      // Toggle all checkboxes based on whether any are unchecked
+      checkboxes.forEach((checkbox) => {
+        checkbox.checked = isAnyUnchecked;
+      });
+
+      // Update button text based on the state
+      if (isAnyUnchecked) {
+        selectAllButton.innerHTML = '<i class="fas fa-check-circle"></i> Deselect All';
+      } else {
+        selectAllButton.innerHTML = '<i class="fas fa-check-circle"></i> Select All';
+      }
+    });
+  }
+
+  // Update Select All button text when individual checkboxes are changed
+  checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", function () {
+      const allChecked = [...checkboxes].every((cb) => cb.checked);
+      if (allChecked) {
+        selectAllButton.innerHTML = '<i class="fas fa-check-circle"></i> Deselect All';
+      } else {
+        selectAllButton.innerHTML = '<i class="fas fa-check-circle"></i> Select All';
+      }
+    });
+  });
+}
+// ==================== Akhir JS untuk Checkboxes ==================== //
+
 // ==================== JS untuk Modal Delete ==================== //
 document.addEventListener("DOMContentLoaded", function () {
   // Fungsi untuk menampilkan modal konfirmasi saat klik tombol Delete
@@ -67,20 +106,28 @@ document.addEventListener("DOMContentLoaded", function () {
     tbody.innerHTML = ""; // Clear existing table content
 
     // Loop through products and create table rows dynamically
-    products.forEach((product) => {
+    products.forEach((product, index) => {
       const row = document.createElement("tr");
       row.innerHTML = `
-              <td>${escapeHtml(product.product_id)}</td>
-              <td>${escapeHtml(product.product_name)}</td>
-              <td>${escapeHtml(product.categories || "Uncategorized")}</td>
-              <td>Rp ${formatPrice(product.price_amount)}</td>
-              <td>
-                  <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-                  <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-              </td>
-          `;
-      tbody.appendChild(row); // Append row to table body
+        <td>
+          <input type="checkbox" name="selected_products[]" 
+                 value="${escapeHtml(product.product_id)}" 
+                 class="product-checkbox">
+          ${index + 1} <!-- Nomor urut -->
+        </td>
+        <td>${escapeHtml(product.product_name)}</td>
+        <td>${escapeHtml(product.categories || "Uncategorized")}</td>
+        <td>Rp ${formatPrice(product.price_amount)}</td>
+        <td>
+          <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
+          <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
+        </td>
+      `;
+      tbody.appendChild(row);
     });
+
+    // Re-attach event listeners for checkboxes
+    attachCheckboxListeners();
   }
 
   // Function to escape HTML to prevent XSS attacks
@@ -199,20 +246,28 @@ document.addEventListener("DOMContentLoaded", function () {
     tbody.innerHTML = ""; // Clear existing table content
 
     // Loop through products and create table rows dynamically
-    products.forEach((product) => {
+    products.forEach((product, index) => {
       const row = document.createElement("tr");
       row.innerHTML = `
-              <td>${escapeHtml(product.product_id)}</td>
-              <td>${escapeHtml(product.product_name)}</td>
-              <td>${escapeHtml(product.categories || "Uncategorized")}</td>
-              <td>Rp ${formatPrice(product.price_amount)}</td>
-              <td>
-                  <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-                  <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-              </td>
-          `;
+        <td>
+          <input type="checkbox" name="selected_products[]" 
+                 value="${escapeHtml(product.product_id)}" 
+                 class="product-checkbox">
+          ${index + 1} <!-- Nomor urut -->
+        </td>
+        <td>${escapeHtml(product.product_name)}</td>
+        <td>${escapeHtml(product.categories || "Uncategorized")}</td>
+        <td>Rp ${formatPrice(product.price_amount)}</td>
+        <td>
+          <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
+          <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
+        </td>
+      `;
       tbody.appendChild(row);
     });
+
+    // Re-attach event listeners for checkboxes
+    attachCheckboxListeners();
   }
 
   // Function to escape HTML to prevent XSS attacks
@@ -295,5 +350,12 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 });
 // ==================== Akhir JS untuk Tagify ==================== //
+
+// ==================== JS untuk Attach Checkboxes ==================== //
+// Attach checkbox listeners when the page is loaded
+document.addEventListener("DOMContentLoaded", function () {
+  attachCheckboxListeners();
+});
+// ==================== Akhir JS untuk Attach Checkboxes ==================== //
 
 // === AKHIR JS UNTUK HALAMAN MANAGE PRODUCTS === //
