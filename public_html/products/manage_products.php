@@ -13,7 +13,7 @@ startSession();
 // Step 1: Check if the user is logged in. If not, redirect to the login page.
 if (!isset($_SESSION['user_id'])) {
     $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
-    header("Location: " . $baseUrl . "auth/login.php");
+    header("Location: " . $baseUrl . "login");
     exit();
 }
 
@@ -34,6 +34,7 @@ $profileImageUrl = $baseUrl . "uploads/profile_images/" . $profileImage;
 // Restrict access to non-admin users.
 if ($userInfo['role'] !== 'admin') {
     handleError("Access denied! Role: " . $userInfo['role'], $_ENV['ENVIRONMENT']);
+    header("Location: " . $baseUrl . "login");
     exit();
 }
 
