@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .catch((error) => {
         console.error("Fetch Error:", error);
-        alert("Network error occurred");
+        alert(`Terjadi kesalahan jaringan: ${error.message}`);
       });
   });
 
@@ -162,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .catch((error) => {
         console.error("Fetch Error:", error);
-        alert("Network error occurred");
+        alert(`Terjadi kesalahan jaringan: ${error.message}`);
       });
   }
 
@@ -189,7 +189,7 @@ document.addEventListener("DOMContentLoaded", function () {
       })
       .catch((error) => {
         console.error("Fetch Error:", error);
-        alert("Network error occurred");
+        alert(`Terjadi kesalahan jaringan: ${error.message}`);
       });
   }
 
