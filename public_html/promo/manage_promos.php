@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
+require_once __DIR__ . '/../../config/promos/promo_functions.php';
 
 use Carbon\Carbon;
 
@@ -93,7 +94,7 @@ header("X-XSS-Protection: 1; mode=block");
 
     <!--========== AREA MANAGE PROMO ==========-->
     <section class="jarak-kustom">
-        < class="container">
+        <div class="container">
             <h2 class="mb-4 text-center">Manage Promos</h2>
 
             <!-- User Info & Promo Summary Section -->
@@ -167,7 +168,7 @@ header("X-XSS-Protection: 1; mode=block");
                 </div>
             </div>
 
-            </div>
+        </div>
     </section>
     <!--========== AKHIR AREA MANAGE PROMO ==========-->
 
