@@ -57,7 +57,7 @@ header("X-XSS-Protection: 1; mode=block");
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage Products - Sarjana Canggih Indonesia</title>
+    <title>Manage Promos - Sarjana Canggih Indonesia</title>
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="<?php echo $baseUrl; ?>favicon.ico" />
     <!-- Bootstrap css -->
@@ -90,9 +90,52 @@ header("X-XSS-Protection: 1; mode=block");
 
     <!--========== AREA MANAGE PROMO ==========-->
     <section class="jarak-kustom">
-        <div class="">
-            <h1>Hello, World!</h1>
-            <!-- PLACEHOLDER -->
+        <div class="container">
+            <h2 class="mb-4 text-center">Manage Promos</h2>
+
+            <!-- User Info & Promo Summary Section -->
+            <div class="row mb-4">
+                <!-- User Info -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">User Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li>
+                                    <img src="<?php echo htmlspecialchars($profileImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                                        alt="Profile Image" class="img-thumbnail" style="width: 100px; height: 100px;">
+                                </li>
+                                <li><strong>Username:</strong> <?php echo htmlspecialchars($userInfo['username']); ?>
+                                </li>
+                                <li><strong>Email:</strong> <?php echo htmlspecialchars($userInfo['email']); ?></li>
+                                <li><strong>Role:</strong> <?php echo htmlspecialchars($userInfo['role']); ?></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Promo Summary -->
+                <div class="col">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                Promo Summary
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li><strong>Total Promo:</strong>
+                                    <!-- PLACEHOLDER PHP -->
+                                </li>
+                                <li><strong>Currently Active Promo:</strong>
+                                    <!-- PLACEHOLDER PHP -->
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
     <!--========== AKHIR AREA MANAGE PROMO ==========-->
