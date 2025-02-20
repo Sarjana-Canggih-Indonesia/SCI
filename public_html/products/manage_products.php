@@ -204,7 +204,7 @@ header("X-XSS-Protection: 1; mode=block");
                 <table class="table table-bordered table-sm table-hover">
                     <thead class="table-dark">
                         <tr>
-                            <th>ID</th>
+                            <th>No.</th>
                             <th>Product Name</th>
                             <th>Category</th>
                             <th>Price</th>
@@ -212,9 +212,11 @@ header("X-XSS-Protection: 1; mode=block");
                         </tr>
                     </thead>
                     <tbody id="productsTableBody">
-                        <?php foreach ($products as $product): ?>
+                        <?php
+                        $counter = 1;
+                        foreach ($products as $product): ?>
                             <tr>
-                                <td><?= htmlspecialchars($product['product_id']) ?></td>
+                                <td><?= $counter++ ?></td>
                                 <td><?= htmlspecialchars($product['product_name']) ?></td>
                                 <td><?= htmlspecialchars($product['categories'] ?? 'Uncategorized') ?></td>
                                 <td>Rp <?= number_format($product['price_amount'], 0, ',', '.') ?>,00</td>
