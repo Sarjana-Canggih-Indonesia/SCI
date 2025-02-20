@@ -85,7 +85,13 @@ if ($userInfo['role'] !== 'admin') {
     <section class="jarak-kustom">
         <div class="container">
             <h1>Hello, World!</h1>
-            <a href="<?php echo $baseUrl; ?>manage_products">Manage Products</a>
+            <button>
+                <a href="<?php echo $baseUrl; ?>manage_products">Manage Products</a>
+            </button>
+            <button>
+                <a href="<?php echo $baseUrl; ?>manage_promos">Manage Promos</a>
+            </button>
+
         </div>
     </section>
     <!--========== AKHIR AREA PROMO ==========-->
@@ -100,6 +106,4 @@ if ($userInfo['role'] !== 'admin') {
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
-</body>
-
-</html>
+</body></html>
