@@ -160,8 +160,8 @@ header("X-XSS-Protection: 1; mode=block");
                     <select class="form-select w-45" id="categoryFilter" aria-label="Filter by Category">
                         <option value="" selected>All Categories</option>
                         <?php foreach ($categories as $category): ?>
-                            <option value="<?= htmlspecialchars($category['category_id']) ?>">
-                                <?= htmlspecialchars($category['category_name']) ?>
+                            <option value="<?= htmlspecialchars($category['promo_category_id']) ?>">
+                                <?= htmlspecialchars($category['promo_category_name']) ?>
                             </option>
                         <?php endforeach; ?>
                     </select>
