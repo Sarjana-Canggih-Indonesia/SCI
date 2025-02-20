@@ -74,15 +74,15 @@ $profileImageUrl = default_profile_image($profileImage);
                     <li class="nav-item">
                         <a class="nav-link active" aria-current="page" href="<?php echo $baseUrl; ?>">Home</a>
                     </li>
-                    <li class="nav-item">
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="<?php echo $baseUrl; ?>products">Products</a>
-                    </li>
-                    <li class="nav-item">
+                    </li> -->
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="<?php echo $baseUrl; ?>promo">Promo</a>
-                    </li>
-                    <li class="nav-item">
+                    </li> -->
+                    <!-- <li class="nav-item">
                         <a class="nav-link" href="<?php echo $baseUrl; ?>blogs/">Blogs</a>
-                    </li>
+                    </li> -->
                     <li class="nav-item">
                         <a class="nav-link" href="<?php echo $baseUrl; ?>about">About Us</a>
                     </li>
@@ -148,21 +148,21 @@ $profileImageUrl = default_profile_image($profileImage);
                         <i class="fa-solid fa-house"></i> Home
                     </a>
                 </li>
-                <li class="nav-item">
+                <!-- <li class="nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>products">
                         <i class="fa-solid fa-box"></i> Products
                     </a>
-                </li>
-                <li class="nav-item">
+                </li> -->
+                <!-- <li class="nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>promo/">
                         <i class="fa-solid fa-tags"></i> Promo
                     </a>
-                </li>
-                <li class="nav-item">
+                </li> -->
+                <!-- <li class="nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>blogs/">
                         <i class="fa-solid fa-blog"></i> Blogs
                     </a>
-                </li>
+                </li> -->
                 <li class="nav-item">
                     <a class="nav-link" href="<?php echo $baseUrl; ?>about">
                         <i class="fa-solid fa-users"></i> About Us
