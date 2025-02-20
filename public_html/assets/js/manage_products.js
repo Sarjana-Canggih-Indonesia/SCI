@@ -1,7 +1,38 @@
 // === JS UNTUK HALAMAN MANAGE PRODUCTS === //
 
+// ==================== Global Helper Functions ==================== //
+function updateDeleteButtonVisibility() {
+  const checkboxes = document.querySelectorAll(".product-checkbox");
+  const deleteSelectedBtn = document.getElementById("deleteSelectedBtn");
+  const anyChecked = Array.from(checkboxes).some((checkbox) => checkbox.checked);
+  if (deleteSelectedBtn) {
+    deleteSelectedBtn.classList.toggle("d-none", !anyChecked);
+  }
+}
+
+function escapeHtml(unsafe) {
+  return unsafe
+    ? unsafe
+        .toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;")
+    : "";
+}
+
+function formatPrice(amount) {
+  return (
+    Number(amount).toLocaleString("id-ID", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }) + ",00"
+  );
+}
+// ==================== Akhir Global Helper Functions ==================== //
+
 // ==================== JS untuk Checkboxes ==================== //
-// Function to attach event listeners for checkboxes and Select All button
 function attachCheckboxListeners() {
   const selectAllButton = document.getElementById("manage_products-selectAllButton");
   const checkboxes = document.querySelectorAll(".product-checkbox");
@@ -11,54 +42,86 @@ function attachCheckboxListeners() {
     selectAllButton.addEventListener("click", function () {
       const isAnyUnchecked = [...checkboxes].some((cb) => !cb.checked);
 
-      // Toggle all checkboxes based on whether any are unchecked
       checkboxes.forEach((checkbox) => {
         checkbox.checked = isAnyUnchecked;
       });
 
-      // Update button text based on the state
       if (isAnyUnchecked) {
         selectAllButton.innerHTML = '<i class="fas fa-check-circle"></i> Deselect All';
       } else {
         selectAllButton.innerHTML = '<i class="fas fa-check-circle"></i> Select All';
       }
+
+      updateDeleteButtonVisibility();
     });
   }
 
-  // Update Select All button text when individual checkboxes are changed
+  // Update buttons when individual checkboxes are changed
   checkboxes.forEach((checkbox) => {
     checkbox.addEventListener("change", function () {
       const allChecked = [...checkboxes].every((cb) => cb.checked);
+
       if (allChecked) {
         selectAllButton.innerHTML = '<i class="fas fa-check-circle"></i> Deselect All';
       } else {
         selectAllButton.innerHTML = '<i class="fas fa-check-circle"></i> Select All';
       }
+
+      updateDeleteButtonVisibility();
     });
   });
+
+  // Initial update
+  updateDeleteButtonVisibility();
 }
 // ==================== Akhir JS untuk Checkboxes ==================== //
 
-// ==================== JS untuk Modal Delete ==================== //
+// ==================== JS untuk Delete Selected ==================== //
 document.addEventListener("DOMContentLoaded", function () {
-  // Fungsi untuk menampilkan modal konfirmasi saat klik tombol Delete
-  document.querySelectorAll(".btn-danger").forEach(function (deleteButton) {
-    deleteButton.addEventListener("click", function () {
-      // Show the delete confirmation modal
-      var modal = new bootstrap.Modal(document.getElementById("deleteModal"));
-      modal.show();
+  const confirmDeleteSelected = document.getElementById("confirmDeleteSelected");
 
-      // Select the confirmation delete button inside the modal
-      var confirmDeleteButton = document.querySelector("#deleteModal .btn-danger");
-      confirmDeleteButton.addEventListener("click", function () {
-        // Simulate product deletion (should be replaced with actual deletion logic)
-        alert("Product deleted!");
-        modal.hide();
-      });
+  if (confirmDeleteSelected) {
+    confirmDeleteSelected.addEventListener("click", function () {
+      const selectedProducts = Array.from(document.querySelectorAll(".product-checkbox:checked")).map(
+        (checkbox) => checkbox.value,
+      );
+
+      if (selectedProducts.length === 0) return;
+
+      fetch(`${BASE_URL}api-proxy.php?action=delete_selected_products`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": "<?php echo $_SESSION['csrf_token']; ?>",
+        },
+        body: JSON.stringify({
+          product_ids: selectedProducts,
+          csrf_token: "<?php echo $_SESSION['csrf_token']; ?>",
+        }),
+        credentials: "include",
+      })
+        .then(handleResponse)
+        .then((data) => {
+          if (data.success) {
+            alert("Produk terpilih berhasil dihapus!");
+            window.location.reload();
+          } else {
+            alert("Gagal menghapus produk: " + data.message);
+          }
+        })
+        .catch((error) => {
+          console.error("Error:", error);
+          alert("Terjadi kesalahan saat menghapus produk");
+        });
     });
-  });
+  }
+
+  function handleResponse(response) {
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    return response.json();
+  }
 });
-// ==================== Akhir JS untuk Modal Delete ==================== //
+// ==================== Akhir JS untuk Delete Selected ==================== //
 
 // ==================== JS untuk Filter Category ==================== //
 document.addEventListener("DOMContentLoaded", function () {
@@ -103,9 +166,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Function to update the product table dynamically
   function updateTable(products) {
     const tbody = document.getElementById("productsTableBody");
-    tbody.innerHTML = ""; // Clear existing table content
+    tbody.innerHTML = "";
 
-    // Loop through products and create table rows dynamically
     products.forEach((product, index) => {
       const row = document.createElement("tr");
       row.innerHTML = `
@@ -113,21 +175,18 @@ document.addEventListener("DOMContentLoaded", function () {
           <input type="checkbox" name="selected_products[]" 
                  value="${escapeHtml(product.product_id)}" 
                  class="product-checkbox">
-          ${index + 1} <!-- Nomor urut -->
+          ${index + 1}
         </td>
         <td>${escapeHtml(product.product_name)}</td>
         <td>${escapeHtml(product.categories || "Uncategorized")}</td>
         <td>Rp ${formatPrice(product.price_amount)}</td>
-        <td>
-          <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-          <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-        </td>
       `;
       tbody.appendChild(row);
     });
 
-    // Re-attach event listeners for checkboxes
+    // Re-attach listeners and update UI
     attachCheckboxListeners();
+    updateDeleteButtonVisibility();
   }
 
   // Function to escape HTML to prevent XSS attacks
@@ -243,9 +302,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // Function to update the table dynamically with product data
   function updateTable(products) {
     const tbody = document.getElementById("productsTableBody");
-    tbody.innerHTML = ""; // Clear existing table content
+    tbody.innerHTML = "";
 
-    // Loop through products and create table rows dynamically
     products.forEach((product, index) => {
       const row = document.createElement("tr");
       row.innerHTML = `
@@ -253,21 +311,18 @@ document.addEventListener("DOMContentLoaded", function () {
           <input type="checkbox" name="selected_products[]" 
                  value="${escapeHtml(product.product_id)}" 
                  class="product-checkbox">
-          ${index + 1} <!-- Nomor urut -->
+          ${index + 1}
         </td>
         <td>${escapeHtml(product.product_name)}</td>
         <td>${escapeHtml(product.categories || "Uncategorized")}</td>
         <td>Rp ${formatPrice(product.price_amount)}</td>
-        <td>
-          <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-          <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-        </td>
       `;
       tbody.appendChild(row);
     });
 
-    // Re-attach event listeners for checkboxes
+    // Re-attach listeners and update UI
     attachCheckboxListeners();
+    updateDeleteButtonVisibility();
   }
 
   // Function to escape HTML to prevent XSS attacks
@@ -352,9 +407,18 @@ document.addEventListener("DOMContentLoaded", function () {
 // ==================== Akhir JS untuk Tagify ==================== //
 
 // ==================== JS untuk Attach Checkboxes ==================== //
-// Attach checkbox listeners when the page is loaded
 document.addEventListener("DOMContentLoaded", function () {
   attachCheckboxListeners();
+
+  // Initial check
+  updateDeleteButtonVisibility();
+
+  // Attach global event listener untuk perubahan dinamis
+  document.addEventListener("change", function (e) {
+    if (e.target.classList.contains("product-checkbox")) {
+      updateDeleteButtonVisibility();
+    }
+  });
 });
 // ==================== Akhir JS untuk Attach Checkboxes ==================== //
 

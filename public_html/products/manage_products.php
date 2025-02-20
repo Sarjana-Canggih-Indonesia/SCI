@@ -215,7 +215,6 @@ header("X-XSS-Protection: 1; mode=block");
                             <th>Product Name</th>
                             <th>Category</th>
                             <th>Price</th>
-                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="productsTableBody">
@@ -231,10 +230,6 @@ header("X-XSS-Protection: 1; mode=block");
                                 <td><?= htmlspecialchars($product['product_name']) ?></td>
                                 <td><?= htmlspecialchars($product['categories'] ?? 'Uncategorized') ?></td>
                                 <td>Rp <?= number_format($product['price_amount'], 0, ',', '.') ?>,00</td>
-                                <td>
-                                    <button class="btn btn-warning btn-sm"><i class="fas fa-edit"></i> Edit</button>
-                                    <button class="btn btn-danger btn-sm"><i class="fas fa-trash"></i> Delete</button>
-                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
@@ -245,10 +240,11 @@ header("X-XSS-Protection: 1; mode=block");
             <div class="mb-4 d-flex">
                 <button class="me-1 btn btn-secondary" id="manage_products-selectAllButton"><i
                         class="fas fa-check-circle"></i> Select All</button>
-                <button class="mx-1 btn btn-danger"><i class="fas fa-trash"></i> Delete Selected</button>
-                <button class="mx-1 btn btn-success"><i class="fas fa-download"></i> Export Data</button>
-                <button class="mx-1 btn btn-primary btn-sm"><i class="fas fa-eye"></i> View Details</button>
                 <button class="mx-1 btn btn-warning btn-sm"><i class="fas fa-pencil-alt"></i> Quick Edit</button>
+                <button class="mx-1 btn btn-danger d-none" id="deleteSelectedBtn" data-bs-toggle="modal"
+                    data-bs-target="#deleteSelectedModal"><i class="fas fa-trash"></i> Delete Selected
+                </button>
+                <button class="mx-1 btn btn-success"><i class="fas fa-download"></i> Export Data</button>
             </div>
 
             <!-- Pagination with Product Count -->
@@ -409,20 +405,21 @@ header("X-XSS-Protection: 1; mode=block");
                 </div>
             </div>
 
-            <!-- Action Confirmation Modals -->
-            <div class="modal" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+            <!-- Delete Selected Modal -->
+            <div class="modal fade" id="deleteSelectedModal" tabindex="-1" aria-labelledby="deleteSelectedModalLabel"
+                aria-hidden="true">
                 <div class="modal-dialog">
                     <div class="modal-content">
                         <div class="modal-header">
-                            <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                            <h5 class="modal-title" id="deleteSelectedModalLabel">Konfirmasi Penghapusan</h5>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            Are you sure you want to delete this product?
+                            Apakah Anda yakin ingin menghapus produk yang dipilih?
                         </div>
                         <div class="modal-footer">
-                            <button type=" button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="button" class="btn btn-danger">Delete</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                            <button type="button" class="btn btn-danger" id="confirmDeleteSelected">Hapus</button>
                         </div>
                     </div>
                 </div>
