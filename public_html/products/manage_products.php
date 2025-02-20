@@ -226,7 +226,7 @@ header("X-XSS-Protection: 1; mode=block");
                                 <td>
                                     <input type="checkbox" name="selected_products[]" value="<?= $product['product_id'] ?>"
                                         class="product-checkbox">
-                                    <?= $counter++ ?> <!-- Nomor urut tetap ditampilkan -->
+                                    <?= $counter++ ?>
                                 </td>
                                 <td><?= htmlspecialchars($product['product_name']) ?></td>
                                 <td><?= htmlspecialchars($product['categories'] ?? 'Uncategorized') ?></td>
