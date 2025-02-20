@@ -36,6 +36,9 @@ if ($userInfo['role'] !== 'admin') {
     exit();
 }
 
+// Retrieve product categories from the database.
+$categories = getPromoCategories();
+
 // Load dynamic URL configuration.
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
@@ -90,7 +93,7 @@ header("X-XSS-Protection: 1; mode=block");
 
     <!--========== AREA MANAGE PROMO ==========-->
     <section class="jarak-kustom">
-        <div class="container">
+        < class="container">
             <h2 class="mb-4 text-center">Manage Promos</h2>
 
             <!-- User Info & Promo Summary Section -->
@@ -136,7 +139,35 @@ header("X-XSS-Protection: 1; mode=block");
                     </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Search Bar -->
+            <div class="mb-4 d-flex">
+                <input type="text" class="form-control flex-grow-1" id="searchInput"
+                    placeholder="Cari promo berdasarkan nama">
+                <button class="btn btn-primary ms-3 d-inline-flex align-items-center">
+                    <i class="fas fa-search me-2"></i>
+                    Search
+                </button>
+            </div>
+
+            <!-- Filter by Category Section -->
+            <div class="card mb-4 shadow-sm">
+                <div class="card-header bg-primary-subtle">
+                    <h5 class="mb-0">Filter by Category</h5>
+                </div>
+                <div class="card-body d-flex justify-content-center align-items-center">
+                    <select class="form-select w-45" id="categoryFilter" aria-label="Filter by Category">
+                        <option value="" selected>All Categories</option>
+                        <?php foreach ($categories as $category): ?>
+                            <option value="<?= htmlspecialchars($category['category_id']) ?>">
+                                <?= htmlspecialchars($category['category_name']) ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </div>
+
+            </div>
     </section>
     <!--========== AKHIR AREA MANAGE PROMO ==========-->
 
