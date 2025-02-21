@@ -73,27 +73,29 @@ if ($userInfo['role'] !== 'admin') {
     <!--========== AKHIR INSERT HEADER.PHP ==========-->
 
     <!--========== AREA SCROLL TO TOP ==========-->
-    <section class="scroll">
+    <div class="scroll">
         <!-- Scroll to Top Button -->
         <a href="#" class="scroll-to-top" id="scrollToTopBtn">
             <i class="fa-solid fa-angles-up"></i>
         </a>
-    </section>
+    </div>
     <!--========== AKHIR AREA SCROLL TO TOP ==========-->
 
     <!--========== AREA PROMO ==========-->
-    <section class="jarak-kustom">
-        <div class="container">
-            <h1>Hello, World!</h1>
-            <button>
-                <a href="<?php echo $baseUrl; ?>manage_products">Manage Products</a>
-            </button>
-            <button>
-                <a href="<?php echo $baseUrl; ?>manage_promos">Manage Promos</a>
-            </button>
+    <div class="jarak-kustom">
+        <section class="container">
+            <h2 class="mb-4 text-center">Admin Dashboard</h2>
 
-        </div>
-    </section>
+            <div class="mb-4">
+                <a class="btn btn-primary" role="button" href="<?php echo $baseUrl; ?>manage_products">
+                    Manage Products
+                </a>
+                <a class="btn btn-primary" role="button" href="<?php echo $baseUrl; ?>manage_promos">
+                    Manage Promos
+                </a>
+            </div>
+        </section>
+    </div>
     <!--========== AKHIR AREA PROMO ==========-->
 
     <!--================ AREA FOOTER =================-->
@@ -106,4 +108,6 @@ if ($userInfo['role'] !== 'admin') {
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
-</body></html>
+</body>
+
+</html>
