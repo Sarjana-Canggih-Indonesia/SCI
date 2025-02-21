@@ -1,4 +1,6 @@
 <?php
+// delete_selected_products.php
+
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/products/product_functions.php';
 
