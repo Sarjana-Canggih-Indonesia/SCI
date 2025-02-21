@@ -410,44 +410,51 @@ function updateProduct($id, $data)
 }
 
 /**
- * Deletes a product from the database based on its ID.
+ * Deletes a product from the database, including its related category mappings.
  *
- * This function prepares and executes an SQL DELETE statement to remove a product from the 'products' table
- * using the provided product ID. It returns an array with a success message or an error message.
+ * This function first validates the product ID, ensures a database connection,
+ * and then removes the product from the `products` table along with its associated
+ * category mappings in `product_category_mapping`. If the product is successfully
+ * deleted, it commits the transaction; otherwise, it rolls back and returns an error message.
  *
- * @param int $id The ID of the product to delete.
- * @return array Returns an array with a success message on successful deletion,
- *               or an array with an error message on failure.
+ * @param int $id The ID of the product to be deleted.
+ * @return array An associative array containing 'error' (boolean) and 'message' (string).
  */
 function deleteProduct($id)
 {
+    if (!is_numeric($id) || $id <= 0) {
+        return ['error' => true, 'message' => 'ID produk tidak valid.'];
+    }
+
     try {
+        $config = getEnvironmentConfig();
         $pdo = getPDOConnection();
-        $stmt = $pdo->prepare("DELETE FROM products WHERE product_id = :id");
-
-        // Execute the query
-        $success = $stmt->execute(['id' => $id]);
-
-        if ($success) {
-            return [
-                'error' => false,
-                'message' => 'Produk berhasil dihapus.'
-            ];
-        } else {
-            return [
-                'error' => true,
-                'message' => 'Gagal menghapus produk. Produk tidak ditemukan atau sudah dihapus.'
-            ];
+        if (!$pdo) {
+            return ['error' => true, 'message' => 'Koneksi database gagal.'];
         }
-    } catch (Exception $e) {
-        // Log the error for debugging purposes
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
 
-        // Return a user-friendly error message
-        return [
-            'error' => true,
-            'message' => 'Terjadi kesalahan saat menghapus produk. Silakan hubungi admin.'
-        ];
+        $pdo->beginTransaction();
+
+        $stmtMapping = $pdo->prepare("DELETE FROM product_category_mapping WHERE product_id=:id");
+        $stmtMapping->execute(['id' => $id]);
+
+        $stmt = $pdo->prepare("DELETE FROM products WHERE product_id=:id");
+        $stmt->execute(['id' => $id]);
+
+        if ($stmt->rowCount() > 0) {
+            $pdo->commit();
+            return ['error' => false, 'message' => 'Produk berhasil dihapus.'];
+        } else {
+            $pdo->rollBack();
+            return ['error' => true, 'message' => 'Produk tidak ditemukan atau sudah dihapus.'];
+        }
+    } catch (PDOException $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+
+        handleError("Database Error: " . $e->getMessage(), $config['is_live'] ? 'live' : 'local');
+        return ['error' => true, 'message' => 'Terjadi kesalahan pada database.'];
     }
 }
 
