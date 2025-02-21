@@ -12,6 +12,7 @@ $allowedActions = [
     'get_all_products' => '../api/get_all_products.php',
     'get_search_products' => '../api/get_search_products.php',
     'get_products_by_category' => '../api/get_products_by_category.php',
+    'delete_selected_products' => '../api/delete_selected_products.php',
 ];
 
 // Periksa apakah action valid
