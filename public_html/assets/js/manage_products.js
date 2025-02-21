@@ -183,7 +183,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
   });
 
-  // Function to update the product table dynamically
+  // Function to update the table dynamically with product data
   function updateTable(products) {
     const tbody = document.getElementById("productsTableBody");
     tbody.innerHTML = "";
@@ -191,16 +191,26 @@ document.addEventListener("DOMContentLoaded", function () {
     products.forEach((product, index) => {
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>
-          <input type="checkbox" name="selected_products[]" 
-                 value="${escapeHtml(product.product_id)}" 
-                 class="product-checkbox">
-          ${index + 1}
-        </td>
-        <td>${escapeHtml(product.product_name)}</td>
-        <td>${escapeHtml(product.categories || "Uncategorized")}</td>
-        <td>Rp ${formatPrice(product.price_amount)}</td>
-      `;
+      <td>
+        <input type="checkbox" name="selected_products[]" 
+               value="${escapeHtml(product.product_id)}" 
+               class="product-checkbox">
+        ${index + 1}
+      </td>
+      <td>${escapeHtml(product.product_name)}</td>
+      <td>${escapeHtml(product.categories || "Uncategorized")}</td>
+      <td>Rp ${formatPrice(product.price_amount)}</td>
+      <td>
+        <!-- Tombol View Details -->
+        <button class="btn btn-info btn-sm" onclick="viewDetails(${escapeHtml(product.product_id)})">
+          <i class="fas fa-eye"></i> View Details
+        </button>
+        <!-- Tombol Edit -->
+        <button class="btn btn-warning btn-sm" onclick="editProduct(${escapeHtml(product.product_id)})">
+          <i class="fas fa-edit"></i> Edit
+        </button>
+      </td>
+    `;
       tbody.appendChild(row);
     });
 
@@ -327,16 +337,26 @@ document.addEventListener("DOMContentLoaded", function () {
     products.forEach((product, index) => {
       const row = document.createElement("tr");
       row.innerHTML = `
-        <td>
-          <input type="checkbox" name="selected_products[]" 
-                 value="${escapeHtml(product.product_id)}" 
-                 class="product-checkbox">
-          ${index + 1}
-        </td>
-        <td>${escapeHtml(product.product_name)}</td>
-        <td>${escapeHtml(product.categories || "Uncategorized")}</td>
-        <td>Rp ${formatPrice(product.price_amount)}</td>
-      `;
+      <td>
+        <input type="checkbox" name="selected_products[]" 
+               value="${escapeHtml(product.product_id)}" 
+               class="product-checkbox">
+        ${index + 1}
+      </td>
+      <td>${escapeHtml(product.product_name)}</td>
+      <td>${escapeHtml(product.categories || "Uncategorized")}</td>
+      <td>Rp ${formatPrice(product.price_amount)}</td>
+      <td>
+        <!-- Tombol View Details -->
+        <button class="btn btn-info btn-sm" onclick="viewDetails(${escapeHtml(product.product_id)})">
+          <i class="fas fa-eye"></i> View Details
+        </button>
+        <!-- Tombol Edit -->
+        <button class="btn btn-warning btn-sm" onclick="editProduct(${escapeHtml(product.product_id)})">
+          <i class="fas fa-edit"></i> Edit
+        </button>
+      </td>
+    `;
       tbody.appendChild(row);
     });
 
