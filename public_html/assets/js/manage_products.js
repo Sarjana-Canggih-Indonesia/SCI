@@ -80,44 +80,51 @@ function attachCheckboxListeners() {
 document.addEventListener("DOMContentLoaded", function () {
   const confirmDeleteSelected = document.getElementById("confirmDeleteSelected");
 
-  if (confirmDeleteSelected) {
-    confirmDeleteSelected.addEventListener("click", function () {
-      const selectedProducts = Array.from(document.querySelectorAll(".product-checkbox:checked")).map(
-        (checkbox) => checkbox.value,
-      );
-
-      if (selectedProducts.length === 0) return;
-
-      fetch(`${BASE_URL}api-proxy.php?action=delete_selected_products`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": "<?php echo $_SESSION['csrf_token']; ?>",
-        },
-        body: JSON.stringify({
-          product_ids: selectedProducts,
-          csrf_token: "<?php echo $_SESSION['csrf_token']; ?>",
-        }),
-        credentials: "include",
-      })
-        .then(handleResponse)
-        .then((data) => {
-          if (data.success) {
-            alert("Produk terpilih berhasil dihapus!");
-            window.location.reload();
-          } else {
-            alert("Gagal menghapus produk: " + data.message);
-          }
-        })
-        .catch((error) => {
-          console.error("Error:", error);
-          alert("Terjadi kesalahan saat menghapus produk");
-        });
-    });
+  if (!confirmDeleteSelected) {
+    console.warn("Button confirmDeleteSelected tidak ditemukan.");
+    return;
   }
 
+  confirmDeleteSelected.addEventListener("click", function () {
+    const selectedProducts = Array.from(document.querySelectorAll(".product-checkbox:checked")).map(
+      (checkbox) => checkbox.value,
+    );
+
+    if (selectedProducts.length === 0) {
+      alert("Silakan pilih produk terlebih dahulu!");
+      return;
+    }
+
+    const url = `${BASE_URL}api-proxy.php?action=delete_selected_products`;
+
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ product_ids: selectedProducts }),
+      credentials: "include",
+    })
+      .then(handleResponse)
+      .then((data) => {
+        if (!data.error) {
+          alert("Produk terpilih berhasil dihapus!");
+          window.location.reload();
+        } else {
+          console.warn("Beberapa produk gagal dihapus:", data.failed_products);
+          alert("Gagal menghapus beberapa produk.");
+        }
+      })
+      .catch((error) => {
+        console.error("Terjadi kesalahan saat menghapus produk:", error);
+        alert("Terjadi kesalahan saat menghapus produk.");
+      });
+  });
+
   function handleResponse(response) {
-    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
     return response.json();
   }
 });
