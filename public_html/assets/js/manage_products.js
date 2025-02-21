@@ -80,47 +80,60 @@ function attachCheckboxListeners() {
 document.addEventListener("DOMContentLoaded", function () {
   const confirmDeleteSelected = document.getElementById("confirmDeleteSelected");
 
+  // Ensure the delete button exists
   if (!confirmDeleteSelected) {
-    console.warn("Button confirmDeleteSelected tidak ditemukan.");
     return;
   }
 
   confirmDeleteSelected.addEventListener("click", function () {
+    // Collect selected product IDs
     const selectedProducts = Array.from(document.querySelectorAll(".product-checkbox:checked")).map(
       (checkbox) => checkbox.value,
     );
 
+    // Validate if at least one product is selected
     if (selectedProducts.length === 0) {
-      alert("Silakan pilih produk terlebih dahulu!");
+      alert("Please select at least one product!");
+      return;
+    }
+
+    // Retrieve CSRF token from meta tag
+    const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute("content");
+
+    // Validate CSRF token existence
+    if (!csrfToken) {
+      alert("An internal error occurred. Please reload the page.");
       return;
     }
 
     const url = `${BASE_URL}api-proxy.php?action=delete_selected_products`;
 
+    // Send DELETE request to the API
     fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "X-CSRF-TOKEN": csrfToken,
       },
       body: JSON.stringify({ product_ids: selectedProducts }),
       credentials: "include",
     })
       .then(handleResponse)
       .then((data) => {
+        // Handle successful and failed deletions
         if (!data.error) {
-          alert("Produk terpilih berhasil dihapus!");
+          alert("Selected products have been successfully deleted!");
           window.location.reload();
         } else {
-          console.warn("Beberapa produk gagal dihapus:", data.failed_products);
-          alert("Gagal menghapus beberapa produk.");
+          alert("Failed to delete some products.");
         }
       })
       .catch((error) => {
-        console.error("Terjadi kesalahan saat menghapus produk:", error);
-        alert("Terjadi kesalahan saat menghapus produk.");
+        alert("An error occurred while deleting products.");
       });
   });
 
+  // Handle API response
   function handleResponse(response) {
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
