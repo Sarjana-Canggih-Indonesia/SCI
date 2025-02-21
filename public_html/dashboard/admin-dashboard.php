@@ -82,17 +82,47 @@ if ($userInfo['role'] !== 'admin') {
     <!--========== AKHIR AREA SCROLL TO TOP ==========-->
 
     <!--========== AREA PROMO ==========-->
-    <div class="jarak-kustom">
-        <section class="container">
+    <div class="jarak-kustom container">
+        <section class="judul-halaman-admin-dashboard">
             <h2 class="mb-4 text-center">Admin Dashboard</h2>
+        </section>
+        <section class="user-info-dan-navigasi-halaman-admin">
+            <div class="row mb-4">
+                <!-- User Info -->
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">User Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                                <li>
+                                    <img src="<?php echo htmlspecialchars($profileImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
+                                        alt="Profile Image" class="img-thumbnail" style="width: 100px; height: 100px;">
+                                </li>
+                                <li><strong>Username:</strong> <?php echo htmlspecialchars($userInfo['username']); ?>
+                                </li>
+                                <li><strong>Email:</strong> <?php echo htmlspecialchars($userInfo['email']); ?></li>
+                                <li><strong>Role:</strong> <?php echo htmlspecialchars($userInfo['role']); ?></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
 
-            <div class="mb-4">
-                <a class="btn btn-primary" role="button" href="<?php echo $baseUrl; ?>manage_products">
-                    Manage Products
-                </a>
-                <a class="btn btn-primary" role="button" href="<?php echo $baseUrl; ?>manage_promos">
-                    Manage Promos
-                </a>
+                <!-- Navigasi Halaman Admin -->
+                <div class="col-md-6">
+                    <div class="d-grid gap-2">
+                        <a class="btn btn-primary" role="button" href="<?php echo $baseUrl; ?>manage_products">
+                            Manage Products
+                        </a>
+                        <a class="btn btn-primary" role="button" href="<?php echo $baseUrl; ?>manage_promos">
+                            Manage Promos
+                        </a>
+                        <a class="btn btn-primary" role="button" href="#">
+                            Manage Blogs
+                        </a>
+                    </div>
+                </div>
             </div>
         </section>
     </div>
