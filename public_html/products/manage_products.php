@@ -217,6 +217,7 @@ header("X-XSS-Protection: 1; mode=block");
                             <th>Product Name</th>
                             <th>Category</th>
                             <th>Price</th>
+                            <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody id="productsTableBody">
@@ -232,6 +233,18 @@ header("X-XSS-Protection: 1; mode=block");
                                 <td><?= htmlspecialchars($product['product_name']) ?></td>
                                 <td><?= htmlspecialchars($product['categories'] ?? 'Uncategorized') ?></td>
                                 <td>Rp <?= number_format($product['price_amount'], 0, ',', '.') ?>,00</td>
+                                <td>
+                                    <!-- Tombol View Details -->
+                                    <button class="btn btn-info btn-sm"
+                                        onclick="viewDetails(<?= $product['product_id'] ?>)">
+                                        <i class="fas fa-eye"></i> View Details
+                                    </button>
+                                    <!-- Tombol Edit -->
+                                    <button class="btn btn-warning btn-sm"
+                                        onclick="editProduct(<?= $product['product_id'] ?>)">
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>
+                                </td>
                             </tr>
                         <?php endforeach; ?>
                     </tbody>
