@@ -87,12 +87,6 @@ header("X-XSS-Protection: 1; mode=block");
     <!-- Custom CSS -->
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/halaman-admin.css" />
-    <style>
-        .product-checkbox {
-            margin-right: 0.5rem;
-            cursor: pointer;
-        }
-    </style>
 </head>
 
 <body style="background-color: #f7f9fb;">
@@ -231,7 +225,7 @@ header("X-XSS-Protection: 1; mode=block");
             </div>
 
             <!-- Products Table -->
-            <div class="table-responsive mb-4">
+            <div class="halaman-manage-products-bagian-table table-responsive mb-4">
                 <table class="table table-bordered table-sm table-hover">
                     <thead class="table-dark">
                         <tr>
