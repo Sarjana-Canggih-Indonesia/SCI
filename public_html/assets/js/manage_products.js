@@ -275,9 +275,7 @@ function viewDetails(productId) {
 
         // Handle product image display
         const imgElement = document.getElementById("detailProductImage");
-        imgElement.src = product.image
-          ? `${BASE_URL}uploads/product_images/${product.image}`
-          : `${BASE_URL}assets/images/no-image.jpg`;
+        imgElement.src = product.image ? `${BASE_URL}${product.image}` : `${BASE_URL}assets/images/no-image.jpg`;
 
         // Show the product details modal
         new bootstrap.Modal(document.getElementById("productDetailsModal")).show();
