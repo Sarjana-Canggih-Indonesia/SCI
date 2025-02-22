@@ -53,24 +53,27 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
 
     <!--================ AREA JUMBOTRON =================-->
     <section class="jumbotron-pk tentang-kami">
-        <div class="container py-4">
-            <div class="jumbotron bg p-5 mb-4 rounded-3">
-                <div class="container-fluid py-5 tk_text">
-                    <h1 class="display-5 fw-bold text-white">Tentang</h1>
-                    <h1 class="display-5 fw-bold text-white">Kami</h1>
-                    <p class="col-md-8 fs-4"></p>
-                </div>
-            </div>
-        </div>
+        <!-- PLACEHOLDER -->
     </section>
     <!--================Akhir Area Jumbotron=================-->
     <br />
     <br />
+
+    <!--================ AREA JUDUL HALAMAN =================-->
+    <section class="judul-halaman-about">
+        <div class="container">
+            <h2 class="text-center mb-4" style="font-size: 3rem; font-weight: 700;">
+                Tentang Kami
+            </h2>
+        </div>
+    </section>
+    <!--================ AKHIR AREA JUDUL HALAMAN =================-->
+
     <!--================Area Kata Mereka=================-->
     <section class="katamereka">
         <div class="container">
             <div class="row">
-                <p class="fs-1 fw-bold">Kata mereka "Joki"? Kami jawab:</p>
+                <p class="fs-2 fw-bold">Kata mereka "Joki"? Kami jawab:</p>
                 <p class="fs-5" style="text-align: justify">
                     "Kami tidak berbeda dengan jasa pihak ketiga lainnya yang menjadikan
                     ide-ide pelanggan kami menjadi karya nyata. Pengalaman kami
@@ -89,7 +92,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
         <div class="container tk-text">
             <div class="row">
                 <div class="col-lg-12">
-                    <h4 class="fs-1 text-center fw-bold">
+                    <h4 class="fs-2 text-center fw-bold">
                         VISI <font color="#FFC300">KAMI</font>
                     </h4>
                     <p class="fs-2 text-center">
@@ -98,7 +101,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
                     </p>
                 </div>
                 <div class="col-lg-12 py-5">
-                    <h4 class="fs-1 text-center fw-bold">
+                    <h4 class="fs-2 text-center fw-bold">
                         MISI <font color="#FFC300">KAMI</font>
                     </h4>
                     <ol>

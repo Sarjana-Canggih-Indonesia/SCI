@@ -1178,23 +1178,20 @@ body.login-page {
 /* AREA HALAMAN PROFILE
 ================================================================================ */
 
-/* AREA JUMBOTRON
+/* AREA HALAMAN ABOUT US
 ================================================================================ */
-
+/* HALAMAN ABOUT US */
 .jumbotron-pk.tentang-kami {
-  background-image: linear-gradient(to bottom, #09203f 0%, #537895 100%);
+  background-image: url("../images/sc-logo-landscape.webp");
   background-size: cover !important;
+  background-position: left top;
   width: 100% !important;
-  min-height: 480px !important;
+  height: 600px !important;
 }
 
-/* MENGATUR LEBAR BUTTON PADA JUMBOTRON TENTANGKAMI & KARIR */
-.jumbotron-pk .container .row a {
-  display: inline-block;
-  min-height: 58px;
-  max-width: 220px;
-  align-content: center;
-  border-radius: 30px;
+section.judul-halaman-about .container h2 {
+  font-size: 3rem;
+  font-weight: 700;
 }
-/* AKHIR AREA JUMBOTRON
+/* AKHIR AREA HALAMAN ABOUT US
 ================================================================================ */
