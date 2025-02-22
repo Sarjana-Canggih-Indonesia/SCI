@@ -223,6 +223,94 @@ function initializeTagify() {
   });
 }
 
+// ==================== JS untuk Modal Detail Product ==================== //
+function viewDetails(productId) {
+  console.log("[Debug] Memulai viewDetails untuk product ID:", productId);
+
+  // Ambil CSRF token dari meta tag
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+  console.log("[Debug] CSRF Token:", csrfToken);
+
+  // Konstruksi URL API proxy
+  const apiUrl = `${BASE_URL}api-proxy.php?action=get_product_details&product_id=${productId}`;
+  console.log("[Debug] API URL:", apiUrl);
+
+  // Lakukan fetch request
+  fetch(apiUrl, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRF-TOKEN": csrfToken,
+    },
+  })
+    .then((response) => {
+      console.log("[Debug] Response Status:", response.status, response.statusText);
+
+      // Handle HTTP error status
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Parse JSON response dengan error handling
+      return response
+        .json()
+        .then((data) => {
+          console.log("[Debug] Response Data:", data);
+          return { status: response.status, data };
+        })
+        .catch((error) => {
+          console.error("[Debug] Gagal parsing JSON:", error);
+          return { status: response.status, data: { success: false, error: "Invalid JSON response" } };
+        });
+    })
+    .then(({ status, data }) => {
+      console.log("[Debug] Hasil Pemrosesan:", { status, data });
+
+      if (data.success) {
+        // Ambil data produk
+        const product = data.product;
+
+        // Update konten modal
+        document.getElementById("detailProductName").textContent = product.name;
+        document.getElementById("detailProductDescription").textContent = product.description;
+        document.getElementById("detailProductPrice").textContent = `Rp ${parseInt(product.price).toLocaleString(
+          "id-ID",
+        )},00`;
+        document.getElementById("detailProductCurrency").textContent = product.currency;
+        document.getElementById("detailProductCategories").textContent = product.categories;
+        document.getElementById("detailProductTags").textContent = product.tags;
+        document.getElementById("detailProductCreatedAt").textContent = new Date(product.created_at).toLocaleString(
+          "id-ID",
+        );
+        document.getElementById("detailProductUpdatedAt").textContent = new Date(product.updated_at).toLocaleString(
+          "id-ID",
+        );
+
+        // Handle gambar produk
+        const imgElement = document.getElementById("detailProductImage");
+        if (product.image) {
+          imgElement.src = `${BASE_URL}uploads/product_images/${product.image}`;
+          console.log("[Debug] Gambar produk:", imgElement.src);
+        } else {
+          imgElement.src = `${BASE_URL}assets/images/no-image.jpg`;
+          console.log("[Debug] Menggunakan gambar default");
+        }
+
+        // Tampilkan modal
+        const modal = new bootstrap.Modal(document.getElementById("productDetailsModal"));
+        modal.show();
+        console.log("[Debug] Modal ditampilkan");
+      } else {
+        console.error("[Debug] Error dari server:", data.error);
+        alert(`Error: ${data.error || "Terjadi kesalahan tidak diketahui"}`);
+      }
+    })
+    .catch((error) => {
+      console.error("[Debug] Error dalam proses fetch:", error);
+      alert("Gagal memuat detail produk. Silakan cek konsol untuk info lebih lanjut.");
+    });
+}
+
 // ==================== Event Listeners dan Inisialisasi ==================== //
 document.addEventListener("DOMContentLoaded", () => {
   // Event delegation untuk checkbox
