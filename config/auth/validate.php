@@ -181,3 +181,70 @@ function validatePrice($price, $currency)
         throw new \InvalidArgumentException("Invalid price or currency format: " . $e->getMessage());
     }
 }
+
+/**
+ * Validates an uploaded product image based on size, extension, MIME type, and dimensions.
+ *
+ * @param array $file The uploaded file data from $_FILES.
+ * @param int $maxWidth Maximum allowed width of the image (default: 2000px).
+ * @param int $maxHeight Maximum allowed height of the image (default: 2000px).
+ * @return array Validation result with error status, message, and image details if valid.
+ */
+function validateProductImage($file, $maxWidth = 2000, $maxHeight = 2000)
+{
+    $allowedExtensions = ['jpg', 'jpeg', 'png', 'webp'];
+    $allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+    // Check if there is an upload error
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        return ['error' => true, 'message' => 'Upload error occurred. Error code: ' . $file['error']];
+    }
+
+    // Validate file size (max 2MB)
+    if ($file['size'] > 2 * 1024 * 1024) {
+        return ['error' => true, 'message' => 'File size exceeds the 2MB limit'];
+    }
+
+    // Validate file extension
+    $fileExtension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
+    if (!in_array($fileExtension, $allowedExtensions)) {
+        return ['error' => true, 'message' => 'Invalid file format. Allowed: JPG, JPEG, PNG, WEBP'];
+    }
+
+    // Validate MIME type using finfo
+    $finfo = finfo_open(FILEINFO_MIME_TYPE);
+    $detectedMimeType = finfo_file($finfo, $file['tmp_name']);
+    finfo_close($finfo);
+    if (!in_array($detectedMimeType, $allowedMimeTypes)) {
+        return ['error' => true, 'message' => 'Invalid MIME type detected: ' . $detectedMimeType];
+    }
+
+    // Validate image dimensions
+    $imageInfo = getimagesize($file['tmp_name']);
+    if (!$imageInfo) {
+        return ['error' => true, 'message' => 'Invalid image file'];
+    }
+
+    $width = $imageInfo[0];
+    $height = $imageInfo[1];
+    if ($width > $maxWidth || $height > $maxHeight) {
+        return ['error' => true, 'message' => "Image dimensions exceed the maximum allowed size of {$maxWidth}x{$maxHeight}px"];
+    }
+
+    // Double-check image type based on extension
+    $imageType = $imageInfo[2];
+    if (!in_array($imageType, [IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_WEBP])) {
+        return ['error' => true, 'message' => 'Invalid image format'];
+    }
+
+    return [
+        'error' => false,
+        'message' => 'Valid image',
+        'data' => [
+            'tmp_path' => $file['tmp_name'],
+            'extension' => $fileExtension,
+            'mime_type' => $detectedMimeType,
+            'dimensions' => ['width' => $width, 'height' => $height]
+        ]
+    ];
+}
