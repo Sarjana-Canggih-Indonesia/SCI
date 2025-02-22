@@ -157,6 +157,45 @@ function getAllProductsWithCategoriesAndTags()
 }
 
 /**
+ * Retrieves product details along with associated categories and tags.
+ *
+ * This function fetches product information based on the given product ID. It retrieves details such as the product name, description, price, currency, image path, creation and update timestamps, 
+ * along with associated categories and tags. The categories and tags are concatenated as comma-separated strings.
+ *
+ * @param int $productId The ID of the product to retrieve.
+ * @return array|null Returns an associative array of product details if found, otherwise null.
+ */
+function getProductWithDetails($productId)
+{
+    try {
+        $pdo = getPDOConnection();
+
+        // SQL query to fetch product details along with categories and tags
+        $sql = "SELECT p.product_id, p.product_name, p.description, p.price_amount, p.currency, p.image_path, p.created_at, p.updated_at, 
+                    GROUP_CONCAT(DISTINCT pc.category_name ORDER BY pc.category_name SEPARATOR ', ') AS categories, 
+                    GROUP_CONCAT(DISTINCT t.tag_name ORDER BY t.tag_name SEPARATOR ', ') AS tags
+                FROM products p
+                LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id
+                LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id
+                LEFT JOIN product_tag_mapping ptm ON p.product_id = ptm.product_id
+                LEFT JOIN tags t ON ptm.tag_id = t.tag_id
+                WHERE p.product_id = :product_id
+                GROUP BY p.product_id";
+
+        $stmt = $pdo->prepare($sql);
+        $stmt->execute(['product_id' => $productId]);
+
+        // Fetch and return the result as an associative array
+        return $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (Exception $e) {
+        // Handle exceptions and return null in case of an error
+        handleError($e->getMessage(), getEnvironmentConfig()['local']);
+        return null;
+    }
+}
+
+
+/**
  * Adds a new product to the database.
  * 
  * This function validates the product data, sanitizes inputs, and ensures that 
