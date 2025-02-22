@@ -489,15 +489,15 @@ function updateProduct($id, $data)
 }
 
 /**
- * Deletes a product from the database, including its related category mappings.
+ * Deletes a product from the database and removes its associated image file.
  *
- * This function first validates the product ID, ensures a database connection,
- * and then removes the product from the `products` table along with its associated
- * category mappings in `product_category_mapping`. If the product is successfully
- * deleted, it commits the transaction; otherwise, it rolls back and returns an error message.
+ * This function validates the product ID, establishes a database connection,
+ * retrieves the image path, deletes the product and its category mappings,
+ * and removes the associated image file from the filesystem. It handles
+ * database transactions and errors gracefully.
  *
- * @param int $id The ID of the product to be deleted.
- * @return array An associative array containing 'error' (boolean) and 'message' (string).
+ * @param int $id The ID of the product to delete.
+ * @return array Returns an associative array with 'error' (boolean) and 'message' (string).
  */
 function deleteProduct($id)
 {
@@ -514,15 +514,30 @@ function deleteProduct($id)
 
         $pdo->beginTransaction();
 
+        // Retrieve the image path from the database
+        $stmtImage = $pdo->prepare("SELECT image_path FROM products WHERE product_id=:id");
+        $stmtImage->execute(['id' => $id]);
+        $imagePath = $stmtImage->fetchColumn();
+
+        // Delete product category mappings
         $stmtMapping = $pdo->prepare("DELETE FROM product_category_mapping WHERE product_id=:id");
         $stmtMapping->execute(['id' => $id]);
 
+        // Delete the product from the database
         $stmt = $pdo->prepare("DELETE FROM products WHERE product_id=:id");
         $stmt->execute(['id' => $id]);
 
         if ($stmt->rowCount() > 0) {
+            // Delete the associated image file if it exists
+            if ($imagePath) {
+                $absolutePath = __DIR__ . '/../../public_html' . $imagePath;
+                if (file_exists($absolutePath)) {
+                    unlink($absolutePath);
+                }
+            }
+
             $pdo->commit();
-            return ['error' => false, 'message' => 'Produk berhasil dihapus.'];
+            return ['error' => false, 'message' => 'Produk dan gambar berhasil dihapus.'];
         } else {
             $pdo->rollBack();
             return ['error' => true, 'message' => 'Produk tidak ditemukan atau sudah dihapus.'];
