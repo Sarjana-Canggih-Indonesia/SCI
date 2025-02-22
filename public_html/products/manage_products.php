@@ -396,7 +396,7 @@ header("X-XSS-Protection: 1; mode=block");
                         </div>
                         <div class="modal-body">
                             <!-- Form untuk menambahkan produk baru -->
-                            <form id="addProductForm" action="manage_products.php" method="POST"
+                            <form id="addProductForm" action="<?php echo $baseUrl; ?>manage_products" method="POST"
                                 enctype="multipart/form-data">
                                 <div class="mb-3">
                                     <label for="productName" class="form-label">Product Name</label>
