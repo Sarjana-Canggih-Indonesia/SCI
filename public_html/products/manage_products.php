@@ -86,6 +86,7 @@ header("X-XSS-Protection: 1; mode=block");
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" />
     <!-- Custom CSS -->
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/halaman-admin.css" />
     <style>
         /* Pastikan z-index lebih tinggi dari modal Bootstrap (biasanya 1050) */
         .tagify-dropdown {

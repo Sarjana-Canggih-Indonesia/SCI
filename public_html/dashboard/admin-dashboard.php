@@ -65,6 +65,7 @@ if ($userInfo['role'] !== 'admin') {
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
     <!-- Custom CSS -->
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/halaman-admin.css" />
 </head>
 
 <body style="background-color: #f7f9fb;">

@@ -1,0 +1,44 @@
+/* AREA HALAMAN ADMIN
+================================================================================ */
+.user-info-halaman-admin .profile-img {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  transition: all 0.3s ease;
+  border: 3px solid #fff;
+}
+
+.user-info-halaman-admin .profile-img:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.user-info-halaman-admin .header-accent {
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 100%;
+  height: 10px;
+  background: linear-gradient(45deg, rgba(255, 255, 255, 0.15), transparent);
+}
+
+.user-info-halaman-admin .card-header.bg-gradient {
+  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+}
+
+.navigasi-halaman-admin .hover-effect {
+  transition: all 0.2s ease-in-out;
+  border-left: 4px solid transparent;
+}
+
+.navigasi-halaman-admin .hover-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  border-left-color: rgba(0, 0, 0, 0.1);
+}
+
+.navigasi-halaman-admin .card-header.bg-gradient {
+  background: linear-gradient(45deg, #0d6efd, #0b5ed7);
+}
+/* AKHIR AREA HALAMAN ADMIN
+  ================================================================================ */
