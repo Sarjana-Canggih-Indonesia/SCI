@@ -88,25 +88,9 @@ header("X-XSS-Protection: 1; mode=block");
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/halaman-admin.css" />
     <style>
-        /* Pastikan z-index lebih tinggi dari modal Bootstrap (biasanya 1050) */
-        .tagify-dropdown {
-            z-index: 1060 !important;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-
-        /* Atur posisi dropdown */
-        .tagify__dropdown {
-            position: absolute;
-            width: 100%;
-            margin-top: 5px;
-        }
-
         .product-checkbox {
             margin-right: 0.5rem;
-            /* Jarak antara checkbox dan nomor urut */
             cursor: pointer;
-            /* Ubah kursor saat dihover */
         }
     </style>
 </head>
@@ -402,7 +386,7 @@ header("X-XSS-Protection: 1; mode=block");
                                 <div class="mb-3">
                                     <label for="productTags" class="form-label">Tags</label>
                                     <input type="text" class="form-control" id="productTags" name="productTags"
-                                        placeholder="Masukkan tags atau tekan spasi langsung untuk melihat tags yang sudah ada.">
+                                        placeholder="Input tag Anda di sini. Tekan spasi untuk melihat daftar tag yang tersedia, pisahkan dengan koma.">
                                     <!-- Datalist untuk autocomplete tags -->
                                     <datalist id="tagList">
                                         <?php foreach ($tags as $tag): ?>
