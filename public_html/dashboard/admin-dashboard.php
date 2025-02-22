@@ -159,7 +159,8 @@ if ($userInfo['role'] !== 'admin') {
                             <div class="row g-3">
                                 <!-- Manage Products -->
                                 <div class="col-12">
-                                    <a href="<?php echo $baseUrl; ?>manage_products" class="btn btn-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
+                                    <a href="<?php echo $baseUrl; ?>manage_products" target="_blank"
+                                        rel="noopener noreferrer" class="btn btn-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
                               shadow-sm hover-effect">
                                         <i class="fa-solid fa-box fs-4 me-3"></i>
                                         <div>
@@ -171,7 +172,8 @@ if ($userInfo['role'] !== 'admin') {
 
                                 <!-- Manage Promos -->
                                 <div class="col-12">
-                                    <a href="<?php echo $baseUrl; ?>manage_promos" class="btn btn-success w-100 text-start p-3 rounded-3 d-flex align-items-center 
+                                    <a href="<?php echo $baseUrl; ?>manage_promos" target="_blank"
+                                        rel="noopener noreferrer" class="btn btn-success w-100 text-start p-3 rounded-3 d-flex align-items-center 
                               shadow-sm hover-effect">
                                         <i class="fa-solid fa-tags fs-4 me-3"></i>
                                         <div>
@@ -183,7 +185,7 @@ if ($userInfo['role'] !== 'admin') {
 
                                 <!-- Manage Blogs -->
                                 <div class="col-12">
-                                    <a href="#" class="btn btn-info w-100 text-start p-3 rounded-3 d-flex align-items-center 
+                                    <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-info w-100 text-start p-3 rounded-3 d-flex align-items-center 
                               shadow-sm hover-effect">
                                         <i class="fa-solid fa-blog fs-4 me-3"></i>
                                         <div>
