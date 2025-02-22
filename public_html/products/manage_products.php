@@ -455,6 +455,67 @@ header("X-XSS-Protection: 1; mode=block");
                     </div>
                 </div>
             </div>
+
+            <!-- Product Details Modal -->
+            <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-labelledby="productDetailsModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="productDetailsModalLabel">Product Details</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <img id="detailProductImage" src="" class="img-fluid rounded mb-3"
+                                        alt="Product Image" style="max-height: 300px; object-fit: cover;">
+                                </div>
+                                <div class="col-md-8">
+                                    <h3 id="detailProductName" class="mb-3"></h3>
+                                    <div class="mb-3">
+                                        <strong>Description:</strong>
+                                        <p id="detailProductDescription" class="text-muted"></p>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <strong>Price:</strong>
+                                            <div id="detailProductPrice" class="text-success fs-5"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Currency:</strong>
+                                            <div id="detailProductCurrency" class="text-muted"></div>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <strong>Categories:</strong>
+                                            <div id="detailProductCategories" class="text-primary"></div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <strong>Tags:</strong>
+                                            <div id="detailProductTags" class="text-info"></div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <small class="text-muted">Created At: <span
+                                                    id="detailProductCreatedAt"></span></small>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted">Last Updated: <span
+                                                    id="detailProductUpdatedAt"></span></small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
     <!--========== AKHIR AREA MANAGE PRODUCTS ==========-->
