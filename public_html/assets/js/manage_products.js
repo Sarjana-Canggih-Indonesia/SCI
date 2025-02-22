@@ -225,17 +225,15 @@ function initializeTagify() {
 
 // ==================== JS untuk Modal Detail Product ==================== //
 function viewDetails(productId) {
-  console.log("[Debug] Memulai viewDetails untuk product ID:", productId);
+  console.log("Loading product details:", productId);
 
-  // Ambil CSRF token dari meta tag
+  // Get CSRF token from meta tag
   const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
-  console.log("[Debug] CSRF Token:", csrfToken);
 
-  // Konstruksi URL API proxy
+  // Construct the API proxy URL
   const apiUrl = `${BASE_URL}api-proxy.php?action=get_product_details&product_id=${productId}`;
-  console.log("[Debug] API URL:", apiUrl);
 
-  // Lakukan fetch request
+  // Perform a fetch request to retrieve product details
   fetch(apiUrl, {
     method: "GET",
     headers: {
@@ -244,33 +242,22 @@ function viewDetails(productId) {
     },
   })
     .then((response) => {
-      console.log("[Debug] Response Status:", response.status, response.statusText);
-
-      // Handle HTTP error status
+      // Check if the response is not OK (status not in the 200-299 range)
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
-      // Parse JSON response dengan error handling
-      return response
-        .json()
-        .then((data) => {
-          console.log("[Debug] Response Data:", data);
-          return { status: response.status, data };
-        })
-        .catch((error) => {
-          console.error("[Debug] Gagal parsing JSON:", error);
-          return { status: response.status, data: { success: false, error: "Invalid JSON response" } };
-        });
+      // Parse the JSON response, handling potential parsing errors
+      return response.json().catch(() => {
+        throw new Error("Invalid JSON response");
+      });
     })
-    .then(({ status, data }) => {
-      console.log("[Debug] Hasil Pemrosesan:", { status, data });
-
+    .then((data) => {
+      // If the API response indicates success
       if (data.success) {
-        // Ambil data produk
         const product = data.product;
 
-        // Update konten modal
+        // Update modal content with product details
         document.getElementById("detailProductName").textContent = product.name;
         document.getElementById("detailProductDescription").textContent = product.description;
         document.getElementById("detailProductPrice").textContent = `Rp ${parseInt(product.price).toLocaleString(
@@ -286,28 +273,24 @@ function viewDetails(productId) {
           "id-ID",
         );
 
-        // Handle gambar produk
+        // Handle product image display
         const imgElement = document.getElementById("detailProductImage");
-        if (product.image) {
-          imgElement.src = `${BASE_URL}uploads/product_images/${product.image}`;
-          console.log("[Debug] Gambar produk:", imgElement.src);
-        } else {
-          imgElement.src = `${BASE_URL}assets/images/no-image.jpg`;
-          console.log("[Debug] Menggunakan gambar default");
-        }
+        imgElement.src = product.image
+          ? `${BASE_URL}uploads/product_images/${product.image}`
+          : `${BASE_URL}assets/images/no-image.jpg`;
 
-        // Tampilkan modal
-        const modal = new bootstrap.Modal(document.getElementById("productDetailsModal"));
-        modal.show();
-        console.log("[Debug] Modal ditampilkan");
+        // Show the product details modal
+        new bootstrap.Modal(document.getElementById("productDetailsModal")).show();
       } else {
-        console.error("[Debug] Error dari server:", data.error);
-        alert(`Error: ${data.error || "Terjadi kesalahan tidak diketahui"}`);
+        // Handle server error response
+        console.error("Error from server:", data.error);
+        alert(`Error: ${data.error || "An unknown error occurred"}`);
       }
     })
     .catch((error) => {
-      console.error("[Debug] Error dalam proses fetch:", error);
-      alert("Gagal memuat detail produk. Silakan cek konsol untuk info lebih lanjut.");
+      // Handle fetch errors
+      console.error("Failed to load product details:", error);
+      alert("Failed to load product details. Please check the console for more information.");
     });
 }
 
