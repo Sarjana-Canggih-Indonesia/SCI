@@ -1182,11 +1182,34 @@ body.login-page {
 ================================================================================ */
 /* HALAMAN ABOUT US */
 .jumbotron-pk.tentang-kami {
-  background-image: url("../images/sc-logo-landscape.webp");
-  background-size: cover !important;
-  background-position: left top;
-  width: 100% !important;
-  height: 600px !important;
+  background: url("../images/sc-logo-landscape.webp") center right / cover no-repeat;
+  width: 100%;
+  min-height: 50vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+@media (max-width: 992px) {
+  .jumbotron-pk.tentang-kami {
+    min-height: 30vh;
+  }
+}
+
+@media (max-width: 768px) {
+  .jumbotron-pk.tentang-kami {
+    margin-top: 92px !important;
+    min-height: 20vh;
+  }
+}
+
+@media (max-width: 576px) {
+  .jumbotron-pk.tentang-kami {
+    height: 100%;
+    background-size: contain;
+    background-repeat: no-repeat;
+  }
 }
 
 section.judul-halaman-about .container h2 {
