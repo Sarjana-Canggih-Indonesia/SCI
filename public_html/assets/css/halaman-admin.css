@@ -49,5 +49,24 @@
   margin-right: 2rem;
   cursor: pointer;
 }
+
+#productDetailsModal .modal-body {
+  padding: 2rem;
+}
+
+#productDetailsModal strong {
+  color: #2c3e50;
+  margin-right: 0.5rem;
+}
+
+#detailProductPrice {
+  font-weight: 700;
+  color: #27ae60;
+}
+
+#detailProductCurrency {
+  font-size: 0.9em;
+  color: #7f8c8d;
+}
 /* AKHIR AREA HALAMAN MANAGE PRODUCTS
 ================================================================================ */
