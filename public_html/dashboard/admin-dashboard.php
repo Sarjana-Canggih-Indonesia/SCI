@@ -110,17 +110,52 @@ if ($userInfo['role'] !== 'admin') {
                 </div>
 
                 <!-- Navigasi Halaman Admin -->
-                <div class="col-md-6">
-                    <div class="d-grid gap-2">
-                        <a class="btn btn-primary" role="button" href="<?php echo $baseUrl; ?>manage_products">
-                            Manage Products
-                        </a>
-                        <a class="btn btn-primary" role="button" href="<?php echo $baseUrl; ?>manage_promos">
-                            Manage Promos
-                        </a>
-                        <a class="btn btn-primary" role="button" href="#">
-                            Manage Blogs
-                        </a>
+                <div class="col-md-6 navigasi-halaman-admin">
+                    <div class="card shadow-lg border-0">
+                        <div class="card-header bg-primary bg-gradient text-white py-3">
+                            <h5 class="mb-0 fw-semibold">
+                                <i class="fa-solid fa-gears me-2"></i>Admin Navigation
+                            </h5>
+                        </div>
+                        <div class="card-body p-4">
+                            <div class="row g-3">
+                                <!-- Manage Products -->
+                                <div class="col-12">
+                                    <a href="<?php echo $baseUrl; ?>manage_products" class="btn btn-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
+                              shadow-sm hover-effect">
+                                        <i class="fa-solid fa-box fs-4 me-3"></i>
+                                        <div>
+                                            <div class="fw-semibold fs-5">Manage Products</div>
+                                            <small class="opacity-75">Manage product catalog and inventory</small>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- Manage Promos -->
+                                <div class="col-12">
+                                    <a href="<?php echo $baseUrl; ?>manage_promos" class="btn btn-success w-100 text-start p-3 rounded-3 d-flex align-items-center 
+                              shadow-sm hover-effect">
+                                        <i class="fa-solid fa-tags fs-4 me-3"></i>
+                                        <div>
+                                            <div class="fw-semibold fs-5">Manage Promos</div>
+                                            <small class="opacity-75">Create and manage promotional offers</small>
+                                        </div>
+                                    </a>
+                                </div>
+
+                                <!-- Manage Blogs -->
+                                <div class="col-12">
+                                    <a href="#" class="btn btn-info w-100 text-start p-3 rounded-3 d-flex align-items-center 
+                              shadow-sm hover-effect">
+                                        <i class="fa-solid fa-blog fs-4 me-3"></i>
+                                        <div>
+                                            <div class="fw-semibold fs-5">Manage Blogs</div>
+                                            <small class="opacity-75">Create and publish blog articles</small>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

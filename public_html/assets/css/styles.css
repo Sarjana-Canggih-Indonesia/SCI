@@ -1218,3 +1218,22 @@ section.judul-halaman-about .container h2 {
 }
 /* AKHIR AREA HALAMAN ABOUT US
 ================================================================================ */
+
+/* AREA HALAMAN ADMIN
+================================================================================ */
+.navigasi-halaman-admin .hover-effect {
+  transition: all 0.2s ease-in-out;
+  border-left: 4px solid transparent;
+}
+
+.navigasi-halaman-admin .hover-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+  border-left-color: rgba(0, 0, 0, 0.1);
+}
+
+.navigasi-halaman-admin .card-header.bg-gradient {
+  background: linear-gradient(45deg, #0d6efd, #0b5ed7);
+}
+/* AKHIR AREA HALAMAN ADMIN
+================================================================================ */
