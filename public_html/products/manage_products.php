@@ -133,22 +133,59 @@ header("X-XSS-Protection: 1; mode=block");
             <!-- Product Summary and User Info Section -->
             <div class="row mb-4">
                 <!-- User Info -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-primary text-white">
-                            <h5 class="mb-0">User Information</h5>
+                <div class="col-md-6 user-info-halaman-admin">
+                    <div class="card shadow-lg border-0 overflow-hidden">
+                        <div class="card-header bg-primary bg-gradient text-white py-3 position-relative">
+                            <h5 class="mb-0 fw-semibold">
+                                <i class="fa-solid fa-user-shield me-2"></i>Admin Profile
+                            </h5>
+                            <div class="header-accent"></div>
                         </div>
-                        <div class="card-body">
-                            <ul class="list-unstyled">
-                                <li>
+                        <div class="card-body p-4">
+                            <div class="d-flex flex-column flex-md-row align-items-center gap-4">
+                                <!-- Profile Image -->
+                                <div class="position-relative">
                                     <img src="<?php echo htmlspecialchars($profileImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                                        alt="Profile Image" class="img-thumbnail" style="width: 100px; height: 100px;">
-                                </li>
-                                <li><strong>Username:</strong> <?php echo htmlspecialchars($userInfo['username']); ?>
-                                </li>
-                                <li><strong>Email:</strong> <?php echo htmlspecialchars($userInfo['email']); ?></li>
-                                <li><strong>Role:</strong> <?php echo htmlspecialchars($userInfo['role']); ?></li>
-                            </ul>
+                                        alt="Profile Image" class="profile-img shadow-lg rounded-circle"
+                                        data-bs-toggle="tooltip" title="Admin Profile Picture">
+                                </div>
+
+                                <!-- User Details -->
+                                <div class="flex-grow-1 w-100">
+                                    <div class="d-flex flex-column gap-3">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-user-tag fs-5 text-primary me-3"></i>
+                                            <div>
+                                                <div class="text-muted small">USERNAME</div>
+                                                <div class="h5 mb-0 fw-semibold">
+                                                    <?php echo htmlspecialchars($userInfo['username']); ?>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-envelope fs-5 text-primary me-3"></i>
+                                            <div>
+                                                <div class="text-muted small">EMAIL</div>
+                                                <div class="h5 mb-0 fw-semibold">
+                                                    <?php echo htmlspecialchars($userInfo['email']); ?>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-user-gear fs-5 text-primary me-3"></i>
+                                            <div>
+                                                <div class="text-muted small">ROLE</div>
+                                                <div class="h5 mb-0 fw-semibold">
+                                                    <span
+                                                        class="badge bg-primary bg-gradient"><?php echo htmlspecialchars($userInfo['role']); ?></span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
