@@ -38,14 +38,33 @@ if ($userInfo['role'] !== 'admin') {
     exit();
 }
 
+// Handle the add product form submission ONLY if the request method is POST.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    handleAddProductForm();
+}
+
+// Handle success/error messages
+$successMessage = '';
+$errorMessage = '';
+
+if (isset($_SESSION['form_success'])) {
+    if ($_SESSION['form_success']) {
+        $successMessage = $_SESSION['success_message'] ?? '';
+    } else {
+        $errorMessage = $_SESSION['error_message'] ?? '';
+    }
+
+    // Clear session messages
+    unset($_SESSION['form_success']);
+    unset($_SESSION['success_message']);
+    unset($_SESSION['error_message']);
+}
+
 // Retrieve product categories from the database.
 $categories = getProductCategories();
 
 // Retrieve all products along with categories and tags.
 $products = getAllProductsWithCategoriesAndTags();
-
-// Handle the add product form submission.
-handleAddProductForm();
 
 // Load dynamic URL configuration.
 $config = getEnvironmentConfig();
@@ -103,6 +122,24 @@ header("X-XSS-Protection: 1; mode=block");
         </a>
     </section>
     <!--========== AKHIR AREA SCROLL TO TOP ==========-->
+
+    <!--========== AREA NOTIFIKASI UNTUK ADD PRODUK ==========-->
+    <div class="jarak-kustom container mt-4">
+        <?php if ($successMessage): ?>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?= htmlspecialchars($successMessage) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+
+        <?php if ($errorMessage): ?>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <?= htmlspecialchars($errorMessage) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
+    </div>
+    <!--========== AREA NOTIFIKASI UNTUK ADD PRODUK ==========-->
 
     <!--========== AREA MANAGE PRODUCTS ==========-->
     <section class="jarak-kustom">

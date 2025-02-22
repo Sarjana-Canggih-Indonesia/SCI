@@ -271,20 +271,29 @@ function addProduct($data)
 }
 
 /**
- * Handles the product addition form submission.
- *
- * This function processes form data when a product is added. It validates the CSRF token, 
- * checks the price format, processes the product data including image upload, 
- * and attempts to store it in the database. If any step fails, an error is logged 
- * and stored in the session, allowing the form to be repopulated with the last input.
+ * Handles the product addition form submission with proper session management.
+ * 
+ * This function processes the form data for adding a new product. It validates the CSRF token, 
+ * ensures price input is valid, generates a slug, processes image uploads, and inserts the product into the database. 
+ * If any step fails, it logs the error and stores necessary session data for repopulation.
  */
 function handleAddProductForm()
 {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
-        validateCSRFToken($_POST['csrf_token']);
-
         try {
-            // Validate price input
+            validateCSRFToken($_POST['csrf_token']);
+
+            $productData = [
+                'name' => $_POST['productName'] ?? '',
+                'category' => (int) ($_POST['productCategory'] ?? 0),
+                'price_amount' => 0,
+                'currency' => 'IDR',
+                'description' => $_POST['productDescription'] ?? '',
+                'slug' => '',
+                'image_path' => ''
+            ];
+
+            // Validate and process price input
             if (!isset($_POST['productPriceAmount']) || !is_numeric($_POST['productPriceAmount'])) {
                 throw new Exception("Invalid price format");
             }
@@ -296,25 +305,22 @@ function handleAddProductForm()
                 RoundingMode::DOWN
             );
 
-            $productData = [
-                'name' => $_POST['productName'],
-                'category' => (int) $_POST['productCategory'],
-                'price_amount' => $money->getAmount()->toInt(),
-                'currency' => $money->getCurrency()->getCurrencyCode(),
-                'description' => $_POST['productDescription'],
-                'slug' => slugify($_POST['productName']),
-                'image_path' => handleProductImageUpload()
-            ];
+            $productData['price_amount'] = $money->getAmount()->toInt();
+            $productData['currency'] = $money->getCurrency()->getCurrencyCode();
 
-            // Validate image path
+            // Generate product slug
+            $productData['slug'] = slugify($_POST['productName']);
+
+            // Handle image upload
+            $productData['image_path'] = handleProductImageUpload();
             if (empty($productData['image_path'])) {
-                throw new Exception("Failed to upload image. Ensure the file meets the requirements.");
+                throw new Exception("Image upload failed. Please check file requirements.");
             }
 
+            // Insert product into the database
             $result = addProduct($productData);
 
             if ($result['error']) {
-                // Remove uploaded image if database insertion fails
                 if (!empty($productData['image_path'])) {
                     $absPath = __DIR__ . '/../../public_html' . $productData['image_path'];
                     if (file_exists($absPath))
@@ -323,24 +329,25 @@ function handleAddProductForm()
                 throw new Exception($result['message']);
             }
 
-            // Store success message in session
-            $_SESSION['success_message'] = 'Product added successfully';
+            $_SESSION['success_message'] = 'Produk berhasil ditambahkan!';
             $_SESSION['form_success'] = true;
+            $_SESSION['old_input'] = [];
 
         } catch (Exception $e) {
-            $errorMessage = "Failed to add product: " . $e->getMessage();
-            error_log("Error: " . $errorMessage);
-            handleError($errorMessage, $_ENV['ENVIRONMENT']);
+            $errorMessage = "Gagal menambahkan produk: " . $e->getMessage();
+            error_log($errorMessage);
 
-            // Store error message and input in session
-            $_SESSION['error_message'] = $errorMessage;
-            $_SESSION['old_input'] = $_POST;
+            $_SESSION['error_message'] = $e->getMessage();
             $_SESSION['form_success'] = false;
+            $_SESSION['old_input'] = $_POST;
         }
+        session_write_close();
+
     } else {
-        error_log("Invalid access to add product form");
-        $_SESSION['error_message'] = 'Invalid request';
+        error_log("Invalid access method to product form");
+        $_SESSION['error_message'] = 'Permintaan tidak valid';
         $_SESSION['form_success'] = false;
+        session_write_close();
     }
 }
 
