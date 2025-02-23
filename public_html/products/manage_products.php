@@ -1,6 +1,7 @@
 <?php
 // manage_products.php
 
+// Step 1: Load necessary configurations and libraries
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
 require_once __DIR__ . '/../../config/products/product_functions.php';
@@ -8,66 +9,63 @@ require_once __DIR__ . '/../../config/products/tag_functions.php';
 
 use Carbon\Carbon;
 
+// Step 2: Start session and generate CSRF token if it doesn't exist
 startSession();
 
-// Step 1: Check if the user is logged in. If not, redirect to the login page.
+// Step 3: Load dynamic URL configuration
+$config = getEnvironmentConfig();
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+$isLive = $config['is_live'];
+
+// Step 4: Set security headers
+header("X-Frame-Options: DENY");
+header("X-Content-Type-Options: nosniff");
+header("X-XSS-Protection: 1; mode=block");
+
+// Step 5: Check if the user is logged in. If not, redirect to the login page.
 if (!isset($_SESSION['user_id'])) {
-    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
     header("Location: " . $baseUrl . "login");
     exit();
 }
 
-// Step 2: Retrieve user information from the session and database.
+// Step 6: Retrieve user information from the session and database.
 $userInfo = getUserInfo($_SESSION['user_id']);
-$profileImage = null;
 
-// Step 3: Handle cases where the user is not found in the database.
+// Step 7: Handle cases where the user is not found in the database.
 if (!$userInfo) {
     handleError("User not found in the database. Redirecting...", $_ENV['ENVIRONMENT']);
     exit();
 }
 
-// Step 4: Set the user profile image. If not available, use a default image.
-$profileImage = $userInfo['image_filename'] ?? 'default_profile_image.jpg';
-$profileImageUrl = $baseUrl . "uploads/profile_images/" . $profileImage;
-
-// Restrict access to non-admin users.
-if ($userInfo['role'] !== 'admin') {
-    handleError("Access denied! Role: " . $userInfo['role'], $_ENV['ENVIRONMENT']);
+// Step 8: Check if the user is an admin. If not, redirect to the login page.
+if (!isset($userInfo['role']) || $userInfo['role'] !== 'admin') {
+    handleError("Unauthorized access attempt", $_ENV['ENVIRONMENT']);
     header("Location: " . $baseUrl . "login");
     exit();
 }
 
-// Handle the add product form submission ONLY if the request method is POST.
+// Step 9: Set the user profile image. If not available, use a default image.
+$profileImage = $userInfo['image_filename'] ?? 'default_profile_image.jpg';
+$profileImageUrl = $baseUrl . "uploads/profile_images/" . $profileImage;
+
+// Step 10: Handle the add product form submission ONLY if the request method is POST.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     handleAddProductForm();
 }
 
-// Load dynamic URL configuration.
-$config = getEnvironmentConfig();
-$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
-$isLive = $config['is_live'];
+// Step 11: Retrieve product categories and tags from the database.
 $pdo = getPDOConnection();
 $tags = getAllTags($pdo);
+$categories = getProductCategories();
+$products = getAllProductsWithCategoriesAndTags();
 
-// Handle success/error messages and update cache headers
+// Step 12: Handle success/error messages and update cache headers
 $flash = processFlashMessagesAndHeaders($isLive);
 $successMessage = $flash['success'];
 $errorMessage = $flash['error'];
 
-// Retrieve product categories from the database.
-$categories = getProductCategories();
-
-// Retrieve all products along with categories and tags.
-$products = getAllProductsWithCategoriesAndTags();
-
-// Set no-cache headers in the local environment.
+// Step 13: Set no-cache headers in the local environment.
 setCacheHeaders($isLive);
-
-// Set security headers.
-header("X-Frame-Options: DENY");
-header("X-Content-Type-Options: nosniff");
-header("X-XSS-Protection: 1; mode=block");
 ?>
 
 <!DOCTYPE html>
