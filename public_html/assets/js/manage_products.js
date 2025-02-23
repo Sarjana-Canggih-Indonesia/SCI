@@ -71,6 +71,10 @@ function debounce(func, delay) {
   };
 }
 
+function editProduct(slug, optimusId) {
+  window.location.href = `${BASE_URL}edit-product/${slug}/${optimusId}`;
+}
+
 // ==================== Akhir Global Helper Functions ==================== //
 
 // ==================== JS untuk Checkboxes dan Delete Selected ==================== //
