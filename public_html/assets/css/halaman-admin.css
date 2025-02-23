@@ -69,3 +69,34 @@
 }
 /* AKHIR AREA HALAMAN MANAGE PRODUCTS
 ================================================================================ */
+
+/* AREA HALAMAN EDIT PRODUCTS
+================================================================================ */
+.halaman-admin-edit-product .separator {
+  border-right: 2px solid #dee2e6;
+  height: 100%;
+}
+
+.halaman-admin-edit-product .preview-card {
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: white;
+}
+
+.halaman-admin-edit-product .live-version {
+  padding-right: 30px;
+}
+
+.halaman-admin-edit-product .edit-section {
+  padding-left: 30px;
+}
+
+.halaman-admin-edit-product h4.section-title {
+  border-bottom: 2px solid #0d6efd;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+/* AKHIR AREA HALAMAN EDIT PRODUCTS
+================================================================================ */
