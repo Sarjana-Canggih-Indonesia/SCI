@@ -258,37 +258,42 @@ function getProductBySlugAndOptimus($slug, $encodedId)
  * Adds a new product to the database.
  *
  * This function validates the product data, ensures an image is uploaded, 
- * sanitizes the data, and then inserts the product into the database.
- * If any step fails, the function rolls back the transaction and returns an error.
+ * sanitizes the data, and inserts the product into the database. 
+ * If any step fails, it rolls back the transaction and returns an error message.
+ *
+ * The function performs the following steps:
+ * - Validates the provided product data
+ * - Checks if an image is provided
+ * - Sanitizes the product data
+ * - Inserts the product into the database
+ * - Retrieves the last inserted product ID
+ * - Links the product to the specified category
+ * - Commits the transaction if successful, otherwise rolls back and returns an error
  *
  * @param array $data Product data including name, price, currency, description, image path, and category.
  * @return array Result of the operation with error status and message.
  */
 function addProduct($data)
 {
-    $violations = validateProductData($data);
+    $violations = validateProductData($data); // Validate product data
     if (count($violations) > 0) {
         handleError("Validation failed: " . implode(", ", array_map(fn($v) => $v->getMessage(), $violations)), getEnvironmentConfig()['local']);
         return ['error' => true, 'message' => 'Invalid product data. Please check your input.'];
     }
 
-    // Ensure an image is uploaded
-    if (empty($data['image_path'])) {
+    if (empty($data['image_path'])) { // Ensure an image is uploaded
         handleError("Product image required", getEnvironmentConfig()['local']);
         return ['error' => true, 'message' => 'Product image is required.'];
     }
 
-    $data = sanitizeProductData($data);
+    $data = sanitizeProductData($data); // Sanitize input data
 
     try {
         $pdo = getPDOConnection();
-        $pdo->beginTransaction();
+        $pdo->beginTransaction(); // Start transaction
 
-        // Insert product into the database
-        $stmt = $pdo->prepare("INSERT INTO products 
-            (product_name,price_amount,currency,description,image_path,slug) 
-            VALUES (:name,:price_amount,:currency,:description,:image_path,:slug)");
-
+        // Insert product into database
+        $stmt = $pdo->prepare("INSERT INTO products (product_name,price_amount,currency,description,image_path,slug) VALUES (:name,:price_amount,:currency,:description,:image_path,:slug)");
         $success = $stmt->execute([
             'name' => $data['name'],
             'price_amount' => $data['price_amount'],
@@ -298,32 +303,27 @@ function addProduct($data)
             'slug' => $data['slug']
         ]);
 
-        if (!$success || $stmt->rowCount() === 0) {
+        if (!$success || $stmt->rowCount() === 0) { // Check if product insertion was successful
             $pdo->rollBack();
             return ['error' => true, 'message' => 'Failed to save product to database.'];
         }
 
-        $product_id = $pdo->lastInsertId();
+        $product_id = $pdo->lastInsertId(); // Retrieve last inserted product ID
 
-        // Map product to category
-        $stmt = $pdo->prepare("INSERT INTO product_category_mapping 
-            (product_id,category_id) VALUES (:product_id,:category_id)");
+        // Link product to category
+        $stmt = $pdo->prepare("INSERT INTO product_category_mapping (product_id,category_id) VALUES (:product_id,:category_id)");
+        $success = $stmt->execute(['product_id' => $product_id, 'category_id' => $data['category']]);
 
-        $success = $stmt->execute([
-            'product_id' => $product_id,
-            'category_id' => $data['category']
-        ]);
-
-        if (!$success) {
+        if (!$success) { // Rollback if linking fails
             $pdo->rollBack();
             return ['error' => true, 'message' => 'Failed to link product to category.'];
         }
 
-        $pdo->commit();
+        $pdo->commit(); // Commit transaction
         return ['error' => false, 'message' => 'Product successfully added.'];
 
     } catch (Exception $e) {
-        $pdo->rollBack();
+        $pdo->rollBack(); // Rollback on error
         handleError($e->getMessage(), getEnvironmentConfig()['local']);
         return ['error' => true, 'message' => 'A system error occurred. Please try again.'];
     }
@@ -331,55 +331,55 @@ function addProduct($data)
 
 /**
  * Handles the product addition form submission with proper session management.
- * 
- * This function processes the form data for adding a new product. It validates the CSRF token, 
- * ensures price input is valid, generates a slug, processes image uploads, and inserts the product into the database. 
- * If any step fails, it logs the error and stores necessary session data for repopulation.
+ *
+ * This function processes the form submission for adding a new product. It performs the following tasks:
+ * - Validates the CSRF token to ensure request authenticity.
+ * - Extracts and validates form input data.
+ * - Processes the price input using the Money library.
+ * - Generates a slug from the product name.
+ * - Handles image upload and validation.
+ * - Inserts the product into the database.
+ * - Manages error handling, logging, and session storage.
+ * - Redirects the user based on success or failure.
  */
 function handleAddProductForm()
 {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) { // Check if the request is a POST request and contains a CSRF token
         try {
-            validateCSRFToken($_POST['csrf_token']);
+            validateCSRFToken($_POST['csrf_token']); // Validate CSRF token to prevent cross-site request forgery
 
+            // Initialize product data with default values
             $productData = [
-                'name' => $_POST['productName'] ?? '',
-                'category' => (int) ($_POST['productCategory'] ?? 0),
-                'price_amount' => 0,
-                'currency' => 'IDR',
-                'description' => $_POST['productDescription'] ?? '',
-                'slug' => '',
-                'image_path' => ''
+                'name' => $_POST['productName'] ?? '', // Get product name or default to empty string
+                'category' => (int) ($_POST['productCategory'] ?? 0), // Convert category to integer, default is 0
+                'price_amount' => 0, // Default price amount
+                'currency' => 'IDR', // Default currency
+                'description' => $_POST['productDescription'] ?? '', // Get product description or default to empty string
+                'slug' => '', // Slug will be generated later
+                'image_path' => '' // Image path will be updated after upload
             ];
 
-            // Validate and process price input
-            if (!isset($_POST['productPriceAmount']) || !is_numeric($_POST['productPriceAmount'])) {
+            // Validate and process product price
+            if (!isset($_POST['productPriceAmount']) || !is_numeric($_POST['productPriceAmount']))
                 throw new Exception("Invalid price format");
-            }
 
-            $money = Money::of(
-                $_POST['productPriceAmount'],
-                $_POST['productCurrency'],
-                null,
-                RoundingMode::DOWN
-            );
+            // Convert price amount using Money library
+            $money = Money::of($_POST['productPriceAmount'], $_POST['productCurrency'], null, RoundingMode::DOWN);
+            $productData['price_amount'] = $money->getAmount()->toInt(); // Convert price to integer
+            $productData['currency'] = $money->getCurrency()->getCurrencyCode(); // Get currency code
 
-            $productData['price_amount'] = $money->getAmount()->toInt();
-            $productData['currency'] = $money->getCurrency()->getCurrencyCode();
-
-            // Generate product slug
+            // Generate product slug from the product name
             $productData['slug'] = slugify($_POST['productName']);
 
-            // Handle image upload
+            // Handle image upload and store the image path
             $productData['image_path'] = handleProductImageUpload();
-            if (empty($productData['image_path'])) {
+            if (empty($productData['image_path']))
                 throw new Exception("Image upload failed. Please check file requirements.");
-            }
 
             // Insert product into the database
             $result = addProduct($productData);
-
             if ($result['error']) {
+                // If product insertion fails, delete the uploaded image to prevent orphaned files
                 if (!empty($productData['image_path'])) {
                     $absPath = __DIR__ . '/../../public_html' . $productData['image_path'];
                     if (file_exists($absPath))
@@ -388,33 +388,32 @@ function handleAddProductForm()
                 throw new Exception($result['message']);
             }
 
+            // Set success message in session and clear old input data
             $_SESSION['success_message'] = 'Produk berhasil ditambahkan!';
             $_SESSION['form_success'] = true;
             $_SESSION['old_input'] = [];
             session_write_close();
 
-            // Redirect ke manage_products.php
+            // Redirect to manage_products page
             $config = getEnvironmentConfig();
-            $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
-            header("Location: " . $baseUrl . "manage_products");
+            header("Location: " . getBaseUrl($config, $_ENV['LIVE_URL']) . "manage_products");
             exit();
-
         } catch (Exception $e) {
-            $errorMessage = "Gagal menambahkan produk: " . $e->getMessage();
-            error_log($errorMessage);
+            // Log error message and store error in session
+            error_log("Gagal menambahkan produk: " . $e->getMessage());
 
             $_SESSION['error_message'] = $e->getMessage();
             $_SESSION['form_success'] = false;
             $_SESSION['old_input'] = $_POST;
             session_write_close();
 
-            // Redirect ke manage_products.php
+            // Redirect back to manage_products page with error message
             $config = getEnvironmentConfig();
-            $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
-            header("Location: " . $baseUrl . "manage_products");
+            header("Location: " . getBaseUrl($config, $_ENV['LIVE_URL']) . "manage_products");
             exit();
         }
     } else {
+        // Log invalid access attempt
         error_log("Invalid access method to product form");
         $_SESSION['error_message'] = 'Permintaan tidak valid';
         $_SESSION['form_success'] = false;
