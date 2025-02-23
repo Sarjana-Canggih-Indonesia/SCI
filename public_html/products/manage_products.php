@@ -109,7 +109,7 @@ setCacheHeaders($isLive);
     </section>
     <!--========== AKHIR AREA SCROLL TO TOP ==========-->
 
-    <!--========== AREA NOTIFIKASI UNTUK ADD PRODUK ==========-->
+    <!--========== AREA GENERIC FLASH MESSAGES ==========-->
     <div class="jarak-kustom container mt-4">
         <?php if ($successMessage): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -125,7 +125,7 @@ setCacheHeaders($isLive);
             </div>
         <?php endif; ?>
     </div>
-    <!--========== AREA NOTIFIKASI UNTUK ADD PRODUK ==========-->
+    <!--========== AKHIR AREA GENERIC FLASH MESSAGES ==========-->
 
     <!--========== AREA MANAGE PRODUCTS ==========-->
     <section class="jarak-kustom">
