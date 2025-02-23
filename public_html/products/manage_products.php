@@ -46,8 +46,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Handle success/error messages
 $successMessage = '';
 $errorMessage = '';
+$forceNoCache = false;
 
 if (isset($_SESSION['form_success'])) {
+    $forceNoCache = true;
+
     if ($_SESSION['form_success']) {
         $successMessage = $_SESSION['success_message'] ?? '';
     } else {
@@ -80,6 +83,15 @@ setCacheHeaders($isLive);
 header("X-Frame-Options: DENY");
 header("X-Content-Type-Options: nosniff");
 header("X-XSS-Protection: 1; mode=block");
+
+// Set cache headers berdasarkan flag
+if ($forceNoCache) {
+    header("Cache-Control: no-cache, no-store, must-revalidate");
+    header("Pragma: no-cache");
+    header("Expires: 0");
+} else {
+    setCacheHeaders($isLive);
+}
 ?>
 
 <!DOCTYPE html>
