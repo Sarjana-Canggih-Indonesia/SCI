@@ -306,3 +306,23 @@ function setCacheHeaders(bool $isLive): void
         ? Carbon::now()->addHour()->toRfc7231String() // Set expiration time 1 hour ahead in live mode
         : Carbon::now()->subYear()->toRfc7231String())); // Set expiration time to a year ago in non-live mode
 }
+
+/**
+ * Updates cache headers on redirect to ensure the latest changes are visible.
+ *
+ * If the $forceNoCache flag is true, the function sets no-cache headers,
+ * otherwise it calls the setCacheHeaders() function based on the $isLive flag.
+ *
+ * @param bool $forceNoCache Flag indicating whether to force no-cache headers.
+ * @param bool $isLive       Flag indicating whether the environment is live.
+ */
+function updateCacheHeadersOnRedirect($forceNoCache, $isLive)
+{
+    if ($forceNoCache) {
+        header("Cache-Control: no-cache, no-store, must-revalidate");
+        header("Pragma: no-cache");
+        header("Expires: 0");
+    } else {
+        setCacheHeaders($isLive);
+    }
+}
