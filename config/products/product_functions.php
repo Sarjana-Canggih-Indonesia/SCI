@@ -37,6 +37,34 @@ function sanitizeProductData($data)
 }
 
 /**
+ * Generates a URL-friendly slug from a product name.
+ *
+ * This function converts a given product name into a slug format by:
+ * - Trimming unnecessary whitespaces
+ * - Converting to lowercase
+ * - Replacing non-alphanumeric characters with hyphens
+ * - Removing duplicate and trailing hyphens
+ * - Ensuring the slug is not empty, defaulting to "untitled" if needed
+ * - Escaping the output for safe use in HTML
+ *
+ * @param string $productName The original product name to be converted.
+ * @return string The generated slug.
+ */
+function generateSlug(string $productName): string
+{
+    $productName = trim($productName); // Remove leading and trailing spaces
+    if ($productName === '')
+        return 'untitled'; // Return default slug if empty input
+
+    $slug = strtolower($productName); // Convert to lowercase
+    $slug = preg_replace('/[^a-z0-9-]/', '-', $slug); // Replace non-alphanumeric characters with "-"
+    $slug = preg_replace('/-+/', '-', $slug); // Remove duplicate hyphens
+    $slug = trim($slug, '-'); // Trim hyphens from start and end
+
+    return $slug === '' ? 'untitled' : htmlspecialchars($slug, ENT_QUOTES, 'UTF-8'); // Ensure a valid slug and escape output
+}
+
+/**
  * Retrieves all products from the database.
  *
  * This function establishes a connection to the database using PDO,
