@@ -128,6 +128,7 @@ function getAllProductsWithCategoriesAndTags()
         $sql = "SELECT 
                     p.product_id,
                     p.product_name,
+                    p.slug,
                     p.description,
                     p.price_amount,
                     p.currency,
