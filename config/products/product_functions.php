@@ -41,6 +41,7 @@ function sanitizeProductData($data)
  *
  * This function converts a given product name into a slug format by:
  * - Trimming unnecessary whitespaces
+ * - Transliterating non-ASCII characters to ASCII equivalents
  * - Converting to lowercase
  * - Replacing non-alphanumeric characters with hyphens
  * - Removing duplicate and trailing hyphens
@@ -52,16 +53,28 @@ function sanitizeProductData($data)
  */
 function generateSlug(string $productName): string
 {
-    $productName = trim($productName); // Remove leading and trailing spaces
-    if ($productName === '')
-        return 'untitled'; // Return default slug if empty input
+    $productName = trim($productName);
+    if ($productName === '') {
+        return 'untitled';
+    }
 
-    $slug = strtolower($productName); // Convert to lowercase
-    $slug = preg_replace('/[^a-z0-9-]/', '-', $slug); // Replace non-alphanumeric characters with "-"
-    $slug = preg_replace('/-+/', '-', $slug); // Remove duplicate hyphens
-    $slug = trim($slug, '-'); // Trim hyphens from start and end
+    // Transliterate non-ASCII characters to ASCII
+    $transliterated = transliterator_transliterate('Any-Latin; Latin-ASCII;', $productName);
 
-    return $slug === '' ? 'untitled' : htmlspecialchars($slug, ENT_QUOTES, 'UTF-8'); // Ensure a valid slug and escape output
+    // Convert to lowercase using multibyte function
+    $slug = mb_strtolower($transliterated, 'UTF-8');
+
+    // Replace any non-alphanumeric characters (except hyphens) with hyphens
+    $slug = preg_replace('/[^a-z0-9-]/u', '-', $slug);
+
+    // Remove duplicate hyphens
+    $slug = preg_replace('/-+/', '-', $slug);
+
+    // Trim hyphens from the start and end
+    $slug = trim($slug, '-');
+
+    // Ensure a valid slug and escape output
+    return $slug === '' ? 'untitled' : htmlspecialchars($slug, ENT_QUOTES, 'UTF-8');
 }
 
 /**
@@ -369,7 +382,7 @@ function handleAddProductForm()
             $productData['currency'] = $money->getCurrency()->getCurrencyCode(); // Get currency code
 
             // Generate product slug from the product name
-            $productData['slug'] = slugify($_POST['productName']);
+            $productData['slug'] = generateSlug($_POST['productName']); // Updated to use generateSlug
 
             // Handle image upload and store the image path
             $productData['image_path'] = handleProductImageUpload();
@@ -1010,32 +1023,4 @@ function formatPrice($amount, $currencyCode = 'IDR', $locale = 'id_ID')
     } catch (UnknownCurrencyException $e) {
         return "Error: Currency code '$currencyCode' is not valid."; // Handle invalid currency codes
     }
-}
-
-/**
- * Converts a given string into a URL-friendly slug.
- * 
- * This function performs the following transformations:
- * 1. Replaces non-letter or non-digit characters with hyphens.
- * 2. Transliterates characters into ASCII characters.
- * 3. Removes unwanted characters (such as punctuation marks).
- * 4. Trims leading and trailing hyphens.
- * 5. Replaces multiple consecutive hyphens with a single hyphen.
- * 6. Converts the string to lowercase.
- * 
- * If the resulting string is empty, it returns 'untitled-product' as a fallback.
- *
- * @param string $text The input string to be converted.
- * @return string The generated URL-friendly slug.
- */
-function slugify($text)
-{
-    $text = preg_replace('~[^\pL\d]+~u', '-', $text); // Replaces non-letter and non-digit characters with hyphens
-    $text = iconv('utf-8', 'us-ascii//TRANSLIT', $text); // Transliterates characters to ASCII
-    $text = preg_replace('~[^-\w]+~', '', $text); // Removes unwanted characters (like punctuation)
-    $text = trim($text, '-'); // Trims leading and trailing hyphens
-    $text = preg_replace('~-+~', '-', $text); // Replaces multiple consecutive hyphens with one
-    $text = strtolower($text); // Converts the string to lowercase
-
-    return $text ?: 'untitled-product'; // Returns 'untitled-product' if the result is empty
 }
