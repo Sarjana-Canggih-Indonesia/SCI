@@ -101,12 +101,12 @@ setCacheHeaders($isLive);
     <!--========== AKHIR INSERT HEADER.PHP ==========-->
 
     <!--========== AREA SCROLL TO TOP ==========-->
-    <section class="scroll">
+    <div class="scroll">
         <!-- Scroll to Top Button -->
         <a href="#" class="scroll-to-top" id="scrollToTopBtn">
             <i class="fa-solid fa-angles-up"></i>
         </a>
-    </section>
+    </div>
     <!--========== AKHIR AREA SCROLL TO TOP ==========-->
 
     <!--========== AREA GENERIC FLASH MESSAGES ==========-->
