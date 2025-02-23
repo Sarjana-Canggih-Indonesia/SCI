@@ -403,7 +403,7 @@ setCacheHeaders($isLive);
                                 <div class="mb-3">
                                     <label for="productTags" class="form-label">Tags</label>
                                     <input type="text" class="form-control" id="productTags" name="productTags"
-                                        placeholder="Input tag Anda. Tekan spasi untuk melihat daftar tag yang tersedia, pisahkan dengan koma.">
+                                        placeholder="Input tag Anda. Tekan spasi untuk melihat daftar tag, pisahkan dengan koma.">
                                     <!-- Datalist untuk autocomplete tags -->
                                     <datalist id="tagList">
                                         <?php foreach ($tags as $tag): ?>
