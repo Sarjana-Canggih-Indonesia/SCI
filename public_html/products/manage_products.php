@@ -262,7 +262,9 @@ setCacheHeaders($isLive);
                     <tbody id="productsTableBody">
                         <?php
                         $counter = 1;
-                        foreach ($products as $product): ?>
+                        foreach ($products as $product):
+                            $encodedId = $optimus->encode($product['product_id']);
+                            ?>
                             <tr>
                                 <td>
                                     <input type="checkbox" name="selected_products[]" value="<?= $product['product_id'] ?>"
@@ -280,7 +282,7 @@ setCacheHeaders($isLive);
                                     </button>
                                     <!-- Tombol Edit -->
                                     <button class="btn btn-warning btn-sm"
-                                        onclick="editProduct(<?= $product['product_id'] ?>)">
+                                        onclick="editProduct('<?= $product['slug'] ?>', <?= $encodedId ?>)">
                                         <i class="fas fa-edit"></i> Edit
                                     </button>
                                 </td>
