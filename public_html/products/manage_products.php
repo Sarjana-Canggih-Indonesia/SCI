@@ -110,7 +110,7 @@ setCacheHeaders($isLive);
     <!--========== AKHIR AREA SCROLL TO TOP ==========-->
 
     <!--========== AREA GENERIC FLASH MESSAGES ==========-->
-    <div class="jarak-kustom container mt-4">
+    <div class="jarak-kustom container">
         <?php if ($successMessage): ?>
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <?= htmlspecialchars($successMessage) ?>
