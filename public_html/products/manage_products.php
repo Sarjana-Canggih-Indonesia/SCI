@@ -43,38 +43,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     handleAddProductForm();
 }
 
-// Handle success/error messages
-$successMessage = '';
-$errorMessage = '';
-$forceNoCache = false;
-
-if (isset($_SESSION['form_success'])) {
-    $forceNoCache = true;
-
-    if ($_SESSION['form_success']) {
-        $successMessage = $_SESSION['success_message'] ?? '';
-    } else {
-        $errorMessage = $_SESSION['error_message'] ?? '';
-    }
-
-    // Clear session messages
-    unset($_SESSION['form_success']);
-    unset($_SESSION['success_message']);
-    unset($_SESSION['error_message']);
-}
-
-// Retrieve product categories from the database.
-$categories = getProductCategories();
-
-// Retrieve all products along with categories and tags.
-$products = getAllProductsWithCategoriesAndTags();
-
 // Load dynamic URL configuration.
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $isLive = $config['is_live'];
 $pdo = getPDOConnection();
 $tags = getAllTags($pdo);
+
+// Handle success/error messages and update cache headers
+$flash = processFlashMessagesAndHeaders($isLive);
+$successMessage = $flash['success'];
+$errorMessage = $flash['error'];
+
+// Retrieve product categories from the database.
+$categories = getProductCategories();
+
+// Retrieve all products along with categories and tags.
+$products = getAllProductsWithCategoriesAndTags();
 
 // Set no-cache headers in the local environment.
 setCacheHeaders($isLive);
@@ -83,9 +68,6 @@ setCacheHeaders($isLive);
 header("X-Frame-Options: DENY");
 header("X-Content-Type-Options: nosniff");
 header("X-XSS-Protection: 1; mode=block");
-
-// Update cache headers based on the redirect flag
-updateCacheHeadersOnRedirect($forceNoCache, $isLive);
 ?>
 
 <!DOCTYPE html>
