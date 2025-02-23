@@ -84,14 +84,8 @@ header("X-Frame-Options: DENY");
 header("X-Content-Type-Options: nosniff");
 header("X-XSS-Protection: 1; mode=block");
 
-// Set cache headers berdasarkan flag
-if ($forceNoCache) {
-    header("Cache-Control: no-cache, no-store, must-revalidate");
-    header("Pragma: no-cache");
-    header("Expires: 0");
-} else {
-    setCacheHeaders($isLive);
-}
+// Update cache headers based on the redirect flag
+updateCacheHeadersOnRedirect($forceNoCache, $isLive);
 ?>
 
 <!DOCTYPE html>
