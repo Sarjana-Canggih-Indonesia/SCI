@@ -326,3 +326,53 @@ function updateCacheHeadersOnRedirect($forceNoCache, $isLive)
         setCacheHeaders($isLive);
     }
 }
+
+/**
+ * Retrieves flash messages from the session and clears them afterward.
+ *
+ * This function checks for the presence of flash messages in the session, returning an
+ * associative array with keys 'success', 'error', and 'forceNoCache'. If a flash message is
+ * found, it sets 'forceNoCache' to true and retrieves either a success or error message accordingly.
+ * After processing, it removes the flash message data from the session.
+ *
+ * @return array{
+ *     success: string,
+ *     error: string,
+ *     forceNoCache: bool
+ * } An array containing flash messages and the no-cache flag.
+ */
+function getFlashMessages()
+{
+    $flash = [
+        'success' => '',
+        'error' => '',
+        'forceNoCache' => false
+    ];
+
+    if (isset($_SESSION['form_success'])) {
+        $flash['forceNoCache'] = true;
+        if ($_SESSION['form_success']) {
+            $flash['success'] = $_SESSION['success_message'] ?? '';
+        } else {
+            $flash['error'] = $_SESSION['error_message'] ?? '';
+        }
+        unset($_SESSION['form_success'], $_SESSION['success_message'], $_SESSION['error_message']);
+    }
+    return $flash;
+}
+
+/**
+ * Processes flash messages and updates cache headers on redirect.
+ *
+ * Retrieves flash messages from the session and then updates the cache headers
+ * based on the 'forceNoCache' flag and the live environment setting.
+ *
+ * @param bool $isLive Flag indicating whether the environment is live.
+ * @return array The flash messages retrieved from the session.
+ */
+function processFlashMessagesAndHeaders($isLive)
+{
+    $flash = getFlashMessages();
+    updateCacheHeadersOnRedirect($flash['forceNoCache'], $isLive);
+    return $flash;
+}
