@@ -223,6 +223,36 @@ function getProductWithDetails($productId)
     }
 }
 
+/**
+ * Retrieves a product by its slug and encoded Optimus ID.
+ *
+ * This function decodes the Optimus ID to obtain the original product ID
+ * and then verifies if the provided slug matches the retrieved product.
+ * If the product is found, it returns the product data; otherwise, it
+ * throws an exception and handles the error.
+ *
+ * @param string $slug The slug of the product.
+ * @param int $encodedId The encoded product ID using Optimus.
+ * @return array|null The product data as an associative array or null if not found.
+ */
+function getProductBySlugAndOptimus($slug, $encodedId)
+{
+    try {
+        $pdo = getPDOConnection(); // Establishes a database connection
+        global $optimus;
+        $productId = $optimus->decode($encodedId); // Decodes the Optimus ID to get the real product ID
+        $stmt = $pdo->prepare("SELECT * FROM products WHERE product_id = :id AND slug = :slug");
+        $stmt->execute(['id' => $productId, 'slug' => $slug]);
+        $product = $stmt->fetch(PDO::FETCH_ASSOC);
+        if (!$product)
+            throw new Exception("Invalid product URL");
+        return $product;
+    } catch (Exception $e) {
+        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handles the error and logs it
+        return null;
+    }
+}
+
 
 /**
  * Adds a new product to the database.
