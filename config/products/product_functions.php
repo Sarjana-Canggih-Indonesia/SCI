@@ -332,6 +332,13 @@ function handleAddProductForm()
             $_SESSION['success_message'] = 'Produk berhasil ditambahkan!';
             $_SESSION['form_success'] = true;
             $_SESSION['old_input'] = [];
+            session_write_close();
+
+            // Redirect ke manage_products.php
+            $config = getEnvironmentConfig();
+            $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+            header("Location: " . $baseUrl . "manage_products");
+            exit();
 
         } catch (Exception $e) {
             $errorMessage = "Gagal menambahkan produk: " . $e->getMessage();
@@ -340,9 +347,14 @@ function handleAddProductForm()
             $_SESSION['error_message'] = $e->getMessage();
             $_SESSION['form_success'] = false;
             $_SESSION['old_input'] = $_POST;
-        }
-        session_write_close();
+            session_write_close();
 
+            // Redirect ke manage_products.php
+            $config = getEnvironmentConfig();
+            $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+            header("Location: " . $baseUrl . "manage_products");
+            exit();
+        }
     } else {
         error_log("Invalid access method to product form");
         $_SESSION['error_message'] = 'Permintaan tidak valid';
