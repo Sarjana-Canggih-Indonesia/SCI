@@ -12,6 +12,33 @@ use Carbon\Carbon;
 // Step 2: Start session and generate CSRF token if it doesn't exist
 startSession();
 
+// Ambil parameter dari URL
+$slug = $_GET['slug'] ?? null;
+$encodedId = $_GET['optimus'] ?? null;
+
+// Validasi parameter
+if (!$slug || !$encodedId) {
+    http_response_code(404);
+    include_once __DIR__ . '/../../404.php';
+    exit();
+}
+
+// Dekode ID menggunakan Optimus
+$productId = $optimus->decode($encodedId);
+
+// Dapatkan data produk dari database
+$product = getProductBySlugAndOptimus($slug, $encodedId);
+
+// Jika produk tidak ditemukan
+if (!$product) {
+    http_response_code(404);
+    include_once __DIR__ . '/../../404.php';
+    exit();
+}
+
+// Ambil data yang diperlukan dari $product
+$currentImage = $product['image_path'] ?? 'default_product.jpg';
+
 // Step 3: Load dynamic URL configuration
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
@@ -169,7 +196,8 @@ setCacheHeaders($isLive);
                 <!-- Kolom Kanan - Edit Form -->
                 <div class="col-md-6 edit-section">
                     <h4 class="section-title">Edit Product</h4>
-                    <form action="edit_product.php?product_id=1" method="post" enctype="multipart/form-data">
+                    <form action="<?= $baseUrl ?>edit-product/<?= $slug ?>/<?= $encodedId ?>" method="post"
+                        enctype="multipart/form-data">
                         <div class="mb-3">
                             <label for="name" class="form-label">Nama Produk</label>
                             <input type="text" class="form-control" id="name" name="name"
