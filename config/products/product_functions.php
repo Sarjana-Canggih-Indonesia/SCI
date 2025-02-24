@@ -479,56 +479,45 @@ function handleAddProductForm()
 }
 
 /**
- * Handles the upload of a product image with comprehensive validation.
+ * Handles the upload of product images.
+ *
+ * This function processes and uploads images submitted via the product form.
+ * It performs the following steps:
+ * - Checks if `$_FILES['productImages']` is set.
+ * - Ensures the upload directory exists, creating it if necessary.
+ * - Validates images using `validateProductImages()`.
+ * - Iterates over validated images, assigns a unique filename, and moves them to the upload directory.
+ * - Returns an array of successfully uploaded image paths.
  * 
- * Validates the image file, generates a unique filename, and stores it 
- * in the designated directory. Returns the relative file path for web access.
- * 
- * @return string Relative file path if successful, empty string on failure.
+ * @return array List of uploaded image file paths.
  */
-function handleProductImageUpload()
+function handleProductImagesUpload()
 {
-    if (!isset($_FILES['productImage'])) {
-        return '';
-    }
+    if (!isset($_FILES['productImages']))
+        return [];
 
-    // 1. Lakukan validasi gambar
-    $validationResult = validateProductImage($_FILES['productImage']);
-
-    // 2. Handle jika validasi gagal
-    if ($validationResult['error']) {
-        handleError(
-            'Image validation failed: ' . $validationResult['message'],
-            getEnvironmentConfig()['local']
-        );
-        return '';
-    }
-
-    // 3. Siapkan direktori upload
     $uploadDir = __DIR__ . '/../../public_html/uploads/products/';
+    if (!file_exists($uploadDir))
+        mkdir($uploadDir, 0755, true); // Ensure upload directory exists
 
-    // 4. Buat direktori jika belum ada
-    if (!file_exists($uploadDir)) {
-        mkdir($uploadDir, 0755, true);
-    }
+    $validationResults = validateProductImages($_FILES['productImages']); // Validate uploaded images
+    $uploadedImages = [];
 
-    // 5. Generate nama file unik dengan ekstensi asli
-    $filename = uniqid('product_', true) . '.' . $validationResult['data']['extension'];
+    foreach ($validationResults as $index => $result) {
+        if ($result['error'])
+            continue; // Skip invalid images
+
+        // Generate a unique filename for the image
+        $filename = uniqid('product_', true) . '.' . $result['data']['extension'];
     $destinationPath = $uploadDir . $filename;
 
-    // 6. Pindahkan file yang valid
-    if (
-        move_uploaded_file(
-            $validationResult['data']['tmp_path'],
-            $destinationPath
-        )
-    ) {
-        // 7. Return path relatif untuk penggunaan web
-        return '/uploads/products/' . $filename;
+        // Move uploaded file to the designated directory
+        if (move_uploaded_file($_FILES['productImages']['tmp_name'][$index], $destinationPath)) {
+            $uploadedImages[] = '/uploads/products/' . $filename;
+    }
     }
 
-    handleError('Failed to move uploaded file', getEnvironmentConfig()['local']);
-    return '';
+    return $uploadedImages; // Return an array of successfully uploaded image paths
 }
 
 /**
