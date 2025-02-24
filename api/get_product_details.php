@@ -1,4 +1,6 @@
 <?php
+// api/get_product_details.php
+
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/products/product_functions.php';
 
@@ -22,6 +24,9 @@ try {
         throw new Exception('Product not found');
     }
 
+    // Format gambar dari string ke array
+    $images = !empty($product['images']) ? explode(', ', $product['images']) : [];
+
     echo json_encode([
         'success' => true,
         'product' => [
@@ -29,7 +34,7 @@ try {
             'description' => $product['description'],
             'price' => $product['price_amount'],
             'currency' => $product['currency'],
-            'image' => $product['image_path'],
+            'images' => $images,
             'categories' => $product['categories'] ?? 'Uncategorized',
             'tags' => $product['tags'] ?? 'No tags',
             'created_at' => $product['created_at'],
