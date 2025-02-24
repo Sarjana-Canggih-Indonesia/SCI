@@ -159,21 +159,24 @@ function getProductCategories()
 }
 
 /**
- * Retrieves all products along with their associated categories and tags.
+ * Retrieves all products with their associated categories, tags, and images.
  * 
- * This function fetches all products from the database and includes their associated categories and tags. 
- * The data is structured as an associative array, where each product contains a concatenated list of its categories and tags.
+ * This function performs a database query to fetch all products along with:
+ * - Their associated images (concatenated as a string).
+ * - Their associated categories (concatenated as a string).
+ * - Their associated tags (concatenated as a string).
  * 
- * - The function uses LEFT JOIN to connect the products table with the category and tag tables.
- * - The GROUP_CONCAT function is used to merge multiple categories and tags into a single string per product.
- * - If an error occurs, it logs the error and returns an empty array.
+ * The data is retrieved using LEFT JOINs to ensure products without images, categories, or tags are still included.
+ * The results are grouped by product ID to avoid duplicate entries.
  * 
- * @return array An array of products, each containing product details along with concatenated category and tag names.
+ * @return array Returns an array of products, each containing product details, categories, tags, and images.
  */
 function getAllProductsWithCategoriesAndTags()
 {
     try {
-        $pdo = getPDOConnection();
+        $pdo = getPDOConnection(); // Establish a database connection.
+
+        // SQL query to fetch products with categories, tags, and images.
         $sql = "SELECT 
                     p.product_id,
                     p.product_name,
@@ -181,13 +184,15 @@ function getAllProductsWithCategoriesAndTags()
                     p.description,
                     p.price_amount,
                     p.currency,
-                    p.image_path,
+                    GROUP_CONCAT(DISTINCT pi.image_path ORDER BY pi.image_id SEPARATOR ', ') AS images,
                     p.created_at,
                     p.updated_at,
                     GROUP_CONCAT(DISTINCT pc.category_name ORDER BY pc.category_name SEPARATOR ', ') AS categories,
                     GROUP_CONCAT(DISTINCT t.tag_name ORDER BY t.tag_name SEPARATOR ', ') AS tags
                 FROM 
                     products p
+                LEFT JOIN 
+                    product_images pi ON p.product_id = pi.product_id
                 LEFT JOIN 
                     product_category_mapping pcm ON p.product_id = pcm.product_id
                 LEFT JOIN 
@@ -198,33 +203,45 @@ function getAllProductsWithCategoriesAndTags()
                     tags t ON ptm.tag_id = t.tag_id
                 GROUP BY 
                     p.product_id";
-        $stmt = $pdo->query($sql);
-        return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+        $stmt = $pdo->query($sql); // Execute the query.
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return results as an associative array.
+
     } catch (Exception $e) {
+        // Handle errors by logging them and returning an empty array.
         handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
         return [];
     }
 }
 
 /**
- * Retrieves product details along with associated categories and tags.
+ * Retrieves a specific product along with its details, including images, categories, and tags.
  *
- * This function fetches product information based on the given product ID. It retrieves details such as the product name, description, price, currency, image path, creation and update timestamps, 
- * along with associated categories and tags. The categories and tags are concatenated as comma-separated strings.
+ * This function fetches a product from the database based on the given product ID. 
+ * It includes the following related data:
+ * - Images (concatenated into a single string).
+ * - Categories (concatenated into a single string).
+ * - Tags (concatenated into a single string).
+ *
+ * The function ensures that even if a product has no images, categories, or tags, 
+ * it will still be included in the result.
  *
  * @param int $productId The ID of the product to retrieve.
- * @return array|null Returns an associative array of product details if found, otherwise null.
+ * @return array|null Returns an associative array containing the product details or null if an error occurs.
  */
 function getProductWithDetails($productId)
 {
     try {
-        $pdo = getPDOConnection();
+        $pdo = getPDOConnection(); // Establish a database connection.
 
-        // SQL query to fetch product details along with categories and tags
-        $sql = "SELECT p.product_id, p.product_name, p.description, p.price_amount, p.currency, p.image_path, p.created_at, p.updated_at, 
+        // SQL query to fetch a product with its related images, categories, and tags.
+        $sql = "SELECT p.product_id, p.product_name, p.description, p.price_amount, p.currency, 
+                    GROUP_CONCAT(DISTINCT pi.image_path ORDER BY pi.image_id SEPARATOR ', ') AS images,
+                    p.created_at, p.updated_at, 
                     GROUP_CONCAT(DISTINCT pc.category_name ORDER BY pc.category_name SEPARATOR ', ') AS categories, 
                     GROUP_CONCAT(DISTINCT t.tag_name ORDER BY t.tag_name SEPARATOR ', ') AS tags
                 FROM products p
+                LEFT JOIN product_images pi ON p.product_id = pi.product_id
                 LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id
                 LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id
                 LEFT JOIN product_tag_mapping ptm ON p.product_id = ptm.product_id
@@ -232,13 +249,12 @@ function getProductWithDetails($productId)
                 WHERE p.product_id = :product_id
                 GROUP BY p.product_id";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute(['product_id' => $productId]);
+        $stmt = $pdo->prepare($sql); // Prepare the SQL statement.
+        $stmt->execute(['product_id' => $productId]); // Execute the statement with the provided product ID.
+        return $stmt->fetch(PDO::FETCH_ASSOC); // Fetch and return the result as an associative array.
 
-        // Fetch and return the result as an associative array
-        return $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
-        // Handle exceptions and return null in case of an error
+        // Handle errors by logging them and returning null.
         handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
         return null;
     }
