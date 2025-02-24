@@ -23,6 +23,7 @@ if (getenv('ENV_LOADED')) {
 
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints as Assert;
+use Symfony\Component\Validator\ConstraintViolation;
 use Brick\Money\Money;
 use Brick\Money\Currency;
 
@@ -117,20 +118,23 @@ function validateEmail($email)
 }
 
 /**
- * Validates product data.
+ * Validates product data using Symfony Validator constraints.
  *
- * This function validates the product name, price, description, and slug.
- * It returns an array of violations or an empty array if the data is valid.
+ * This function ensures that the product data meets the required validation rules:
+ * - `name`: Must not be blank.
+ * - `price_amount`: Must not be blank, must be an integer, and must be positive or zero.
+ * - `currency`: Must not be blank.
+ * - `description`: Must not be blank.
+ * - `slug`: Must match the pattern `/^[a-z0-9-]+$/`.
  *
- * @param array $data An associative array containing the product data (name, price_amount, currency, description, image_path, slug).
- * @return array Returns an array of validation violations or an empty array if the data is valid.
+ * @param array $data The product data to be validated.
+ * @return array An array of constraint violations. If empty, the data is valid.
  */
 function validateProductData($data)
 {
-    // Create a validator
-    $validator = Validation::createValidator();
+    $validator = Validation::createValidator(); // Initialize the validator instance.
 
-    // Define constraints for the data
+    // Define validation constraints for product data fields.
     $constraints = [
         'name' => new Assert\NotBlank(['message' => 'Product name cannot be blank']),
         'price_amount' => [
@@ -146,16 +150,16 @@ function validateProductData($data)
         ])
     ];
 
-    $violations = [];
+    $violations = []; // Store validation errors if any.
 
-    // Validate each field
+    // Validate each field and merge the validation violations into the array.
     $violations = array_merge($violations, iterator_to_array($validator->validate($data['name'], $constraints['name'])));
     $violations = array_merge($violations, iterator_to_array($validator->validate($data['price_amount'], $constraints['price_amount'])));
     $violations = array_merge($violations, iterator_to_array($validator->validate($data['currency'], $constraints['currency'])));
     $violations = array_merge($violations, iterator_to_array($validator->validate($data['description'], $constraints['description'])));
     $violations = array_merge($violations, iterator_to_array($validator->validate($data['slug'], $constraints['slug'])));
 
-    return $violations;
+    return $violations; // Return an array of violations, empty if validation passes.
 }
 
 /**
