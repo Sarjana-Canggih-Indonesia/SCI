@@ -96,7 +96,7 @@ function getProducts()
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         // Log the error for debugging purposes
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
 
         // Return a user-friendly error message
         return [
@@ -125,7 +125,7 @@ function getProductById($id)
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
     }
 }
 
@@ -145,7 +145,7 @@ function getProductCategories()
         $stmt = $pdo->query("SELECT * FROM product_categories"); // Execute the query to fetch all product categories
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Return the fetched data as an associative array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle errors if the query fails
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors if the query fails
         return []; // Return an empty array in case of an error
     }
 }
@@ -193,7 +193,7 @@ function getAllProductsWithCategoriesAndTags()
         $stmt = $pdo->query($sql);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
         return [];
     }
 }
@@ -231,7 +231,7 @@ function getProductWithDetails($productId)
         return $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         // Handle exceptions and return null in case of an error
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
         return null;
     }
 }
@@ -561,7 +561,7 @@ function updateProduct($id, $data)
         }
     } catch (Exception $e) {
         // Log the error for debugging purposes
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
 
         // Return a user-friendly error message
         return [
@@ -654,7 +654,7 @@ function searchProducts($keyword)
         $stmt->execute(['keyword' => "%$keyword%"]); // Bind keyword and execute query
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return results as an associative array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle errors based on environment
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors based on environment
         return []; // Return an empty array in case of failure
     }
 }
@@ -701,7 +701,7 @@ function advancedProductSearch($filters)
         $stmt->execute($params); // Execute query with bound parameters
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return filtered results
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle errors based on environment
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors based on environment
         return []; // Return an empty array in case of failure
     }
 }
@@ -726,7 +726,7 @@ function getSearchSuggestions($keyword)
         $stmt->execute(['keyword' => "$keyword%"]); // Bind keyword and execute query
         return $stmt->fetchAll(PDO::FETCH_COLUMN); // Fetch only product names as an array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle errors based on environment
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors based on environment
         return []; // Return an empty array in case of failure
     }
 }
@@ -750,7 +750,7 @@ function fuzzySearchProducts($keyword)
         $stmt->execute(['keyword' => $keyword]); // Bind the keyword and execute the query
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return all matching products as an associative array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle errors based on environment
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors based on environment
         return []; // Return an empty array if an error occurs
     }
 }
@@ -777,7 +777,7 @@ function logSearchQuery($keyword, $userId = null)
             'keyword' => $keyword,
         ]);
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle any potential error
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle any potential error
     }
 }
 
