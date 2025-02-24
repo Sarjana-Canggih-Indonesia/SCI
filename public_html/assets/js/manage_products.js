@@ -277,9 +277,39 @@ function viewDetails(productId) {
           "id-ID",
         );
 
-        // Handle product image display
-        const imgElement = document.getElementById("detailProductImage");
-        imgElement.src = product.image ? `${BASE_URL}${product.image}` : `${BASE_URL}assets/images/no-image.jpg`;
+        // Handle product image display with carousel
+        const carouselInner = document.getElementById("detailProductImagesContainer");
+        carouselInner.innerHTML = ""; // Bersihkan konten sebelumnya
+
+        if (product.images && product.images.length > 0) {
+          product.images.forEach((image, index) => {
+            const carouselItem = document.createElement("div");
+            carouselItem.className = `carousel-item ${index === 0 ? "active" : ""}`;
+
+            const img = document.createElement("img");
+            img.src = `${BASE_URL}${image}`;
+            img.alt = "Product Image";
+            img.className = "d-block w-100 product-image";
+
+            // Tambahkan fitur zoom pada gambar
+            img.addEventListener("click", () => {
+              img.classList.toggle("zoom");
+            });
+
+            carouselItem.appendChild(img);
+            carouselInner.appendChild(carouselItem);
+          });
+        } else {
+          // Tampilkan gambar default jika tidak ada gambar
+          const carouselItem = document.createElement("div");
+          carouselItem.className = "carousel-item active";
+          const img = document.createElement("img");
+          img.src = `${BASE_URL}assets/images/no-image.jpg`;
+          img.alt = "No image available";
+          img.className = "d-block w-100";
+          carouselItem.appendChild(img);
+          carouselInner.appendChild(carouselItem);
+        }
 
         // Show the product details modal
         new bootstrap.Modal(document.getElementById("productDetailsModal")).show();
@@ -337,5 +367,14 @@ document.addEventListener("DOMContentLoaded", () => {
   $("#addProductModal").on("shown.bs.modal", initializeTagify);
   $("#addProductModal").on("hidden.bs.modal", () => {
     if (tagify) tagify.destroy();
+  });
+
+  // Maksimal 10 gambar
+  document.getElementById("addProductForm").addEventListener("submit", function (event) {
+    const files = document.getElementById("productImages").files;
+    if (files.length > 10) {
+      alert("You can upload a maximum of 10 images.");
+      event.preventDefault();
+    }
   });
 });
