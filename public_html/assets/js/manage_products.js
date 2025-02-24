@@ -72,7 +72,7 @@ function debounce(func, delay) {
 }
 
 function editProduct(slug, optimusId) {
-  window.location.href = `${BASE_URL}edit-product/${slug}/${optimusId}`;
+  window.open(`${BASE_URL}edit-product/${slug}/${optimusId}`, "_blank");
 }
 
 // ==================== Akhir Global Helper Functions ==================== //
