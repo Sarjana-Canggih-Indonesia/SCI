@@ -160,7 +160,7 @@ function getProductCategories()
 
 /**
  * Retrieves all products with their associated categories, tags, and images.
- * 
+ *
  * This function performs a database query to fetch all products along with:
  * - Their associated images (concatenated as a string).
  * - Their associated categories (concatenated as a string).
@@ -168,7 +168,7 @@ function getProductCategories()
  * 
  * The data is retrieved using LEFT JOINs to ensure products without images, categories, or tags are still included.
  * The results are grouped by product ID to avoid duplicate entries.
- * 
+ *
  * @return array Returns an array of products, each containing product details, categories, tags, and images.
  */
 function getAllProductsWithCategoriesAndTags()
@@ -504,7 +504,7 @@ function handleAddProductForm()
  * - Validates images using `validateProductImages()`.
  * - Iterates over validated images, assigns a unique filename, and moves them to the upload directory.
  * - Returns an array of successfully uploaded image paths.
- * 
+ *
  * @return array List of uploaded image file paths.
  */
 function handleProductImagesUpload()
@@ -525,12 +525,12 @@ function handleProductImagesUpload()
 
         // Generate a unique filename for the image
         $filename = uniqid('product_', true) . '.' . $result['data']['extension'];
-    $destinationPath = $uploadDir . $filename;
+        $destinationPath = $uploadDir . $filename;
 
         // Move uploaded file to the designated directory
         if (move_uploaded_file($_FILES['productImages']['tmp_name'][$index], $destinationPath)) {
             $uploadedImages[] = '/uploads/products/' . $filename;
-    }
+        }
     }
 
     return $uploadedImages; // Return an array of successfully uploaded image paths
@@ -621,66 +621,78 @@ function updateProduct($id, $data)
 }
 
 /**
- * Deletes a product from the database and removes its associated image file.
+ * Deletes a product from the database and removes associated image files.
  *
- * This function validates the product ID, establishes a database connection,
- * retrieves the image path, deletes the product and its category mappings,
- * and removes the associated image file from the filesystem. It handles
- * database transactions and errors gracefully.
+ * This function performs the following steps:
+ * - Validates the product ID to ensure it is a valid numeric value.
+ * - Retrieves image paths from the `product_images` table.
+ * - Deletes product-category mappings from `product_category_mapping`.
+ * - Deletes associated images from `product_images`.
+ * - Deletes the product from the `products` table.
+ * - Removes image files from the server if they exist.
+ * - Uses database transactions to ensure consistency.
  *
- * @param int $id The ID of the product to delete.
+ * @param int $id The ID of the product to be deleted.
  * @return array Returns an associative array with 'error' (boolean) and 'message' (string).
  */
 function deleteProduct($id)
 {
     if (!is_numeric($id) || $id <= 0) {
-        return ['error' => true, 'message' => 'ID produk tidak valid.'];
+        return ['error' => true, 'message' => 'Invalid product ID.'];
     }
 
     try {
-        $config = getEnvironmentConfig();
-        $pdo = getPDOConnection();
+        $config = getEnvironmentConfig(); // Load environment configuration.
+        $pdo = getPDOConnection(); // Establish a PDO connection.
         if (!$pdo) {
-            return ['error' => true, 'message' => 'Koneksi database gagal.'];
+            return ['error' => true, 'message' => 'Database connection failed.'];
         }
 
-        $pdo->beginTransaction();
+        $pdo->beginTransaction(); // Begin database transaction.
 
-        // Retrieve the image path from the database
-        $stmtImage = $pdo->prepare("SELECT image_path FROM products WHERE product_id=:id");
+        // Retrieve all image paths related to the product.
+        $stmtImage = $pdo->prepare("SELECT image_path FROM product_images WHERE product_id = :id");
         $stmtImage->execute(['id' => $id]);
-        $imagePath = $stmtImage->fetchColumn();
+        $imagePaths = $stmtImage->fetchAll(PDO::FETCH_COLUMN, 0);
 
-        // Delete product category mappings
-        $stmtMapping = $pdo->prepare("DELETE FROM product_category_mapping WHERE product_id=:id");
+        // Delete product-category mappings.
+        $stmtMapping = $pdo->prepare("DELETE FROM product_category_mapping WHERE product_id = :id");
         $stmtMapping->execute(['id' => $id]);
 
-        // Delete the product from the database
-        $stmt = $pdo->prepare("DELETE FROM products WHERE product_id=:id");
-        $stmt->execute(['id' => $id]);
+        // Delete product images from the database.
+        $stmtImagesDelete = $pdo->prepare("DELETE FROM product_images WHERE product_id = :id");
+        $stmtImagesDelete->execute(['id' => $id]);
 
-        if ($stmt->rowCount() > 0) {
-            // Delete the associated image file if it exists
-            if ($imagePath) {
-                $absolutePath = __DIR__ . '/../../public_html' . $imagePath;
-                if (file_exists($absolutePath)) {
-                    unlink($absolutePath);
+        // Delete the product from the database.
+        $stmtProduct = $pdo->prepare("DELETE FROM products WHERE product_id = :id");
+        $stmtProduct->execute(['id' => $id]);
+
+        if ($stmtProduct->rowCount() > 0) {
+            // Delete image files from the server.
+            if (!empty($imagePaths)) {
+                foreach ($imagePaths as $imagePath) {
+                    if (!empty($imagePath)) {
+                        $absolutePath = __DIR__ . '/../../public_html' . $imagePath;
+                        if (file_exists($absolutePath)) {
+                            unlink($absolutePath);
+                        }
+                    }
                 }
             }
 
-            $pdo->commit();
-            return ['error' => false, 'message' => 'Produk dan gambar berhasil dihapus.'];
+            $pdo->commit(); // Commit the transaction if successful.
+            return ['error' => false, 'message' => 'Product, category, and images successfully deleted.'];
         } else {
-            $pdo->rollBack();
-            return ['error' => true, 'message' => 'Produk tidak ditemukan atau sudah dihapus.'];
+            $pdo->rollBack(); // Rollback the transaction if no product was found.
+            return ['error' => true, 'message' => 'Product not found or already deleted.'];
         }
     } catch (PDOException $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
+        if (isset($pdo) && $pdo->inTransaction()) {
+            $pdo->rollBack(); // Rollback the transaction in case of an error.
         }
 
         handleError("Database Error: " . $e->getMessage(), $config['is_live'] ? 'live' : 'local');
-        return ['error' => true, 'message' => 'Terjadi kesalahan pada database.'];
+        return ['error' => true, 'message' => 'A database error occurred.'];
     }
 }
 
