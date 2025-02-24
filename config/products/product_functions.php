@@ -14,26 +14,34 @@ use Brick\Money\Exception\UnknownCurrencyException;
 use Brick\Math\RoundingMode;
 
 /**
- * Sanitizes product data to prevent XSS attacks.
+ * Sanitizes product data to ensure it is safe for storage and processing.
  *
- * This function sanitizes the name, description, and slug fields
- * by removing harmful HTML and special characters using AntiXSS.
+ * This function performs the following sanitization steps:
+ * - Removes leading and trailing spaces from all string inputs.
+ * - Prevents XSS attacks by cleaning the `name` and `description` fields.
+ * - Converts `price_amount` to an integer to ensure numerical consistency.
+ * - Converts `currency` to uppercase for standardization.
+ * - Converts `slug` to lowercase to maintain URL consistency.
  *
- * @param array $data The product data to sanitize.
+ * @param array $data The raw product data to be sanitized.
  * @return array The sanitized product data.
  */
 function sanitizeProductData($data)
 {
-    $antiXSS = new AntiXSS();
+    $antiXSS = new AntiXSS(); // Initialize the XSS protection library.
 
-    // Sanitize the relevant fields
+    // Sanitize the name field by trimming spaces and removing potential XSS content.
     $data['name'] = $antiXSS->xss_clean(trim($data['name']));
+    // Ensure price_amount is stored as an integer for consistency.
     $data['price_amount'] = (int) $data['price_amount'];
+    // Standardize currency format by converting to uppercase.
     $data['currency'] = strtoupper(trim($data['currency']));
+    // Sanitize the description field by trimming spaces and removing potential XSS content.
     $data['description'] = $antiXSS->xss_clean(trim($data['description']));
+    // Standardize the slug by converting it to lowercase.
     $data['slug'] = strtolower(trim($data['slug']));
 
-    return $data;
+    return $data; // Return the sanitized product data.
 }
 
 /**
