@@ -285,7 +285,7 @@ function getProductBySlugAndOptimus($slug, $encodedId)
             throw new Exception("Invalid product URL");
         return $product;
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handles the error and logs it
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handles the error and logs it
         return null;
     }
 }
