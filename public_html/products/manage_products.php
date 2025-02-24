@@ -444,9 +444,9 @@ setCacheHeaders($isLive);
                                         rows="3"></textarea>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="productImage" class="form-label">Product Image</label>
-                                    <input type="file" class="form-control" id="productImage" name="productImage"
-                                        accept="image/*">
+                                    <label for="productImages" class="form-label">Product Images (Max 10 images)</label>
+                                    <input type="file" class="form-control" id="productImages" name="productImages[]"
+                                        accept="image/*" multiple>
                                 </div>
                                 <input type="hidden" name="csrf_token" value="<?php echo $_SESSION['csrf_token']; ?>">
                                 <div class="modal-footer">
@@ -482,8 +482,8 @@ setCacheHeaders($isLive);
             </div>
 
             <!-- Product Details Modal -->
-            <div class="modal fade" id="productDetailsModal" tabindex="-1" aria-labelledby="productDetailsModalLabel"
-                aria-hidden="true">
+            <div class="modal-halaman-admin-bagian-details modal fade" id="productDetailsModal" tabindex="-1"
+                aria-labelledby="productDetailsModalLabel" aria-hidden="true">
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content">
                         <div class="modal-header">
@@ -493,9 +493,27 @@ setCacheHeaders($isLive);
                         <div class="modal-body">
                             <div class="row">
                                 <div class="col-md-4">
-                                    <img id="detailProductImage" src="" class="img-fluid rounded mb-3"
-                                        alt="Product Image" style="max-height: 300px; object-fit: cover;">
+                                    <!-- Carousel Container -->
+                                    <div id="productImageCarousel" class="carousel slide" data-bs-ride="carousel">
+                                        <div class="carousel-inner" id="detailProductImagesContainer"
+                                            style="max-height: 300px; overflow: hidden;">
+                                            <!-- Dynamic images will be inserted here -->
+                                        </div>
+
+                                        <!-- Carousel Controls -->
+                                        <button class="carousel-control-prev" type="button"
+                                            data-bs-target="#productImageCarousel" data-bs-slide="prev">
+                                            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Previous</span>
+                                        </button>
+                                        <button class="carousel-control-next" type="button"
+                                            data-bs-target="#productImageCarousel" data-bs-slide="next">
+                                            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                                            <span class="visually-hidden">Next</span>
+                                        </button>
+                                    </div>
                                 </div>
+
                                 <div class="col-md-8">
                                     <h3 id="detailProductName" class="mb-3"></h3>
                                     <div class="mb-3">
