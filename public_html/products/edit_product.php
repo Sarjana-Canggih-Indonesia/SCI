@@ -164,30 +164,50 @@ setCacheHeaders($isLive);
                 <div class="col-md-6 separator live-version">
                     <h4 class="section-title">Live Preview</h4>
                     <div class="preview-card shadow-sm">
-                        <img src="placeholder-image.jpg" class="img-fluid mb-3 rounded" alt="Product Image"
-                            style="max-height: 200px;">
-                        <h3 class="mb-2">Sample Product Name</h3>
+                        <!-- Gambar Produk -->
+                        <img src="<?= $baseUrl . ($product['image_path'] ?? 'assets/images/default_product.jpg') ?>"
+                            class="img-fluid mb-3 rounded" alt="Product Image"
+                            style="max-height: 200px; object-fit: cover;">
+                        <!-- Nama Produk -->
+                        <h3 class="mb-2"><?= htmlspecialchars($product['product_name']) ?></h3>
 
+                        <!-- Kategori dan Status -->
                         <div class="d-flex gap-2 mb-3">
-                            <span class="badge bg-primary">Electronics</span>
-                            <span class="badge bg-success">Active</span>
+                            <span
+                                class="badge bg-primary"><?= htmlspecialchars($product['category_name'] ?? 'Uncategorized') ?></span>
+                            <span class="badge <?= ($product['deleted_at'] === null) ? 'bg-success' : 'bg-danger' ?>">
+                                <?= ($product['deleted_at'] === null) ? 'Active' : 'Inactive' ?>
+                            </span>
                         </div>
 
-                        <h4 class="text-danger mb-3">$199.99</h4>
+                        <!-- Harga -->
+                        <h4 class="text-danger mb-3">
+                            Rp <?= number_format($product['price_amount'], 0, ',', '.') ?>
+                        </h4>
 
+                        <!-- Deskripsi -->
                         <div class="mb-4">
                             <h5>Description</h5>
-                            <p class="text-muted">This is a detailed description of the product that customers will see
-                                on
-                                the live version of the website.</p>
+                            <p class="text-muted">
+                                <?= htmlspecialchars($product['description'] ?? 'No description available') ?>
+                            </p>
                         </div>
 
+                        <!-- Tags -->
                         <div class="tags-section">
                             <h5>Tags</h5>
                             <div class="d-flex gap-2">
-                                <span class="badge bg-secondary">gadget</span>
-                                <span class="badge bg-secondary">electronics</span>
-                                <span class="badge bg-secondary">new</span>
+                                <?php
+                                // Pisahkan tags jika disimpan sebagai string dipisahkan koma
+                                $tags = explode(',', $product['tags'] ?? '');
+                                foreach ($tags as $tag):
+                                    if (trim($tag)): // Pastikan tag tidak kosong
+                                        ?>
+                                        <span class="badge bg-secondary"><?= htmlspecialchars(trim($tag)) ?></span>
+                                        <?php
+                                    endif;
+                                endforeach;
+                                ?>
                             </div>
                         </div>
                     </div>
