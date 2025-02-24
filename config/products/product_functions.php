@@ -278,74 +278,99 @@ function getProductBySlugAndOptimus($slug, $encodedId)
 /**
  * Adds a new product to the database.
  *
- * This function validates the product data, ensures an image is uploaded, 
- * sanitizes the data, and inserts the product into the database. 
- * If any step fails, it rolls back the transaction and returns an error message.
+ * This function performs the following steps:
+ * - Validates required keys in the provided data.
+ * - Checks for validation errors in the product data.
+ * - Ensures that at least one image is provided and the count does not exceed 10.
+ * - Sanitizes the input data.
+ * - Inserts product details into the `products` table.
+ * - Associates images with the product in the `product_images` table.
+ * - Links the product to a category in the `product_category_mapping` table.
+ * - Rolls back the transaction and deletes uploaded images if an error occurs.
  *
- * The function performs the following steps:
- * - Validates the provided product data
- * - Checks if an image is provided
- * - Sanitizes the product data
- * - Inserts the product into the database
- * - Retrieves the last inserted product ID
- * - Links the product to the specified category
- * - Commits the transaction if successful, otherwise rolls back and returns an error
- *
- * @param array $data Product data including name, price, currency, description, image path, and category.
- * @return array Result of the operation with error status and message.
+ * @param array $data The product data including name, price, currency, description, slug, images, and category.
+ * @return array An associative array indicating success or failure with an error message if applicable.
  */
 function addProduct($data)
 {
-    $violations = validateProductData($data); // Validate product data
+    $requiredKeys = ['name', 'price_amount', 'currency', 'description', 'slug', 'images', 'category'];
+    foreach ($requiredKeys as $key) {
+        if (!isset($data[$key])) {
+            return ['error' => true, 'message' => "Key '$key' not found in product data."];
+        }
+    }
+
+    // Validate product data
+    $violations = validateProductData($data);
     if (count($violations) > 0) {
         handleError("Validation failed: " . implode(", ", array_map(fn($v) => $v->getMessage(), $violations)), getEnvironmentConfig()['local']);
         return ['error' => true, 'message' => 'Invalid product data. Please check your input.'];
     }
 
-    if (empty($data['image_path'])) { // Ensure an image is uploaded
-        handleError("Product image required", getEnvironmentConfig()['local']);
-        return ['error' => true, 'message' => 'Product image is required.'];
+    // Ensure at least one image is provided and does not exceed 10
+    if (empty($data['images']) || !is_array($data['images'])) {
+        handleError("Product images required", getEnvironmentConfig()['local']);
+        return ['error' => true, 'message' => 'Product images are required.'];
     }
 
-    $data = sanitizeProductData($data); // Sanitize input data
+    $imageCount = count($data['images']);
+    if ($imageCount < 1 || $imageCount > 10) {
+        handleError("Number of images must be between 1 and 10", getEnvironmentConfig()['local']);
+        return ['error' => true, 'message' => 'Number of images must be between 1 and 10.'];
+    }
+
+    // Sanitize product data
+    $data = sanitizeProductData($data);
 
     try {
         $pdo = getPDOConnection();
-        $pdo->beginTransaction(); // Start transaction
+        $pdo->beginTransaction();
 
-        // Insert product into database
-        $stmt = $pdo->prepare("INSERT INTO products (product_name,price_amount,currency,description,image_path,slug) VALUES (:name,:price_amount,:currency,:description,:image_path,:slug)");
+        // Insert product details
+        $stmt = $pdo->prepare("INSERT INTO products (product_name, price_amount, currency, description, slug) VALUES (:name, :price_amount, :currency, :description, :slug)");
         $success = $stmt->execute([
             'name' => $data['name'],
             'price_amount' => $data['price_amount'],
             'currency' => $data['currency'],
             'description' => $data['description'],
-            'image_path' => $data['image_path'],
             'slug' => $data['slug']
         ]);
 
-        if (!$success || $stmt->rowCount() === 0) { // Check if product insertion was successful
+        if (!$success || $stmt->rowCount() === 0) {
             $pdo->rollBack();
             return ['error' => true, 'message' => 'Failed to save product to database.'];
         }
 
-        $product_id = $pdo->lastInsertId(); // Retrieve last inserted product ID
+        $product_id = $pdo->lastInsertId();
+
+        // Insert product images
+        $stmtImages = $pdo->prepare("INSERT INTO product_images (product_id, image_path) VALUES (?, ?)");
+        foreach ($data['images'] as $imagePath) {
+            $stmtImages->execute([$product_id, $imagePath]);
+        }
 
         // Link product to category
-        $stmt = $pdo->prepare("INSERT INTO product_category_mapping (product_id,category_id) VALUES (:product_id,:category_id)");
+        $stmt = $pdo->prepare("INSERT INTO product_category_mapping (product_id, category_id) VALUES (:product_id, :category_id)");
         $success = $stmt->execute(['product_id' => $product_id, 'category_id' => $data['category']]);
 
-        if (!$success) { // Rollback if linking fails
+        if (!$success) {
             $pdo->rollBack();
             return ['error' => true, 'message' => 'Failed to link product to category.'];
         }
 
-        $pdo->commit(); // Commit transaction
+        $pdo->commit();
         return ['error' => false, 'message' => 'Product successfully added.'];
 
     } catch (Exception $e) {
-        $pdo->rollBack(); // Rollback on error
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
+        // Delete uploaded images if an error occurs
+        foreach ($data['images'] as $imagePath) {
+            $absPath = __DIR__ . '/../../public_html' . $imagePath;
+            if (file_exists($absPath))
+                @unlink($absPath);
+        }
+
+        $pdo->rollBack();
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
         return ['error' => true, 'message' => 'A system error occurred. Please try again.'];
     }
 }
