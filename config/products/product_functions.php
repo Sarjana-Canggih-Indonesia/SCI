@@ -376,91 +376,102 @@ function addProduct($data)
 }
 
 /**
- * Handles the product addition form submission with proper session management.
+ * Handles the submission of the "Add Product" form.
  *
- * This function processes the form submission for adding a new product. It performs the following tasks:
- * - Validates the CSRF token to ensure request authenticity.
- * - Extracts and validates form input data.
- * - Processes the price input using the Money library.
- * - Generates a slug from the product name.
- * - Handles image upload and validation.
- * - Inserts the product into the database.
- * - Manages error handling, logging, and session storage.
- * - Redirects the user based on success or failure.
+ * This function processes the form data when a product is being added. It performs the following steps:
+ * - Validates the CSRF token for security.
+ * - Extracts and sanitizes product data from the form input.
+ * - Ensures that the price is valid and formatted correctly.
+ * - Generates a slug for the product name.
+ * - Handles product image uploads and validates their count.
+ * - Calls `addProduct()` to insert the product into the database.
+ * - If successful, redirects to the product management page.
+ * - If an error occurs, deletes uploaded images and stores the error message in the session.
+ *
+ * @return void Redirects to the manage products page with success or error messages.
  */
 function handleAddProductForm()
 {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) { // Check if the request is a POST request and contains a CSRF token
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
         try {
             validateCSRFToken($_POST['csrf_token']); // Validate CSRF token to prevent cross-site request forgery
 
-            // Initialize product data with default values
+            // Prepare product data from form input
             $productData = [
-                'name' => $_POST['productName'] ?? '', // Get product name or default to empty string
-                'category' => (int) ($_POST['productCategory'] ?? 0), // Convert category to integer, default is 0
-                'price_amount' => 0, // Default price amount
-                'currency' => 'IDR', // Default currency
-                'description' => $_POST['productDescription'] ?? '', // Get product description or default to empty string
-                'slug' => '', // Slug will be generated later
-                'image_path' => '' // Image path will be updated after upload
+                'name' => $_POST['productName'] ?? '',
+                'category' => (int) ($_POST['productCategory'] ?? 0),
+                'price_amount' => 0,
+                'currency' => 'IDR',
+                'description' => $_POST['productDescription'] ?? '',
+                'slug' => '',
+                'images' => []
             ];
 
-            // Validate and process product price
-            if (!isset($_POST['productPriceAmount']) || !is_numeric($_POST['productPriceAmount']))
+            // Validate product price
+            if (!isset($_POST['productPriceAmount']) || !is_numeric($_POST['productPriceAmount'])) {
                 throw new Exception("Invalid price format");
+            }
 
-            // Convert price amount using Money library
+            // Convert price to appropriate format using Money library
             $money = Money::of($_POST['productPriceAmount'], $_POST['productCurrency'], null, RoundingMode::DOWN);
-            $productData['price_amount'] = $money->getAmount()->toInt(); // Convert price to integer
-            $productData['currency'] = $money->getCurrency()->getCurrencyCode(); // Get currency code
+            $productData['price_amount'] = $money->getAmount()->toInt();
+            $productData['currency'] = $money->getCurrency()->getCurrencyCode();
 
-            // Generate product slug from the product name
-            $productData['slug'] = generateSlug($_POST['productName']); // Updated to use generateSlug
+            // Generate slug for the product based on its name
+            $productData['slug'] = generateSlug($_POST['productName']);
 
-            // Handle image upload and store the image path
-            $productData['image_path'] = handleProductImageUpload();
-            if (empty($productData['image_path']))
-                throw new Exception("Image upload failed. Please check file requirements.");
+            // Handle product image uploads
+            $productData['images'] = handleProductImagesUpload();
+            if (empty($productData['images'])) {
+                throw new Exception("Minimum 1 image required, maximum 10 images allowed");
+            }
 
-            // Insert product into the database
+            // Add product to the database
             $result = addProduct($productData);
             if ($result['error']) {
-                // If product insertion fails, delete the uploaded image to prevent orphaned files
-                if (!empty($productData['image_path'])) {
-                    $absPath = __DIR__ . '/../../public_html' . $productData['image_path'];
+                // Delete uploaded images if product addition fails
+                foreach ($productData['images'] as $imagePath) {
+                    $absPath = __DIR__ . '/../../public_html' . $imagePath;
                     if (file_exists($absPath))
                         @unlink($absPath);
                 }
                 throw new Exception($result['message']);
             }
 
-            // Set success message in session and clear old input data
+            // Store success message and reset form input
             $_SESSION['success_message'] = 'Produk berhasil ditambahkan!';
             $_SESSION['form_success'] = true;
             $_SESSION['old_input'] = [];
             session_write_close();
 
-            // Redirect to manage_products page
+            // Redirect to the manage products page
             $config = getEnvironmentConfig();
             header("Location: " . getBaseUrl($config, $_ENV['LIVE_URL']) . "manage_products");
             exit();
-        } catch (Exception $e) {
-            // Log error message and store error in session
-            error_log("Gagal menambahkan produk: " . $e->getMessage());
 
+        } catch (Throwable $e) {
+            // Delete uploaded images if an error occurs
+            if (!empty($productData['images'])) {
+                foreach ($productData['images'] as $imagePath) {
+                    $absPath = __DIR__ . '/../../public_html' . $imagePath;
+                    if (file_exists($absPath))
+                        @unlink($absPath);
+                }
+            }
+
+            // Store error message and retain form input data
             $_SESSION['error_message'] = $e->getMessage();
             $_SESSION['form_success'] = false;
             $_SESSION['old_input'] = $_POST;
             session_write_close();
 
-            // Redirect back to manage_products page with error message
+            // Redirect to the manage products page
             $config = getEnvironmentConfig();
             header("Location: " . getBaseUrl($config, $_ENV['LIVE_URL']) . "manage_products");
             exit();
         }
     } else {
-        // Log invalid access attempt
-        error_log("Invalid access method to product form");
+        // Handle invalid requests
         $_SESSION['error_message'] = 'Permintaan tidak valid';
         $_SESSION['form_success'] = false;
         session_write_close();
