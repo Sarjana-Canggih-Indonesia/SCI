@@ -1,4 +1,6 @@
 <?php
+// manage_users.php
+
 // Step 1: Load necessary configurations and libraries
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/auth/admin_functions.php';
@@ -120,7 +122,7 @@ $result = $conn->query($sql);
     <script>
         function confirmDelete(userId) {
             if (confirm("Apakah Anda yakin ingin menghapus user ini?")) {
-                window.location.href = `delete_user.php?user_id=${userId}`;
+                window.location.href = `<?= $baseUrl ?>delete-user?user_id=${userId}`;
             }
         }
     </script>
@@ -181,7 +183,7 @@ $result = $conn->query($sql);
                     <td>{$row['username']}</td>
                     <td>{$row['email']}</td>
                     <td>
-                        <form action='" . $baseUrl . "admin/role/change_role.php' method='POST' style='display:inline;'>
+                        <form action='" . $baseUrl . "change_role' method='POST' style='display:inline;'>
                             <input type='hidden' name='user_id' value='{$row['user_id']}'>
                             <select name='new_role' onchange='this.form.submit()'>
                                 <option value='admin' " . ($row['role'] === 'admin' ? 'selected' : '') . ">Admin</option>
