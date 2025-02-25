@@ -5,40 +5,40 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../auth/validate.php';
 
 /**
- * Create multiple tags in the database.
+ * Inserts multiple unique tags into the database.
  *
- * This function validates an array of tag names and inserts only the unique ones into the database.
- * If a tag already exists, it is skipped, and its presence is logged. The function returns an array of 
- * newly created tag IDs or false if no new tags were added.
+ * This function takes an array of tag names, validates them, sanitizes them, and inserts only unique ones into the database.
+ * If a tag already exists, it is skipped, and its existence is logged. The function returns an array of newly created tag IDs
+ * or `false` if no new tags were added.
  *
  * @param PDO $pdo The PDO database connection instance.
- * @param array $tagNames An array of tag names to be created.
- * @return array|false Returns an array of newly created tag IDs or false if no new tags were inserted.
+ * @param array $tagNames An array containing the tag names to be created.
+ * @return array|false Returns an array of newly created tag IDs or `false` if no new tags were inserted.
  */
 function createTags(PDO $pdo, array $tagNames)
 {
     if (!validateTags($tagNames))
         return false; // Validate tag names; return false if validation fails.
-
-    $tagIds = []; // Store IDs of newly created tags.
-    $existingTags = []; // Store tags that already exist.
+    $tagIds = []; // Array to store newly created tag IDs.
+    $existingTags = []; // Array to store tags that already exist.
 
     try {
-        $stmt = $pdo->prepare("INSERT INTO tags (tag_name) VALUES (:tag_name)"); // Prepare statement for inserting a tag.
+        $stmt = $pdo->prepare("INSERT INTO tags (tag_name) VALUES (:tag_name)"); // Prepare SQL statement for inserting a tag.
 
         foreach ($tagNames as $tagName) {
             $tagName = strtolower($tagName); // Convert tag name to lowercase for consistency.
+            $tagName = sanitize_input($tagName); // Sanitize input to prevent XSS attacks.
 
             $checkStmt = $pdo->prepare("SELECT tag_id FROM tags WHERE tag_name = :tag_name"); // Check if the tag already exists.
             $checkStmt->bindParam(':tag_name', $tagName, PDO::PARAM_STR);
             $checkStmt->execute();
 
-            if ($checkStmt->fetch()) { // If the tag exists, add it to the existing tags list.
+            if ($checkStmt->fetch()) { // If the tag exists, add it to the existingTags array and skip insertion.
                 $existingTags[] = $tagName;
-                continue; // Skip insertion for existing tags.
+                continue;
             }
 
-            $stmt->bindParam(':tag_name', $tagName, PDO::PARAM_STR); // Bind tag name for insertion.
+            $stmt->bindParam(':tag_name', $tagName, PDO::PARAM_STR); // Bind the sanitized tag name for insertion.
             if ($stmt->execute())
                 $tagIds[] = $pdo->lastInsertId(); // Store the new tag's ID if successfully inserted.
         }
@@ -47,7 +47,7 @@ function createTags(PDO $pdo, array $tagNames)
             handleError("The following tags already exist: " . implode(", ", $existingTags), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
         }
 
-        return !empty($tagIds) ? $tagIds : false; // Return newly created tag IDs or false if none were inserted.
+        return !empty($tagIds) ? $tagIds : false; // Return the array of newly created tag IDs or `false` if none were inserted.
     } catch (PDOException $e) {
         handleError("Database error: " . $e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Log database errors.
         return false;
