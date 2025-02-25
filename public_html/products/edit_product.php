@@ -198,10 +198,9 @@ setCacheHeaders($isLive);
                             <h5>Tags</h5>
                             <div class="d-flex gap-2">
                                 <?php
-                                // Pisahkan tags jika disimpan sebagai string dipisahkan koma
                                 $tags = explode(',', $product['tags'] ?? '');
                                 foreach ($tags as $tag):
-                                    if (trim($tag)): // Pastikan tag tidak kosong
+                                    if (trim($tag)):
                                         ?>
                                         <span class="badge bg-secondary"><?= htmlspecialchars(trim($tag)) ?></span>
                                         <?php
@@ -312,14 +311,6 @@ setCacheHeaders($isLive);
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
     <script> const BASE_URL = '<?= $baseUrl ?>';</script>
-    <!-- Script terkait dengan tagify -->
-    <script>
-        const TAGS_WHITELIST = [
-            <?php foreach ($tags as $tag): ?> "<?php echo htmlspecialchars($tag['tag_name']); ?>",
-            <?php endforeach; ?>
-        ];
-    </script>
-    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/manage_products.js"></script>
 </body>
 
 </html>
