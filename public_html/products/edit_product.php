@@ -218,12 +218,13 @@ setCacheHeaders($isLive);
                     <h4 class="section-title">Edit Product</h4>
                     <form action="<?= $baseUrl ?>edit-product/<?= $slug ?>/<?= $encodedId ?>" method="post"
                         enctype="multipart/form-data">
+                        <!-- Nama Produk -->
                         <div class="mb-3">
                             <label for="name" class="form-label">Nama Produk</label>
                             <input type="text" class="form-control" id="name" name="name"
                                 placeholder="Masukkan nama produk">
                         </div>
-
+                        <!-- Harga -->
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="price" class="form-label">Price</label>
@@ -233,7 +234,7 @@ setCacheHeaders($isLive);
                                         placeholder="50000.00" step="5000">
                                 </div>
                             </div>
-
+                            <!-- Status Penjualan -->
                             <div class="col-md-6">
                                 <label for="status" class="form-label">Status</label>
                                 <select class="form-select" id="status" name="status">
@@ -242,32 +243,30 @@ setCacheHeaders($isLive);
                                 </select>
                             </div>
                         </div>
-
-                        <div class="mb-3">
-                            <label for="short_description" class="form-label">Short Description</label>
-                            <textarea class="form-control" id="short_description" name="short_description" rows="2"
-                                placeholder="Max 150 characters...">This is a sample short description for the product preview</textarea>
-                        </div>
-
+                        <!-- Description -->
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
                             <textarea class="form-control" id="description" name="description" rows="4"
                                 placeholder="Masukkan deskripsi produk"></textarea>
                         </div>
-
+                        <!-- Category -->
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label for="category_id" class="form-label">Category</label>
                                 <select class="form-select" id="category_id" name="category_id">
-                                    <option value="1" selected>Electronics</option>
-                                    <option value="2">Clothing</option>
-                                    <option value="3">Books</option>
+                                    <?php
+                                    $currentCategoryIds = explode(',', $product['category_ids'] ?? '');
+                                    foreach ($categories as $category):
+                                        $isSelected = in_array($category['category_id'], $currentCategoryIds);
+                                        ?>
+                                        <option value="<?= $category['category_id'] ?>" <?= $isSelected ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($category['category_name']) ?>
+                                        </option>
+                                    <?php endforeach; ?>
                                 </select>
                             </div>
-
-
                         </div>
-
+                        <!-- Tags -->
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label for="tags" class="form-label">Tags</label>
@@ -275,7 +274,7 @@ setCacheHeaders($isLive);
                                     placeholder="Input tag Anda. Tekan spasi untuk melihat daftar tag, pisahkan dengan koma.">
                             </div>
                         </div>
-
+                        <!-- Image Produk / Layanan -->
                         <div class="mb-4 mt-4">
                             <label for="image" class="form-label">Product Image</label>
                             <input type="file" class="form-control" id="image" name="image">
