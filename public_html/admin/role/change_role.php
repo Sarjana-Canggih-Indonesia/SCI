@@ -1,10 +1,10 @@
 <?php
-session_start();
-
 // Include necessary files
 require_once __DIR__ . '/../../../config/config.php';
 require_once __DIR__ . '/../../../config/auth/admin_functions.php';
 require_once __DIR__ . '/../../../config/user_actions_config.php';
+
+startSession();
 
 // Check if admin is logged in
 if (!isset($_SESSION['user_id'])) {
