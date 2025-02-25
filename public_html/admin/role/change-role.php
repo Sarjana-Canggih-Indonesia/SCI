@@ -46,6 +46,5 @@ try {
 }
 
 // Redirect kembali ke halaman manage_users
-header("Location: " . $baseUrl . "admin/manage_users.php");
+header("Location: " . $baseUrl . "manage_users");
 exit();
-?>

@@ -183,7 +183,7 @@ $result = $conn->query($sql);
                     <td>{$row['username']}</td>
                     <td>{$row['email']}</td>
                     <td>
-                        <form action='" . $baseUrl . "change_role' method='POST' style='display:inline;'>
+                        <form action='" . $baseUrl . "chnage-role' method='POST' style='display:inline;'>
                             <input type='hidden' name='user_id' value='{$row['user_id']}'>
                             <select name='new_role' onchange='this.form.submit()'>
                                 <option value='admin' " . ($row['role'] === 'admin' ? 'selected' : '') . ">Admin</option>
