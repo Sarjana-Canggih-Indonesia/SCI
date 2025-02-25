@@ -123,34 +123,42 @@ function getAllTags(PDO $pdo): array
 /**
  * Updates an existing tag in the database.
  *
- * This function updates the name of a tag in the `tags` table based on the provided tag ID.
+ * This function updates the name of a tag identified by its tag ID in the `tags` table.
+ * It ensures that the new tag name is valid and does not already exist under a different ID to maintain data integrity.
+ * If the new tag name is invalid or already exists, the update is prevented, and an error is logged.
  *
  * @param PDO $pdo The PDO database connection instance.
- * @param int $tagId The ID of the tag to update.
- * @param string $newTagName The new name for the tag.
- * @return bool Returns true if the update was successful, otherwise false.
+ * @param int $tagId The ID of the tag to be updated.
+ * @param string $newTagName The new tag name to be assigned.
+ * @return bool Returns `true` if the update was successful, otherwise `false`.
  */
-function updateTag(PDO $pdo, int $tagId, string $newTagName)
-{
-    // Sanitize the input to prevent XSS and SQL injection
-    $newTagName = sanitize_input($newTagName);
+function updateTag(PDO $pdo, int $tagId, string $newTagName) { 
+    $newTagName = strtolower($newTagName); // Convert tag name to lowercase for consistency.
+    $newTagName = sanitize_input($newTagName); // Sanitize input to prevent XSS and SQL injection risks.
 
-    try {
-        // Prepare the SQL statement for updating a tag
-        $stmt = $pdo->prepare("UPDATE tags SET tag_name = :tag_name WHERE tag_id = :tag_id");
+    if (!validateTag($newTagName)) return false; // Validate the new tag name; return false if invalid.
+
+    try { 
+        $checkStmt = $pdo->prepare("SELECT tag_id FROM tags WHERE tag_name = :tag_name AND tag_id != :tag_id"); // Check if the new tag name already exists under a different ID.
+        $checkStmt->bindParam(':tag_name', $newTagName, PDO::PARAM_STR);
+        $checkStmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
+        $checkStmt->execute();
+
+        if ($checkStmt->fetch()) { // If a duplicate tag exists, log an error and prevent the update.
+            handleError("Cannot update tag: The tag name '$newTagName' already exists.", getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+            return false;
+        }
+
+        $stmt = $pdo->prepare("UPDATE tags SET tag_name = :tag_name WHERE tag_id = :tag_id"); // Prepare update statement.
         $stmt->bindParam(':tag_name', $newTagName, PDO::PARAM_STR);
         $stmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
 
-        // Execute the statement and return true if the update was successful
-        if ($stmt->execute()) {
-            return true;
-        }
-    } catch (PDOException $e) {
-        // Log the error and handle it appropriately
-        handleError("Error updating tag: " . $e->getMessage(), isLive() ? 'live' : 'local');
+        if ($stmt->execute() && $stmt->rowCount() > 0) return true; // Execute update and check if any rows were affected.
+        return false; 
+    } catch (PDOException $e) { 
+        handleError("Database error: " . $e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Log database errors.
+        return false;
     }
-
-    return false; // Return false if the update failed
 }
 
 /**
