@@ -75,6 +75,48 @@ function changeUserRole($admin_id, $user_id, $new_role)
 }
 
 /**
+ * Deletes a user from the database and logs the action in the admin activity log.
+ * 
+ * This function removes a user from the `users` table based on the provided user ID. 
+ * It also records the action in the `admin_activity_log` table for auditing purposes.
+ * The function first retrieves the environment-specific database configuration, establishes a connection, 
+ * and then executes the deletion query. If the operation is successful, it logs the action; 
+ * otherwise, it handles errors accordingly.
+ * 
+ * @param int $admin_id The ID of the admin performing the action.
+ * @param int $user_id The ID of the user to be deleted.
+ * @return void
+ * @throws Exception If an error occurs during the database operation.
+ */
+function deleteUser($admin_id, $user_id)
+{
+    $config = getEnvironmentConfig(); // Get database configuration based on the environment
+
+    $conn = new mysqli($config['DB_HOST'], $config['DB_USER'], $config['DB_PASS'], $config['DB_NAME']); // Establish database connection
+
+    if ($conn->connect_error) { // Check if the connection failed
+        $errorMessage = "Database connection failed: " . $conn->connect_error;
+        handleError($errorMessage, isLive() ? 'live' : 'local'); // Handle connection error
+    }
+
+    $admin_id = $conn->real_escape_string(sanitize_input($admin_id)); // Sanitize and escape admin ID input
+    $user_id = $conn->real_escape_string(sanitize_input($user_id)); // Sanitize and escape user ID input
+
+    $sql = "DELETE FROM users WHERE user_id = '$user_id'"; // SQL query to delete the user
+
+    if ($conn->query($sql) === TRUE) { // Execute query and check if successful
+        logAdminAction($admin_id, 'delete_user', 'users', $user_id, "Deleted user with ID $user_id"); // Log the deletion action
+
+        echo escapeHTML("User successfully deleted."); // Display success message
+    } else {
+        $errorMessage = "Deletion failed: " . $conn->error;
+        handleError($errorMessage, isLive() ? 'live' : 'local'); // Handle SQL execution error
+    }
+
+    $conn->close(); // Close database connection
+}
+
+/**
  * Logs an administrative action into the `admin_activity_log` table in the database.
  *
  * This function records administrative actions such as creating, updating, or deleting records.
