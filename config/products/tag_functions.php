@@ -3,6 +3,7 @@
 
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../auth/validate.php';
+require_once __DIR__ . '/../auth/admin_functions.php';
 
 /**
  * Inserts multiple unique tags into the database.
@@ -132,13 +133,15 @@ function getAllTags(PDO $pdo): array
  * @param string $newTagName The new tag name to be assigned.
  * @return bool Returns `true` if the update was successful, otherwise `false`.
  */
-function updateTag(PDO $pdo, int $tagId, string $newTagName) { 
+function updateTag(PDO $pdo, int $tagId, string $newTagName)
+{
     $newTagName = strtolower($newTagName); // Convert tag name to lowercase for consistency.
     $newTagName = sanitize_input($newTagName); // Sanitize input to prevent XSS and SQL injection risks.
 
-    if (!validateTag($newTagName)) return false; // Validate the new tag name; return false if invalid.
+    if (!validateTag($newTagName))
+        return false; // Validate the new tag name; return false if invalid.
 
-    try { 
+    try {
         $checkStmt = $pdo->prepare("SELECT tag_id FROM tags WHERE tag_name = :tag_name AND tag_id != :tag_id"); // Check if the new tag name already exists under a different ID.
         $checkStmt->bindParam(':tag_name', $newTagName, PDO::PARAM_STR);
         $checkStmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
@@ -153,38 +156,52 @@ function updateTag(PDO $pdo, int $tagId, string $newTagName) {
         $stmt->bindParam(':tag_name', $newTagName, PDO::PARAM_STR);
         $stmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
 
-        if ($stmt->execute() && $stmt->rowCount() > 0) return true; // Execute update and check if any rows were affected.
-        return false; 
-    } catch (PDOException $e) { 
+        if ($stmt->execute() && $stmt->rowCount() > 0)
+            return true; // Execute update and check if any rows were affected.
+        return false;
+    } catch (PDOException $e) {
         handleError("Database error: " . $e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Log database errors.
         return false;
     }
 }
 
 /**
- * Deletes a tag from the database.
+ * Deletes a tag from the database based on the given tag ID.
  *
- * This function removes a tag from the `tags` table based on the provided tag ID.
+ * This function first validates the tag ID, then attempts to delete the tag
+ * from the database using a prepared statement. If the deletion is successful,
+ * it logs the action and returns true. If an error occurs, it is handled and rethrown.
  *
  * @param PDO $pdo The PDO database connection instance.
- * @param int $tagId The ID of the tag to delete.
- * @return bool Returns true if the deletion was successful, otherwise false.
+ * @param int $tagId The ID of the tag to be deleted.
+ * @param int $adminId The ID of the admin performing the deletion.
+ * @return bool Returns true if the tag was deleted successfully, false otherwise.
+ * @throws PDOException If a database error occurs, the exception is rethrown.
  */
-function deleteTag(PDO $pdo, int $tagId)
+function deleteTag(PDO $pdo, int $tagId, int $adminId): bool
 {
-    try {
-        // Prepare the SQL statement for deleting a tag
-        $stmt = $pdo->prepare("DELETE FROM tags WHERE tag_id = :tag_id");
-        $stmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
+    if ($tagId <= 0)
+        return false; // Validate tag ID: must be greater than zero.
 
-        // Execute the statement and return true if the deletion was successful
-        if ($stmt->execute()) {
-            return true;
+    try {
+        $stmt = $pdo->prepare("DELETE FROM tags WHERE tag_id = :tag_id"); // Prepare the DELETE query.
+        $stmt->bindValue(':tag_id', $tagId, PDO::PARAM_INT); // Bind tag ID to the query.
+
+        if ($stmt->execute()) { // Execute the query.
+            if ($stmt->rowCount() > 0) { // Check if any row was affected.
+                logAdminAction(
+                    $adminId,
+                    'delete',
+                    'tags',
+                    $tagId,
+                    "Tag with ID $tagId deleted successfully."
+                ); // Log the deletion action with admin ID.
+                return true; // Return true if deletion was successful.
+            }
         }
     } catch (PDOException $e) {
-        // Log the error and handle it appropriately
-        handleError("Error deleting tag: " . $e->getMessage(), isLive() ? 'live' : 'local');
+        handleError("Error deleting tag with ID $tagId: " . $e->getMessage(), isLive() ? 'live' : 'local'); // Handle and log the error.
+        throw $e; // Rethrow the exception for further handling.
     }
-
-    return false; // Return false if the deletion failed
+    return false; // Return false if deletion failed.
 }
