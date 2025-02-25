@@ -75,43 +75,40 @@ function changeUserRole($admin_id, $user_id, $new_role)
 }
 
 /**
- * Deletes a user from the database and logs the action in the admin activity log.
+ * Deletes a user from the database and logs the action performed by an admin.
  * 
- * This function removes a user from the `users` table based on the provided user ID. 
- * It also records the action in the `admin_activity_log` table for auditing purposes.
- * The function first retrieves the environment-specific database configuration, establishes a connection, 
- * and then executes the deletion query. If the operation is successful, it logs the action; 
- * otherwise, it handles errors accordingly.
+ * This function removes a specific user from the `users` table based on the provided user ID.
+ * It also records the deletion in the `admin_activity_log` table for tracking purposes.
+ * The function establishes a database connection, sanitizes the input data, executes 
+ * the deletion query, and logs the action. If an error occurs during the process, 
+ * an exception is thrown.
  * 
  * @param int $admin_id The ID of the admin performing the action.
  * @param int $user_id The ID of the user to be deleted.
  * @return void
- * @throws Exception If an error occurs during the database operation.
+ * @throws Exception If a database connection error or query failure occurs.
  */
 function deleteUser($admin_id, $user_id)
 {
-    $config = getEnvironmentConfig(); // Get database configuration based on the environment
+    $config = getEnvironmentConfig(); // Retrieve environment-specific database configuration
 
     $conn = new mysqli($config['DB_HOST'], $config['DB_USER'], $config['DB_PASS'], $config['DB_NAME']); // Establish database connection
 
-    if ($conn->connect_error) { // Check if the connection failed
-        $errorMessage = "Database connection failed: " . $conn->connect_error;
-        handleError($errorMessage, isLive() ? 'live' : 'local'); // Handle connection error
-    }
+    if ($conn->connect_error)
+        throw new Exception("Database connection failed: " . $conn->connect_error); // Handle database connection error
 
     $admin_id = $conn->real_escape_string(sanitize_input($admin_id)); // Sanitize and escape admin ID input
     $user_id = $conn->real_escape_string(sanitize_input($user_id)); // Sanitize and escape user ID input
 
     $sql = "DELETE FROM users WHERE user_id = '$user_id'"; // SQL query to delete the user
 
-    if ($conn->query($sql) === TRUE) { // Execute query and check if successful
-        logAdminAction($admin_id, 'delete_user', 'users', $user_id, "Deleted user with ID $user_id"); // Log the deletion action
-
-        echo escapeHTML("User successfully deleted."); // Display success message
-    } else {
-        $errorMessage = "Deletion failed: " . $conn->error;
-        handleError($errorMessage, isLive() ? 'live' : 'local'); // Handle SQL execution error
+    if (!$conn->query($sql)) { // Execute deletion query and check if successful
+        $error = $conn->error;
+        $conn->close();
+        throw new Exception("Failed to delete user: " . $error); // Handle query failure
     }
+
+    logAdminAction($admin_id, 'delete_user', 'users', $user_id, "Deleted user with ID $user_id"); // Log the deletion action
 
     $conn->close(); // Close database connection
 }
