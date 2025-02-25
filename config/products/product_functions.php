@@ -215,48 +215,47 @@ function getAllProductsWithCategoriesAndTags()
 }
 
 /**
- * Retrieves a specific product along with its details, including images, categories, and tags.
+ * Retrieves product details along with associated images, categories, and tags.
  *
- * This function fetches a product from the database based on the given product ID. 
- * It includes the following related data:
- * - Images (concatenated into a single string).
- * - Categories (concatenated into a single string).
- * - Tags (concatenated into a single string).
- *
- * The function ensures that even if a product has no images, categories, or tags, 
- * it will still be included in the result.
+ * This function fetches product information by joining multiple tables: `products`, `product_images`, 
+ * `product_categories`, and `tags`. It groups related images, categories, and tags into comma-separated strings.
  *
  * @param int $productId The ID of the product to retrieve.
- * @return array|null Returns an associative array containing the product details or null if an error occurs.
+ * @return array|null Returns an associative array of product details or null if an error occurs.
  */
 function getProductWithDetails($productId)
 {
     try {
-        $pdo = getPDOConnection(); // Establish a database connection.
+        $pdo = getPDOConnection(); // Get the PDO database connection
 
-        // SQL query to fetch a product with its related images, categories, and tags.
-        $sql = "SELECT p.product_id, p.product_name, p.description, p.price_amount, p.currency, 
-                    GROUP_CONCAT(DISTINCT pi.image_path ORDER BY pi.image_id SEPARATOR ', ') AS images,
-                    p.created_at, p.updated_at, 
+        $sql = "SELECT 
+                    p.product_id, 
+                    p.product_name, 
+                    p.description, 
+                    p.price_amount, 
+                    p.currency, 
+                    GROUP_CONCAT(DISTINCT pi.image_path ORDER BY pi.image_id SEPARATOR ', ') AS images, 
+                    p.created_at, 
+                    p.updated_at, 
+                    GROUP_CONCAT(DISTINCT pc.category_id ORDER BY pc.category_id SEPARATOR ', ') AS category_ids, 
                     GROUP_CONCAT(DISTINCT pc.category_name ORDER BY pc.category_name SEPARATOR ', ') AS categories, 
-                    GROUP_CONCAT(DISTINCT t.tag_name ORDER BY t.tag_name SEPARATOR ', ') AS tags
-                FROM products p
-                LEFT JOIN product_images pi ON p.product_id = pi.product_id
-                LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id
-                LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id
-                LEFT JOIN product_tag_mapping ptm ON p.product_id = ptm.product_id
-                LEFT JOIN tags t ON ptm.tag_id = t.tag_id
-                WHERE p.product_id = :product_id
+                    GROUP_CONCAT(DISTINCT t.tag_name ORDER BY t.tag_name SEPARATOR ', ') AS tags 
+                FROM products p 
+                LEFT JOIN product_images pi ON p.product_id = pi.product_id 
+                LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id 
+                LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id 
+                LEFT JOIN product_tag_mapping ptm ON p.product_id = ptm.product_id 
+                LEFT JOIN tags t ON ptm.tag_id = t.tag_id 
+                WHERE p.product_id = :product_id 
                 GROUP BY p.product_id";
 
-        $stmt = $pdo->prepare($sql); // Prepare the SQL statement.
-        $stmt->execute(['product_id' => $productId]); // Execute the statement with the provided product ID.
-        return $stmt->fetch(PDO::FETCH_ASSOC); // Fetch and return the result as an associative array.
+        $stmt = $pdo->prepare($sql); // Prepare the SQL statement
+        $stmt->execute(['product_id' => $productId]); // Execute the query with productId parameter
+        return $stmt->fetch(PDO::FETCH_ASSOC); // Fetch and return the product data
 
     } catch (Exception $e) {
-        // Handle errors by logging them and returning null.
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
-        return null;
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle the error based on the environment
+        return null; // Return null in case of an error
     }
 }
 
