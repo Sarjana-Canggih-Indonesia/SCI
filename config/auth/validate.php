@@ -282,3 +282,54 @@ function validateProductImages($files, $maxWidth = 2000, $maxHeight = 2000)
 
     return $results;
 }
+
+/**
+ * Validate a tag name based on length and format.
+ *
+ * This function checks whether the given tag name meets the specified criteria:
+ * - The length must not exceed 255 characters.
+ * - It must contain only letters (A-Z, a-z) and hyphens (-).
+ * If the tag name is invalid, an error is logged using `handleError`, and the function returns false.
+ *
+ * @param string $tagName The tag name to validate.
+ * @return bool Returns true if the tag name is valid, otherwise false.
+ */
+function validateTag(string $tagName): bool
+{
+    if (strlen($tagName) > 255) { // Ensure the tag name does not exceed 255 characters.
+        handleError("Tag name '$tagName' cannot exceed 255 characters.", getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+        return false;
+    }
+
+    if (!preg_match('/^[a-zA-Z-]+$/', $tagName)) { // Ensure the tag name contains only letters and hyphens.
+        handleError("Tag name '$tagName' can only contain letters and hyphens.", getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+        return false;
+    }
+
+    return true; // Return true if the tag name passes all validations.
+}
+
+/**
+ * Validate an array of tag names.
+ *
+ * This function ensures that at least one tag name is provided and that all tag names
+ * meet the validation criteria defined in the `validateTag` function.
+ * If any tag name is invalid, the function returns false.
+ *
+ * @param array $tagNames An array of tag names to validate.
+ * @return bool Returns true if all tag names are valid, otherwise false.
+ */
+function validateTags(array $tagNames): bool
+{
+    if (empty($tagNames)) { // Ensure at least one tag is provided.
+        handleError("At least one tag must be provided.", getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+        return false;
+    }
+
+    foreach ($tagNames as $tagName) { // Loop through each tag and validate it.
+        if (!validateTag($tagName))
+            return false; // Stop validation immediately if any tag is invalid.
+    }
+
+    return true; // Return true if all tags pass validation.
+}
