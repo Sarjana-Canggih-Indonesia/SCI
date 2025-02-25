@@ -58,16 +58,22 @@ function createTags(PDO $pdo, array $tagNames)
  * Retrieves a tag by its ID from the database.
  *
  * This function fetches a tag from the `tags` table based on the provided tag ID.
+ * The returned array contains the following keys:
+ * - `tag_id` (int): The ID of the tag.
+ * - `tag_name` (string): The name of the tag.
  *
  * @param PDO $pdo The PDO database connection instance.
  * @param int $tagId The ID of the tag to retrieve.
  * @return array|null Returns an associative array containing the tag data, or null if the tag is not found.
  */
-function getTagById(PDO $pdo, int $tagId)
+function getTagById(PDO $pdo, int $tagId): ?array
 {
     try {
+        // Set PDO to throw exceptions on error
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
         // Prepare the SQL statement for fetching a tag by ID
-        $stmt = $pdo->prepare("SELECT * FROM tags WHERE tag_id = :tag_id");
+        $stmt = $pdo->prepare("SELECT tag_id, tag_name FROM tags WHERE tag_id = :tag_id");
         $stmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
         $stmt->execute();
 
@@ -79,22 +85,29 @@ function getTagById(PDO $pdo, int $tagId)
         return null; // Return null if an error occurred
     }
 
-    return $result; // Return the result or null if the tag is not found
+    return $result ?: null; // Return the result or null if the tag is not found
 }
 
 /**
  * Retrieves all tags from the database.
  *
  * This function fetches all tags from the `tags` table.
+ * Each tag in the returned array contains the following keys:
+ * - `tag_id` (int): The ID of the tag.
+ * - `tag_name` (string): The name of the tag.
  *
  * @param PDO $pdo The PDO database connection instance.
  * @return array Returns an array of associative arrays containing all tags.
  */
-function getAllTags(PDO $pdo)
+function getAllTags(PDO $pdo): array
 {
     try {
+        // Set PDO to throw exceptions on error
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
         // Prepare the SQL statement for fetching all tags
-        $stmt = $pdo->query("SELECT * FROM tags");
+        $stmt = $pdo->prepare("SELECT tag_id, tag_name FROM tags");
+        $stmt->execute();
 
         // Fetch all tags as an array of associative arrays
         $result = $stmt->fetchAll(PDO::FETCH_ASSOC);
