@@ -215,18 +215,19 @@ function getAllProductsWithCategoriesAndTags()
 }
 
 /**
- * Retrieves product details along with associated images, categories, and tags.
+ * Retrieves detailed information of a product, including images, categories, and tags.
  *
- * This function fetches product information by joining multiple tables: `products`, `product_images`, 
- * `product_categories`, and `tags`. It groups related images, categories, and tags into comma-separated strings.
+ * This function queries the database to fetch a product's details and aggregates related images, 
+ * categories, and tags using GROUP_CONCAT. Additionally, it converts the tags field from a 
+ * comma-separated string to an array for easier processing.
  *
- * @param int $productId The ID of the product to retrieve.
- * @return array|null Returns an associative array of product details or null if an error occurs.
+ * @param int $productId The unique identifier of the product.
+ * @return array|null Returns an associative array containing product details or null if an error occurs.
  */
 function getProductWithDetails($productId)
 {
     try {
-        $pdo = getPDOConnection(); // Get the PDO database connection
+        $pdo = getPDOConnection(); // Establish a PDO connection
 
         $sql = "SELECT 
                     p.product_id, 
@@ -251,10 +252,18 @@ function getProductWithDetails($productId)
 
         $stmt = $pdo->prepare($sql); // Prepare the SQL statement
         $stmt->execute(['product_id' => $productId]); // Execute the query with productId parameter
-        return $stmt->fetch(PDO::FETCH_ASSOC); // Fetch and return the product data
+        $product = $stmt->fetch(PDO::FETCH_ASSOC); // Fetch product data
+
+        if ($product && !empty($product['tags'])) {
+            $product['tags'] = explode(', ', $product['tags']); // Convert tags from a string to an array
+        } else {
+            $product['tags'] = []; // Ensure tags are always returned as an array
+        }
+
+        return $product; // Return the product data
 
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle the error based on the environment
+        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors based on environment
         return null; // Return null in case of an error
     }
 }
