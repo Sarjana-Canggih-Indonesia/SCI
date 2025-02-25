@@ -157,11 +157,24 @@ if ($userInfo['role'] !== 'admin') {
                         </div>
                         <div class="card-body p-4">
                             <div class="row g-3">
+                                <!-- Manage Users -->
+                                <div class="col-12">
+                                    <a href="<?php echo $baseUrl; ?>manage_users" target="_blank"
+                                        rel="noopener noreferrer" class="btn btn-outline-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
+                          shadow-sm hover-effect">
+                                        <i class="fa-solid fa-user-gear fs-4 me-3"></i>
+                                        <div>
+                                            <div class="fw-semibold fs-5">Manage Users</div>
+                                            <small class="opacity-75">Manage user accounts and permissions</small>
+                                        </div>
+                                    </a>
+                                </div>
+
                                 <!-- Manage Products -->
                                 <div class="col-12">
                                     <a href="<?php echo $baseUrl; ?>manage_products" target="_blank"
-                                        rel="noopener noreferrer" class="btn btn-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
-                              shadow-sm hover-effect">
+                                        rel="noopener noreferrer" class="btn btn-outline-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
+                          shadow-sm hover-effect">
                                         <i class="fa-solid fa-box fs-4 me-3"></i>
                                         <div>
                                             <div class="fw-semibold fs-5">Manage Products</div>
@@ -173,8 +186,8 @@ if ($userInfo['role'] !== 'admin') {
                                 <!-- Manage Promos -->
                                 <div class="col-12">
                                     <a href="<?php echo $baseUrl; ?>manage_promos" target="_blank"
-                                        rel="noopener noreferrer" class="btn btn-success w-100 text-start p-3 rounded-3 d-flex align-items-center 
-                              shadow-sm hover-effect">
+                                        rel="noopener noreferrer" class="btn btn-outline-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
+                          shadow-sm hover-effect">
                                         <i class="fa-solid fa-tags fs-4 me-3"></i>
                                         <div>
                                             <div class="fw-semibold fs-5">Manage Promos</div>
@@ -185,8 +198,8 @@ if ($userInfo['role'] !== 'admin') {
 
                                 <!-- Manage Blogs -->
                                 <div class="col-12">
-                                    <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-info w-100 text-start p-3 rounded-3 d-flex align-items-center 
-                              shadow-sm hover-effect">
+                                    <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
+                          shadow-sm hover-effect">
                                         <i class="fa-solid fa-blog fs-4 me-3"></i>
                                         <div>
                                             <div class="fw-semibold fs-5">Manage Blogs</div>
