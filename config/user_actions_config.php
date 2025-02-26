@@ -208,20 +208,22 @@ function logoutUser()
  *
  * @param string $login_id The username or email provided by the user.
  * @param string $password The password provided by the user.
+ * @param array $config Database configuration.
+ * @param string $env Environment (local/live).
  * @return array Returns an array with:
  *   - 'status' (string): 'success', 'account_not_activated', 'invalid_credentials', or 'error'.
  *   - 'message' (string, optional): Additional information in case of an error.
  *   - 'user' (array, optional): User data if authentication is successful.
  */
-function loginUser($login_id, $password)
+function loginUser($login_id, $password, $config, $env)
 {
-    $pdo = getPDOConnection(); // Establish database connection
+    $pdo = getPDOConnection($config, $env); // Establish database connection
     if (!$pdo) {
         return ['status' => 'error', 'message' => 'Database error']; // Return error if the connection fails
     }
 
     try {
-        $query = "SELECT user_id,username,password,isactive FROM users WHERE username=:login_id OR email=:login_id";
+        $query = "SELECT user_id, username, password, isactive FROM users WHERE username=:login_id OR email=:login_id";
         $stmt = $pdo->prepare($query); // Prepare SQL query
         $stmt->execute(['login_id' => $login_id]); // Execute query with user input
         $user = $stmt->fetch(PDO::FETCH_ASSOC); // Fetch user data
@@ -249,19 +251,30 @@ function loginUser($login_id, $password)
  *
  * @param string $login_id The user's login identifier (username or email).
  * @param string $password The user's password.
+ * @param array $config Database configuration.
+ * @param string $env Environment (local/live).
  * @return string Returns 'Login successful.' if authentication succeeds; otherwise, returns an error message.
  */
-function processLogin($login_id, $password)
+function processLogin($login_id, $password, $config, $env)
 {
-    $login_result = loginUser($login_id, $password); // Authenticate the user
+    // Authenticate the user using the updated loginUser function
+    $login_result = loginUser($login_id, $password, $config, $env);
 
     if ($login_result['status'] === 'success') {
+        // Initialize the session if not already started
+        if (session_status() === PHP_SESSION_NONE) {
+            session_start();
+        }
+
+        // Set session variables
         $_SESSION['user_logged_in'] = true; // Set session flag indicating successful login
         $_SESSION['username'] = $login_result['user']['username']; // Store the username in the session
-        $_SESSION['user_id'] = $login_result['user']['user_id'];
+        $_SESSION['user_id'] = $login_result['user']['user_id']; // Store the user ID in the session
+
         return 'Login successful.';
     } else {
-        return $login_result['status']; // Return the error status if login fails
+        // Return the error status if login fails
+        return $login_result['status'];
     }
 }
 
@@ -273,24 +286,21 @@ function processLogin($login_id, $password)
  * sets a secure HTTP-only cookie in the user's browser.
  * 
  * @param int $user_id The unique identifier of the user.
+ * @param array $config Database configuration.
+ * @param string $env Environment (local/live).
  * @return void
  */
-function rememberMe($user_id)
+function rememberMe($user_id, $config, $env)
 {
     $token = bin2hex(random_bytes(32)); // Generate a cryptographically secure token.
-
     $hashedToken = password_hash($token, PASSWORD_BCRYPT); // Hash the token before storing it in the database.
-
     $expiryTime = Carbon::now()->addDays(30); // Set expiry time (30 days) using Carbon.
+    $pdo = getPDOConnection($config, $env); // Get database connection using provided config and env.
+    if (!$pdo)
+        return; // Exit if the database connection fails.
 
-    $pdo = getPDOConnection(); // Get database connection.
     try {
-        // Insert the hashed token and expiration time into the database.
-        $stmt = $pdo->prepare("
-            INSERT INTO remember_me_tokens 
-            (user_id, token_hash, expires_at) 
-            VALUES (:user_id, :token_hash, :expires_at)
-        ");
+        $stmt = $pdo->prepare("INSERT INTO remember_me_tokens (user_id, token_hash, expires_at) VALUES (:user_id, :token_hash, :expires_at)");
         $stmt->execute([
             ':user_id' => $user_id,
             ':token_hash' => $hashedToken,
@@ -302,24 +312,17 @@ function rememberMe($user_id)
     }
 
     // Encode the user_id and token to store in the cookie.
-    $cookieData = json_encode([
-        'user_id' => $user_id,
-        'token' => $token
-    ]);
+    $cookieData = json_encode(['user_id' => $user_id, 'token' => $token]);
 
     // Set the "remember me" cookie with maximum security.
-    setcookie(
-        'remember_me',
-        $cookieData,
-        [
-            'expires' => $expiryTime->timestamp, // Use Carbon timestamp for cookie expiry.
-            'path' => '/',
-            'domain' => $_SERVER['HTTP_HOST'],
-            'secure' => true, // Ensures the cookie is sent over HTTPS.
-            'httponly' => true, // Ensures the cookie is accessible only via HTTP and not JavaScript.
-            'samesite' => 'Lax' // Limits cross-site cookie transmission to prevent CSRF attacks.
-        ]
-    );
+    setcookie('remember_me', $cookieData, [
+        'expires' => $expiryTime->timestamp, // Use Carbon timestamp for cookie expiry.
+        'path' => '/',
+        'domain' => $_SERVER['HTTP_HOST'],
+        'secure' => true, // Ensures the cookie is sent over HTTPS.
+        'httponly' => true, // Ensures the cookie is accessible only via HTTP and not JavaScript.
+        'samesite' => 'Lax' // Limits cross-site cookie transmission to prevent CSRF attacks.
+    ]);
 }
 
 /**
@@ -329,55 +332,57 @@ function rememberMe($user_id)
  * verifies it against the database, and logs the user in by setting the session. 
  * If successful, it also refreshes the token for security and redirects the user.
  * 
+ * @param array $config Database configuration.
+ * @param string $env Environment (local/live).
  * @return string|null Returns an error message if the login attempt fails, or null if successful.
  */
-function autoLogin()
+function autoLogin($config, $env)
 {
-    if (isset($_COOKIE['remember_me'])) {
-        $cookieData = json_decode($_COOKIE['remember_me'], true);
+    if (!isset($_COOKIE['remember_me']))
+        return null; // No "remember_me" cookie found.
 
-        // Validate cookie structure to ensure it contains the required fields.
-        if (!isset($cookieData['user_id']) || !isset($cookieData['token'])) {
-            return 'Invalid cookie structure.';
-        }
+    $cookieData = json_decode($_COOKIE['remember_me'], true);
 
-        $user_id = $cookieData['user_id'];
-        $token = $cookieData['token'];
+    // Validate cookie structure to ensure it contains the required fields.
+    if (!isset($cookieData['user_id']) || !isset($cookieData['token']))
+        return 'Invalid cookie structure.';
 
-        $pdo = getPDOConnection(); // Get database connection.
-        try {
-            // Fetch the stored hashed token for the user from the database.
-            $stmt = $pdo->prepare("
-                SELECT users.user_id,users.username,remember_me_tokens.token_hash 
-                FROM remember_me_tokens
-                JOIN users ON remember_me_tokens.user_id=users.user_id
-                WHERE remember_me_tokens.user_id=:user_id 
-                AND remember_me_tokens.expires_at>:now
-            ");
-            $stmt->execute([
-                ':user_id' => $user_id,
-                ':now' => Carbon::now()->toDateTimeString() // Get current timestamp using Carbon.
-            ]);
-            $tokenData = $stmt->fetch(PDO::FETCH_ASSOC);
-        } catch (PDOException $e) {
-            error_log("Database error: " . $e->getMessage()); // Log database errors for debugging.
-            return 'Database error during auto-login.';
-        }
+    $user_id = $cookieData['user_id'];
+    $token = $cookieData['token'];
+    $pdo = getPDOConnection($config, $env); // Get database connection using provided config and env.
+    if (!$pdo)
+        return 'Database connection failed.';
 
-        // Verify the token by comparing the stored hash with the provided token.
-        if ($tokenData && password_verify($token, $tokenData['token_hash'])) {
-            $_SESSION['user_logged_in'] = true; // Set session variable to mark user as logged in.
-            $_SESSION['username'] = $tokenData['username']; // Store username in session.
-
-            rememberMe($user_id); // Refresh the "remember me" token for security.
-
-            header("Location: index.php"); // Redirect to the main page.
-            exit();
-        } else {
-            return 'Invalid or expired token.';
-        }
+    try {
+        $stmt = $pdo->prepare("
+            SELECT users.user_id, users.username, remember_me_tokens.token_hash 
+            FROM remember_me_tokens
+            JOIN users ON remember_me_tokens.user_id = users.user_id
+            WHERE remember_me_tokens.user_id = :user_id 
+            AND remember_me_tokens.expires_at > :now
+        ");
+        $stmt->execute([
+            ':user_id' => $user_id,
+            ':now' => Carbon::now()->toDateTimeString() // Get current timestamp using Carbon.
+        ]);
+        $tokenData = $stmt->fetch(PDO::FETCH_ASSOC);
+    } catch (PDOException $e) {
+        error_log("Database error: " . $e->getMessage()); // Log database errors for debugging.
+        return 'Database error during auto-login.';
     }
-    return null; // No "remember_me" cookie found.
+
+    // Verify the token by comparing the stored hash with the provided token.
+    if ($tokenData && password_verify($token, $tokenData['token_hash'])) {
+        $_SESSION['user_logged_in'] = true; // Set session variable to mark user as logged in.
+        $_SESSION['username'] = $tokenData['username']; // Store username in session.
+
+        rememberMe($user_id, $config, $env); // Refresh the "remember me" token for security.
+
+        header("Location: index.php"); // Redirect to the main page.
+        exit();
+    }
+
+    return 'Invalid or expired token.';
 }
 
 /**
@@ -717,9 +722,10 @@ function registerUser($username, $email, $password, $env)
  * 
  * @param string $env The environment configuration.
  * @param string $baseUrl The base URL for redirection after successful login.
+ * @param array $config Database configuration.
  * @return void
  */
-function processLoginForm($env, $baseUrl)
+function processLoginForm($env, $baseUrl, $config)
 {
     // Honeypot check
     if (!empty($_POST['honeypot'])) {
@@ -767,13 +773,13 @@ function processLoginForm($env, $baseUrl)
     }
 
     // Process login
-    $login_result = processLogin($login_id, $password);
+    $login_result = processLogin($login_id, $password, $config, $env);
 
     // Handle login result
     if ($login_result === 'Login successful.') {
         // Set remember me cookie if checked
-        if (isset($_POST['rememberMe'])) {
-            rememberMe($login_result['user']['user_id']); // Gunakan user_id dari database
+        if (isset($_POST['rememberMe']) && isset($_SESSION['user_id'])) {
+            rememberMe($_SESSION['user_id'], $config, $env);
         }
         header("Location: $baseUrl");
         exit();
