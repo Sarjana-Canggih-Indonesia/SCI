@@ -1,5 +1,13 @@
 <?php
+// validate.php
+
 require_once __DIR__ . '/../../vendor/autoload.php';
+require_once __DIR__ . '/../database/database-config.php';
+
+// Memuat konfigurasi lingkungan
+$config = getEnvironmentConfig();
+$env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+$pdo = getPDOConnection($config, $env);
 
 /**
  * Loads environment variables from a .env file.
@@ -24,6 +32,7 @@ if (getenv('ENV_LOADED')) {
 use Symfony\Component\Validator\Validation;
 use Symfony\Component\Validator\Constraints as Assert;
 use Symfony\Component\Validator\ConstraintViolation;
+use Symfony\Component\Validator\Constraints\Choice;
 use Brick\Money\Money;
 use Brick\Money\Currency;
 
@@ -294,15 +303,15 @@ function validateProductImages($files, $maxWidth = 2000, $maxHeight = 2000)
  * @param string $tagName The tag name to validate.
  * @return bool Returns true if the tag name is valid, otherwise false.
  */
-function validateTag(string $tagName): bool
+function validateTag(string $tagName, string $env): bool
 {
     if (strlen($tagName) > 255) { // Ensure the tag name does not exceed 255 characters.
-        handleError("Tag name '$tagName' cannot exceed 255 characters.", getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+        handleError("Tag name '$tagName' cannot exceed 255 characters.", $env);
         return false;
     }
 
     if (!preg_match('/^[a-zA-Z-]+$/', $tagName)) { // Ensure the tag name contains only letters and hyphens.
-        handleError("Tag name '$tagName' can only contain letters and hyphens.", getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+        handleError("Tag name '$tagName' can only contain letters and hyphens.", $env);
         return false;
     }
 
@@ -319,17 +328,50 @@ function validateTag(string $tagName): bool
  * @param array $tagNames An array of tag names to validate.
  * @return bool Returns true if all tag names are valid, otherwise false.
  */
-function validateTags(array $tagNames): bool
+function validateTags(array $tagNames, string $env): bool
 {
     if (empty($tagNames)) { // Ensure at least one tag is provided.
-        handleError("At least one tag must be provided.", getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+        handleError("At least one tag must be provided.", $env);
         return false;
     }
 
     foreach ($tagNames as $tagName) { // Loop through each tag and validate it.
-        if (!validateTag($tagName))
+        if (!validateTag($tagName, $env))
             return false; // Stop validation immediately if any tag is invalid.
     }
 
     return true; // Return true if all tags pass validation.
+}
+
+/**
+ * Validates the user role against allowed values from the database.
+ *
+ * @param string $role The role to validate.
+ * @param PDO $pdo The active PDO database connection.
+ * @param string $env The environment (local/live).
+ * @return bool Returns true if valid, otherwise false.
+ */
+function validateUserRole($role, PDO $pdo, string $env)
+{
+    $allowedRoles = getAllowedRolesFromDB($pdo, $env);
+
+    if (empty($allowedRoles)) {
+        handleError("Failed to fetch allowed roles from database.", $env);
+        return false;
+    }
+
+    $validator = Validation::createValidator();
+    $constraint = new Choice([
+        'choices' => $allowedRoles,
+        'message' => 'Invalid role: {{ value }}. Allowed roles are: ' . implode(", ", $allowedRoles),
+    ]);
+
+    $violations = $validator->validate($role, $constraint);
+
+    if (count($violations) > 0) {
+        handleError($violations[0]->getMessage(), $env);
+        return false;
+    }
+
+    return true;
 }
