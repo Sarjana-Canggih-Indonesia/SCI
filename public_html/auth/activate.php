@@ -9,9 +9,10 @@ use voku\helper\AntiXSS;
 // Start the session and generate a CSRF token
 startSession();
 
-// Load environment configuration
+// Load variable
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+$env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
 if (empty($_SESSION['csrf_token'])) {
     $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
@@ -23,14 +24,14 @@ redirect_if_logged_in();
 $message = '';
 
 // Establish database connection using the getPDOConnection function from user_actions_config.php
-$pdo = getPDOConnection();
+$pdo = getPDOConnection($config, $env);
 
 // Activate account if activation code and user ID are provided
 if (isset($_GET['code'])) {
     $activationCode = $_GET['code'];
 
     // Call the activateAccount function with the activation code
-    $message = activateAccount($activationCode);
+    $message = activateAccount($activationCode, $env, $config);
 } else {
     $message = 'Invalid request: activation code missing.';
 }
