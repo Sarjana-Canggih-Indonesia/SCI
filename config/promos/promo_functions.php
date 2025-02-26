@@ -6,7 +6,10 @@ require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../user_actions_config.php';
 require_once __DIR__ . '/../auth/validate.php';
 
-use voku\helper\AntiXSS;
+// Load variables
+$config = getEnvironmentConfig();
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+$env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
 /**
  * Retrieves all promos from the database.
@@ -19,15 +22,15 @@ use voku\helper\AntiXSS;
  * @return array Returns an associative array containing all promos on success,
  *               or an array with an error message on failure.
  */
-function getPromos()
+function getPromos($config, $env)
 {
     try {
-        $pdo = getPDOConnection();
+        $pdo = getPDOConnection($config, $env);
         $stmt = $pdo->query("SELECT * FROM promos");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         // Log the error for debugging purposes
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
+        handleError($e->getMessage(), $env);
 
         // Return a user-friendly error message
         return [
@@ -48,15 +51,15 @@ function getPromos()
  * @param int $id The ID of the promo to retrieve.
  * @return array|null Returns an associative array containing the promo data, or null if no promo is found.
  */
-function getPromoById($id)
+function getPromoById($id, $config, $env)
 {
     try {
-        $pdo = getPDOConnection();
+        $pdo = getPDOConnection($config, $env);
         $stmt = $pdo->prepare("SELECT * FROM promos WHERE promo_id = :id");
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']);
+        handleError($e->getMessage(), $env);
     }
 }
 
@@ -69,14 +72,14 @@ function getPromoById($id)
  * 
  * @return array An associative array containing the promo categories data.
  */
-function getPromoCategories()
+function getPromoCategories($config, $env)
 {
     try {
-        $pdo = getPDOConnection(); // Get the PDO database connection
+        $pdo = getPDOConnection($config, $env);
         $stmt = $pdo->query("SELECT * FROM promo_categories"); // Execute the query to fetch all promo categories
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Return the fetched data as an associative array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['local']); // Handle errors if the query fails
+        handleError($e->getMessage(), $env); // Handle errors if the query fails
         return []; // Return an empty array in case of an error
     }
 }
