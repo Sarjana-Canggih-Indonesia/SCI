@@ -649,11 +649,12 @@ function resendActivationEmail($identifier)
  * @param string $email The email of the user.
  * @param string $password The password of the user.
  * @param string $env The environment setting for error handling.
+ * @param array $config Database configuration settings.
  * @return string A message indicating the result of the registration process.
  */
-function registerUser($username, $email, $password, $env)
+function registerUser($username, $email, $password, $env, $config)
 {
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection($config, $env);
     if (!$pdo) {
         handleError('Database connection failed.', $env);
         return 'Internal server error. Please try again later.';
@@ -805,11 +806,13 @@ function processLoginForm($env, $baseUrl, $config)
  * and additional profile details (first name, last name, phone, address, etc.) from the database.
  * 
  * @param int $userId The unique identifier of the user.
+ * @param array $config Database configuration settings.
+ * @param string $env Environment (local/live).
  * @return array|null An associative array containing user details, or null if the user is not found or an error occurs.
  */
-function getUserInfo($userId)
+function getUserInfo($userId, $config, $env)
 {
-    $pdo = getPDOConnection(); // Establish PDO connection to the database
+    $pdo = getPDOConnection($config, $env); // Establish PDO connection to the database
     if (!$pdo) {
         return null; // Return null if database connection fails
     }
@@ -828,7 +831,7 @@ function getUserInfo($userId)
 
         return $userInfo ?: null; // Return user details or null if not found
     } catch (PDOException $e) {
-        handleError('Database Error: ' . $e->getMessage(), 'live'); // Log error if query fails
+        handleError('Database Error: ' . $e->getMessage(), $env); // Log error if query fails
         return null; // Return null if an error occurs
     }
 }
@@ -841,27 +844,33 @@ function getUserInfo($userId)
  * based on the environment (local or live).
  *
  * @param string $imageFilename The filename of the user's profile image.
+ * @param string $env The environment setting (local/live).
+ * @param array $config Database configuration settings.
  * @return string|null The URL of the profile image or null in case of an error.
  */
-function default_profile_image($imageFilename)
+function default_profile_image($imageFilename, $env, $config)
 {
-    $pdo = getPDOConnection(); // Establish PDO connection to the database
+    $pdo = getPDOConnection($config, $env); // Establish PDO connection to the database
     if (!$pdo)
         return null; // Return null if PDO connection fails
 
     try {
-        $config = getEnvironmentConfig(); // Get environment configuration
+        // Get environment configuration (if needed)
+        $envConfig = getEnvironmentConfig();
 
+        // Determine the base URL based on the environment
         if ($_SERVER['HTTP_HOST'] === 'localhost') { // Check if the environment is local
-            $baseUrl = rtrim($config['BASE_URL'], '/') . '/public_html/uploads/user_images/'; // Set base URL for local environment
+            $baseUrl = rtrim($envConfig['BASE_URL'], '/') . '/public_html/uploads/user_images/'; // Set base URL for local environment
         } else {
-            $baseUrl = rtrim($config['BASE_URL'], '/') . '/uploads/user_images/'; // Set base URL for live environment
+            $baseUrl = rtrim($envConfig['BASE_URL'], '/') . '/uploads/user_images/'; // Set base URL for live environment
         }
 
+        // Return default profile image URL if no image filename is provided
         if (empty($imageFilename))
-            return $baseUrl . 'default-profile.svg'; // Return default profile image URL if no image filename is provided
+            return $baseUrl . 'default-profile.svg';
 
-        return $baseUrl . $imageFilename; // Return the URL for the provided profile image filename
+        // Return the URL for the provided profile image filename
+        return $baseUrl . $imageFilename;
     } catch (PDOException $e) {
         error_log('Error: ' . $e->getMessage()); // Log the error if database query fails
         return null; // Return null if there is a database error
@@ -875,9 +884,11 @@ function default_profile_image($imageFilename)
  * verifies that the activation code has not expired, and then updates the user's status in the database.
  *
  * @param string $activationCode The activation code sent to the user.
+ * @param string $env The environment setting for error handling.
+ * @param array $config Database configuration settings.
  * @return string A message indicating the result of the activation process.
  */
-function activateAccount($activationCode)
+function activateAccount($activationCode, $env, $config)
 {
     define('DB_CONNECTION_FAILED', 'Database connection failed'); // Response message for DB connection failure
     define('ACCOUNT_ACTIVATED_SUCCESS', 'Account activated successfully.'); // Response message for successful activation
@@ -886,15 +897,13 @@ function activateAccount($activationCode)
     define('ALREADY_ACTIVATED', 'Account is already activated.'); // Response message when account is already active
     define('ERROR_OCCURRED', 'Error: '); // General error message
 
-    $config = getEnvironmentConfig(); // Load environment configuration
-    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'; // Determine environment
-
     $activationCode = sanitize_input($activationCode); // Sanitize the activation code input
     if (strlen($activationCode) !== 64 || !ctype_xdigit($activationCode)) { // Validate activation code format
         handleError('Invalid activation code format: ' . $activationCode, $env); // Error handling for invalid format
         return INVALID_ACTIVATION_CODE;
     }
-    $pdo = getPDOConnection(); // Establish database connection
+
+    $pdo = getPDOConnection($config, $env); // Establish database connection
     if (!$pdo) {
         handleError(DB_CONNECTION_FAILED, $env);
         return DB_CONNECTION_FAILED;
@@ -903,7 +912,7 @@ function activateAccount($activationCode)
     try {
         $pdo->beginTransaction(); // Begin database transaction
         // Retrieve activation_expires_at and isactive values for the provided activation code (locking the row)
-        $selectQuery = "SELECT activation_expires_at,isactive FROM users WHERE activation_code = :activation_code FOR UPDATE";
+        $selectQuery = "SELECT activation_expires_at, isactive FROM users WHERE activation_code = :activation_code FOR UPDATE";
         $selectStmt = $pdo->prepare($selectQuery);
         $selectStmt->execute(['activation_code' => $activationCode]);
         $user = $selectStmt->fetch(PDO::FETCH_ASSOC); // Fetch user record
@@ -951,6 +960,8 @@ function activateAccount($activationCode)
  * @param string $recaptcha_response The reCAPTCHA response token.
  * @param string $csrf_token The CSRF token for form protection.
  * @param HttpClientInterface $httpClient An HTTP client instance for validating reCAPTCHA.
+ * @param array $config Database configuration settings.
+ * @param string $baseUrl The base URL for generating reset links.
  * @return array Returns an array with 'status' (success/error) and 'message'.
  */
 function processPasswordResetRequest($email_or_username, $recaptcha_response, $csrf_token, HttpClientInterface $httpClient, $config, $baseUrl)
@@ -959,8 +970,7 @@ function processPasswordResetRequest($email_or_username, $recaptcha_response, $c
     Carbon::setToStringFormat('Y-m-d H:i:s');
     Carbon::setTestNow(Carbon::now('Asia/Jakarta'));
 
-    // Load environment configuration and set environment type based on host
-    $config = getEnvironmentConfig();
+    // Set environment type based on host
     $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
     // Validate CSRF token and reCAPTCHA response using a helper function
@@ -983,7 +993,7 @@ function processPasswordResetRequest($email_or_username, $recaptcha_response, $c
     }
 
     // Establish a database connection
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection($config, $env);
     if (!$pdo) {
         handleError('Database connection error.', $env);
         return ['status' => 'error', 'message' => 'Database connection error.'];
