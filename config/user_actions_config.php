@@ -1153,41 +1153,59 @@ function markTokenAsUsed($token, $pdo)
 }
 
 /**
- * Change the user's email address.
+ * Handles the password reset process.
  *
- * @param int $userId The user ID.
- * @param string $newEmail The new email address to set.
- * @return string A message indicating the result of the operation.
+ * This function validates the reset token, processes the POST request for password reset,
+ * validates CSRF token and reCAPTCHA, updates the user's password, and redirects the user
+ * to the login page with a success message upon successful password reset.
+ *
+ * @param string $token The password reset token from the URL.
+ * @param PDO $pdo The PDO database connection object.
+ * @param string $baseUrl The base URL of the application (e.g., "http://localhost/project/").
+ * @return void
  */
-
-function handlePasswordReset($token, $pdo): void
+function handlePasswordReset($token, $pdo, $baseUrl): void
 {
+    // Validate the reset token to ensure it is valid and not expired
     $user = validateResetToken($token, $pdo);
 
+    // Check if the request method is POST (form submission)
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $token = $_POST['token'] ?? '';
-        $csrf_token = $_POST['csrf_token'] ?? '';
-        $new_password = $_POST['password'] ?? '';
+        // Retrieve form data
+        $token = $_POST['token'] ?? ''; // Token from the hidden form field
+        $csrf_token = $_POST['csrf_token'] ?? ''; // CSRF token from the form
+        $new_password = $_POST['password'] ?? ''; // New password from the form
 
+        // Validate the CSRF token to prevent CSRF attacks
         validateCSRFToken($csrf_token);
 
+        // Validate reCAPTCHA response to ensure the request is from a human
         $recaptcha_response = $_POST['g-recaptcha-response'] ?? '';
-        $recaptcha_secret = RECAPTCHA_SECRET_KEY;
+        $recaptcha_secret = RECAPTCHA_SECRET_KEY; // reCAPTCHA secret key
         $recaptcha_url = "https://www.google.com/recaptcha/api/siteverify?secret=$recaptcha_secret&response=$recaptcha_response";
         $recaptcha_data = json_decode(file_get_contents($recaptcha_url));
 
+        // Check if reCAPTCHA validation failed
         if (!$recaptcha_data->success) {
-            die('reCAPTCHA validation failed.');
+            die('reCAPTCHA validation failed.'); // Terminate the script with an error message
         }
 
+        // Check if the user is valid (token is valid and not expired)
         if ($user) {
+            // Hash the new password for secure storage
             $hashed_password = password_hash($new_password, PASSWORD_BCRYPT);
+
+            // Update the user's password in the database
             updateUserPassword($user['user_id'], $hashed_password, $pdo);
+
+            // Mark the reset token as used to prevent reuse
             markTokenAsUsed($token, $pdo);
 
-            header("Location: login.php?message=Password+reset+successfully.");
-            exit();
+            // Redirect the user to the login page with a success message
+            header("Location: " . $baseUrl . "login?message=Password+reset+successfully.");
+            exit(); // Terminate the script after redirect
         } else {
+            // If the token is invalid or expired, terminate the script with an error message
             die('Invalid or expired token.');
         }
     }
