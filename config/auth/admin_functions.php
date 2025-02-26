@@ -2,6 +2,12 @@
 // admin_functions.php
 
 require_once __DIR__ . '/../config.php';
+require_once __DIR__ . '/../database/database-config.php';
+
+// Memuat konfigurasi lingkungan
+$config = getEnvironmentConfig();
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+$env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
 /**
  * Changes the role of a user to a specified role in the database.
@@ -13,65 +19,50 @@ require_once __DIR__ . '/../config.php';
  * @param int $admin_id The ID of the admin performing the action.
  * @param int $user_id The ID of the user whose role will be changed.
  * @param string $new_role The new role to assign to the user. Must be either 'admin' or 'customer'.
+ * @param array $config The configuration array containing environment settings.
+ * @param string $env The environment (local/live).
  * 
  * @return void
  * 
  * @throws Exception If an error occurs during the database operation or if the role is invalid.
  */
-function changeUserRole($admin_id, $user_id, $new_role)
+function changeUserRole($admin_id, $user_id, $new_role, $config, $env)
 {
-    // Retrieve environment-specific configuration (e.g., database credentials)
-    $config = getEnvironmentConfig();
+    // Mendapatkan koneksi database dengan parameter $config dan $env
+    $pdo = getPDOConnection($config, $env);
 
-    // Establish a database connection using environment-specific credentials
-    $servername = $config['DB_HOST'];
-    $username = $config['DB_USER'];
-    $password = $config['DB_PASS'];
-    $dbname = $config['DB_NAME'];
-
-    // Create a new MySQLi connection
-    $conn = new mysqli($servername, $username, $password, $dbname);
-
-    // Check for connection errors
-    if ($conn->connect_error) {
-        $errorMessage = "Database connection failed: " . $conn->connect_error;
-        handleError($errorMessage, isLive() ? 'live' : 'local');
+    if (!$pdo) {
+        handleError("Failed to establish database connection.", $env);
+        return;
     }
 
-    // Sanitize inputs to prevent XSS attacks
+    // Sanitasi input untuk mencegah serangan XSS
     $admin_id = sanitize_input($admin_id);
     $user_id = sanitize_input($user_id);
     $new_role = sanitize_input($new_role);
 
-    // Escape inputs to prevent SQL injection
-    $admin_id = $conn->real_escape_string($admin_id);
-    $user_id = $conn->real_escape_string($user_id);
-    $new_role = $conn->real_escape_string($new_role);
-
-    // Step 1: Validate the new role
-    $allowed_roles = ['admin', 'customer']; // Allowed roles based on the `role` enum in the `users` table
-    if (!in_array($new_role, $allowed_roles)) {
-        $errorMessage = "Invalid role: $new_role. Allowed roles are: " . implode(", ", $allowed_roles);
-        handleError($errorMessage, isLive() ? 'live' : 'local');
+    // Validasi role yang baru
+    if (!validateUserRole($new_role)) {
+        return;
     }
 
-    // Step 2: Update the user's role in the database
-    $sql = "UPDATE users SET role = '$new_role' WHERE user_id = '$user_id'";
+    try {
+        // Mengupdate role pengguna dalam database
+        $sql = "UPDATE users SET role = :new_role WHERE user_id = :user_id";
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':new_role', $new_role, PDO::PARAM_STR);
+        $stmt->bindParam(':user_id', $user_id, PDO::PARAM_INT);
+        $stmt->execute();
 
-    if ($conn->query($sql) === TRUE) {
-        // Log the admin action
+        // Mencatat aksi admin untuk keperluan audit
         logAdminAction($admin_id, 'change_role', 'users', $user_id, "Changed user role to $new_role for user ID $user_id");
 
-        // Output a success message (escaped to prevent XSS)
+        // Menampilkan pesan sukses (escaped untuk mencegah XSS)
         echo escapeHTML("User role successfully updated to $new_role.");
-    } else {
-        // Handle query execution errors
-        $errorMessage = "SQL Error: " . $sql . "<br>" . $conn->error;
-        handleError($errorMessage, isLive() ? 'live' : 'local');
+    } catch (PDOException $e) {
+        // Menangani error eksekusi query
+        handleError("SQL Error: " . $e->getMessage(), $env);
     }
-
-    // Close the database connection
-    $conn->close();
 }
 
 /**
