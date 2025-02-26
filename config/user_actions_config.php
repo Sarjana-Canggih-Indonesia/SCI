@@ -1198,24 +1198,55 @@ function handlePasswordReset($token, $pdo): void
  *
  * @param int $userId The ID of the user whose email is to be updated.
  * @param string $newEmail The new email address to set.
+ * @param array $config Database configuration settings.
+ * @param string $env Environment (local/live).
  * @return string Returns a success message or an error message if the update fails.
  */
-function changeEmail($userId, $newEmail)
+function changeEmail($userId, $newEmail, $config, $env)
 {
-    $pdo = getPDOConnection();
-    if (!$pdo)
-        return 'Database connection failed';
+    // Validate the new email address
+    $emailViolations = validateEmail($newEmail);
+    if (count($emailViolations) > 0) {
+        return $emailViolations[0]->getMessage();
+    }
+
+    // Establish a database connection
+    $pdo = getPDOConnection($config, $env);
+    if (!$pdo) {
+        handleError('Database connection failed.', $env);
+        return 'Database connection failed. Please try again later.';
+    }
 
     try {
-        $query = "UPDATE users SET email = :email WHERE user_id = :user_id";
-        $stmt = $pdo->prepare($query);
-        $stmt->execute([
-            'email' => $newEmail,
-            'user_id' => $userId
-        ]);
-        return 'Email address updated successfully.';
+        // Check if the new email already exists in the database
+        $checkQuery = "SELECT 1 FROM users WHERE email = :email AND user_id != :user_id";
+        $stmt = executeQuery($pdo, $checkQuery, ['email' => $newEmail, 'user_id' => $userId], $env);
+        if (!$stmt) {
+            return 'An error occurred while checking the email address.';
+        }
+
+        if ($stmt->fetch()) {
+            return 'The email address is already in use by another account.';
+        }
+
+        // Update the email address
+        $updateQuery = "UPDATE users SET email = :email WHERE user_id = :user_id";
+        $stmt = executeQuery($pdo, $updateQuery, ['email' => $newEmail, 'user_id' => $userId], $env);
+        if (!$stmt) {
+            return 'An error occurred while updating the email address.';
+        }
+
+        if ($stmt->rowCount() > 0) {
+            return 'Email address updated successfully.';
+        } else {
+            return 'No changes were made. The email address may already be set to the provided value.';
+        }
     } catch (PDOException $e) {
-        return 'Error: ' . $e->getMessage();
+        handleError('Database error: ' . $e->getMessage(), $env);
+        return 'An error occurred while updating the email address. Please try again later.';
+    } finally {
+        // Close the database connection
+        closeConnection($pdo);
     }
 }
 
