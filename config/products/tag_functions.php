@@ -8,20 +8,22 @@ require_once __DIR__ . '/../auth/admin_functions.php';
 /**
  * Inserts multiple unique tags into the database.
  *
- * This function takes an array of tag names, validates them, sanitizes them, and inserts only unique ones into the database.
- * If a tag already exists, it is skipped, and its existence is logged. The function returns an array of newly created tag IDs
- * or `false` if no new tags were added.
+ * This function validates and sanitizes an array of tag names before inserting them into the database.
+ * If a tag already exists, it is skipped, and its existence is logged. The function returns an array of 
+ * newly created tag IDs or `false` if no new tags were inserted.
  *
  * @param PDO $pdo The PDO database connection instance.
  * @param array $tagNames An array containing the tag names to be created.
+ * @param string $env The environment setting ('local' or 'live').
  * @return array|false Returns an array of newly created tag IDs or `false` if no new tags were inserted.
  */
-function createTags(PDO $pdo, array $tagNames)
+function createTags(PDO $pdo, array $tagNames, $env)
 {
-    if (!validateTags($tagNames))
+    if (!validateTags($tagNames, $env))
         return false; // Validate tag names; return false if validation fails.
-    $tagIds = []; // Array to store newly created tag IDs.
-    $existingTags = []; // Array to store tags that already exist.
+
+    $tagIds = []; // Store newly created tag IDs.
+    $existingTags = []; // Store tags that already exist.
 
     try {
         $stmt = $pdo->prepare("INSERT INTO tags (tag_name) VALUES (:tag_name)"); // Prepare SQL statement for inserting a tag.
@@ -30,7 +32,8 @@ function createTags(PDO $pdo, array $tagNames)
             $tagName = strtolower($tagName); // Convert tag name to lowercase for consistency.
             $tagName = sanitize_input($tagName); // Sanitize input to prevent XSS attacks.
 
-            $checkStmt = $pdo->prepare("SELECT tag_id FROM tags WHERE tag_name = :tag_name"); // Check if the tag already exists.
+            // Check if the tag already exists in the database
+            $checkStmt = $pdo->prepare("SELECT tag_id FROM tags WHERE tag_name = :tag_name");
             $checkStmt->bindParam(':tag_name', $tagName, PDO::PARAM_STR);
             $checkStmt->execute();
 
@@ -39,18 +42,19 @@ function createTags(PDO $pdo, array $tagNames)
                 continue;
             }
 
-            $stmt->bindParam(':tag_name', $tagName, PDO::PARAM_STR); // Bind the sanitized tag name for insertion.
+            // Insert the sanitized tag name into the database
+            $stmt->bindParam(':tag_name', $tagName, PDO::PARAM_STR);
             if ($stmt->execute())
                 $tagIds[] = $pdo->lastInsertId(); // Store the new tag's ID if successfully inserted.
         }
 
-        if (!empty($existingTags)) { // Log existing tags that were skipped.
-            handleError("The following tags already exist: " . implode(", ", $existingTags), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
-        }
+        // Log existing tags that were skipped to notify the admin
+        if (!empty($existingTags))
+            handleError("The following tags already exist: " . implode(", ", $existingTags), $env);
 
         return !empty($tagIds) ? $tagIds : false; // Return the array of newly created tag IDs or `false` if none were inserted.
     } catch (PDOException $e) {
-        handleError("Database error: " . $e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Log database errors.
+        handleError("Database error: " . $e->getMessage(), $env); // Handle database errors.
         return false;
     }
 }
@@ -131,28 +135,31 @@ function getAllTags(PDO $pdo): array
  * @param PDO $pdo The PDO database connection instance.
  * @param int $tagId The ID of the tag to be updated.
  * @param string $newTagName The new tag name to be assigned.
+ * @param string $env The environment setting ('local' or 'live').
  * @return bool Returns `true` if the update was successful, otherwise `false`.
  */
-function updateTag(PDO $pdo, int $tagId, string $newTagName)
+function updateTag(PDO $pdo, int $tagId, string $newTagName, string $env)
 {
     $newTagName = strtolower($newTagName); // Convert tag name to lowercase for consistency.
     $newTagName = sanitize_input($newTagName); // Sanitize input to prevent XSS and SQL injection risks.
 
-    if (!validateTag($newTagName))
+    if (!validateTag($newTagName, $env))
         return false; // Validate the new tag name; return false if invalid.
 
     try {
-        $checkStmt = $pdo->prepare("SELECT tag_id FROM tags WHERE tag_name = :tag_name AND tag_id != :tag_id"); // Check if the new tag name already exists under a different ID.
+        // Check if the new tag name already exists under a different ID
+        $checkStmt = $pdo->prepare("SELECT tag_id FROM tags WHERE tag_name = :tag_name AND tag_id != :tag_id");
         $checkStmt->bindParam(':tag_name', $newTagName, PDO::PARAM_STR);
         $checkStmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
         $checkStmt->execute();
 
         if ($checkStmt->fetch()) { // If a duplicate tag exists, log an error and prevent the update.
-            handleError("Cannot update tag: The tag name '$newTagName' already exists.", getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+            handleError("Cannot update tag: The tag name '$newTagName' already exists.", $env);
             return false;
         }
 
-        $stmt = $pdo->prepare("UPDATE tags SET tag_name = :tag_name WHERE tag_id = :tag_id"); // Prepare update statement.
+        // Prepare update statement
+        $stmt = $pdo->prepare("UPDATE tags SET tag_name = :tag_name WHERE tag_id = :tag_id");
         $stmt->bindParam(':tag_name', $newTagName, PDO::PARAM_STR);
         $stmt->bindParam(':tag_id', $tagId, PDO::PARAM_INT);
 
@@ -160,7 +167,7 @@ function updateTag(PDO $pdo, int $tagId, string $newTagName)
             return true; // Execute update and check if any rows were affected.
         return false;
     } catch (PDOException $e) {
-        handleError("Database error: " . $e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Log database errors.
+        handleError("Database error: " . $e->getMessage(), $env); // Handle database errors.
         return false;
     }
 }
