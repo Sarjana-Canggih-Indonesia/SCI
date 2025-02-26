@@ -718,6 +718,79 @@ function registerUser($username, $email, $password, $env, $config)
 }
 
 /**
+ * Handles user registration by validating input, processing registration, and sending activation emails.
+ *
+ * @param mixed  $client  The client instance used for reCAPTCHA verification.
+ * @param string $baseUrl The base URL for redirection after processing.
+ * @param array  $config  The configuration array for database and email settings.
+ */
+function handleRegistration($client, $baseUrl, $config)
+{
+    if ($_SERVER['REQUEST_METHOD'] !== 'POST')
+        return;
+
+    /** Validate CSRF and reCAPTCHA */
+    $validationResult = validateCsrfAndRecaptcha($_POST, $client);
+    if ($validationResult !== true) {
+        $_SESSION['error_message'] = 'Invalid CSRF token or reCAPTCHA. Please try again.';
+        header("Location: " . $baseUrl . "register");
+        exit();
+    }
+
+    /** Honeypot Field Check - Prevents bot submissions */
+    if (!empty($_POST['honeypot'])) {
+        $_SESSION['error_message'] = 'Bot detected. Submission rejected.';
+        header("Location: " . $baseUrl . "register");
+        exit();
+    }
+
+    /** Sanitize and validate form inputs */
+    $username = sanitize_input(trim($_POST['username']));
+    $email = sanitize_input(trim($_POST['email']));
+    $password = $_POST['password'];
+    $confirm_password = $_POST['confirm_password'];
+
+    /** Check if password confirmation matches */
+    if ($password !== $confirm_password) {
+        $_SESSION['error_message'] = 'Passwords do not match.';
+        header("Location: " . $baseUrl . "register");
+        exit();
+    }
+
+    /** Determine environment (local or live) */
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+
+    /** Attempt to register the user */
+    $registrationResult = registerUser($username, $email, $password, $env, $config);
+
+    if (strpos($registrationResult, 'Registration successful') !== false) {
+        /** Extract activation code from registration response */
+        preg_match('/Activation Code: (\S+)/', $registrationResult, $matches);
+        $activationCode = $matches[1] ?? '';
+
+        /** Send activation email */
+        $activationResult = sendActivationEmail($email, $activationCode, $username);
+        if ($activationResult === true) {
+            $_SESSION['success_message'] = "Registration successful! Please check your email to activate your account.";
+        } else {
+            /** If email fails, delete the registered user */
+            $pdo = getPDOConnection($config, $env);
+            $stmt = $pdo->prepare("DELETE FROM users WHERE email = :email");
+            $stmt->execute(['email' => $email]);
+
+            $_SESSION['error_message'] = 'Failed to send activation email. Please try again.';
+        }
+    } else {
+        /** If registration fails, store the error message */
+        $_SESSION['error_message'] = $registrationResult;
+    }
+
+    /** Redirect to avoid form resubmission */
+    header("Location: " . $baseUrl . "register");
+    exit();
+}
+
+/**
  * Validates and processes the login form submission.
  * 
  * This function checks for honeypot field, validates CSRF token and reCAPTCHA response,
