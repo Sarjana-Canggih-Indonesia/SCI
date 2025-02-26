@@ -1285,7 +1285,7 @@ function markTokenAsUsed($token, $pdo)
  * @param string $baseUrl The base URL of the application (e.g., "http://localhost/project/").
  * @return void
  */
-function handlePasswordReset($token, $pdo, $baseUrl): void
+function handlePasswordReset($token, $pdo, $baseUrl)
 {
     // Validate the reset token to ensure it is valid and not expired
     $user = validateResetToken($token, $pdo);
