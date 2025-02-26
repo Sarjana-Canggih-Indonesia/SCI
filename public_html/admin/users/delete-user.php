@@ -13,7 +13,7 @@ try {
         throw new Exception("Akses ditolak: Silakan login terlebih dahulu");
     }
 
-    $userInfo = getUserInfo($_SESSION['user_id']);
+    $userInfo = getUserInfo($_SESSION['user_id'], $config, $env);
     if (!$userInfo || $userInfo['role'] !== 'admin') {
         throw new Exception("Akses ditolak: Hanya admin yang boleh melakukan aksi ini");
     }
@@ -26,7 +26,7 @@ try {
     $user_id = (int) $_GET['user_id'];
 
     // Eksekusi penghapusan
-    deleteUser($_SESSION['user_id'], $user_id);
+    deleteUser($_SESSION['user_id'], $user_id, $config, $env);
 
     // Set flash message sukses
     $_SESSION['success_message'] = "User berhasil dihapus!";
