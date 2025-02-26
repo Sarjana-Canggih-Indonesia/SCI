@@ -42,7 +42,7 @@ try {
         $categoryId = null;
     }
 
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection($config, $env);
 
     $sql = "SELECT 
                 p.product_id,
