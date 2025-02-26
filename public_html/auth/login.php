@@ -6,28 +6,31 @@ require_once __DIR__ . '/../../config/user_actions_config.php'; // Include user 
 
 startSession(); // Start the session and generate a CSRF token
 
-// Ambil error dari session (jika ada)
+// Retrieve error from session (if any)
 $error_message = '';
 if (isset($_SESSION['error_message'])) {
   $error_message = $_SESSION['error_message'];
-  unset($_SESSION['error_message']); // Hapus setelah ditampilkan
+  unset($_SESSION['error_message']); // Remove after displaying
 }
 
 $config = getEnvironmentConfig(); // Load environment configuration
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']); // Get the base URL from the configuration
 $isLive = $config['is_live'];
-// Deteksi environment
-$isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
-setCacheHeaders($isLive); // Set header no cache saat local environment
+
+// Set no-cache headers for local environment
+setCacheHeaders($isLive);
 
 $user_input = $_GET['input'] ?? ''; // Get user input from the query string
 $sanitized_input = sanitize_input($user_input); // Sanitize the user input to prevent XSS
 
-autoLogin($config, $env); // Perform auto-login if applicable
+// Perform auto-login if applicable
+autoLogin($config, $env);
 
-validateReCaptchaEnvVariables(); // Validate reCAPTCHA environment variables
+// Validate reCAPTCHA environment variables
+validateReCaptchaEnvVariables();
 
-redirect_if_logged_in(); // Redirect to the index page if the user is already logged in
+// Redirect to the index page if the user is already logged in
+redirect_if_logged_in();
 ?>
 
 <!DOCTYPE html>
