@@ -21,9 +21,9 @@ $keyword = '%' . $_GET['keyword'] . '%';
 
 try {
     // Establish a database connection
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection($config, $env);
 
-    // Prepare the SQL query to search for products by name
+    // Prepare the SQL query with adjustments for the updated database structure
     $stmt = $pdo->prepare("
         SELECT 
             p.product_id, 
@@ -31,30 +31,44 @@ try {
             p.description, 
             p.created_at, 
             p.updated_at, 
-            p.image_path, 
             p.slug, 
             p.deleted_at, 
             p.price_amount, 
             p.currency,
-            GROUP_CONCAT(pc.category_name SEPARATOR ', ') AS categories
+            GROUP_CONCAT(DISTINCT pc.category_name SEPARATOR ', ') AS categories,
+            COALESCE(GROUP_CONCAT(DISTINCT pi.image_path ORDER BY pi.image_id SEPARATOR ','), '') AS images
         FROM products p
         LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id
         LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id
+        LEFT JOIN product_images pi ON p.product_id = pi.product_id
         WHERE p.product_name LIKE :keyword
         GROUP BY p.product_id
     ");
 
-    // Bind the keyword parameter to the query
-    $stmt->bindParam(':keyword', $keyword, PDO::PARAM_STR);
+    // Bind the search parameter with wildcards for partial matching
+    $searchKeyword = "%$keyword%";
+    $stmt->bindParam(':keyword', $searchKeyword, PDO::PARAM_STR);
     $stmt->execute();
 
-    // Fetch the matching products
+    // Fetch the data and process images
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Return the search results as JSON
-    echo json_encode(["success" => true, "products" => $products]);
+    // Convert image string to an array
+    foreach ($products as &$product) {
+        $product['images'] = $product['images'] ? explode(',', $product['images']) : [];
+    }
+    unset($product); // Remove reference
+
+    // Return the results as JSON
+    echo json_encode([
+        "success" => true,
+        "products" => $products
+    ]);
 
 } catch (PDOException $e) {
     // Handle database errors
-    echo json_encode(["success" => false, "message" => "Database error: " . $e->getMessage()]);
+    echo json_encode([
+        "success" => false,
+        "message" => "Database error: " . $e->getMessage()
+    ]);
 }
