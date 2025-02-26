@@ -7,8 +7,6 @@ require_once __DIR__ . '/../../config/user_actions_config.php';
 require_once __DIR__ . '/../../config/products/product_functions.php';
 require_once __DIR__ . '/../../config/products/tag_functions.php';
 
-use Carbon\Carbon;
-
 // Step 2: Start session and generate CSRF token if it doesn't exist
 startSession();
 
@@ -29,7 +27,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Step 6: Retrieve user information from the session and database.
-$userInfo = getUserInfo($_SESSION['user_id']);
+$userInfo = getUserInfo($_SESSION['user_id'], $config, $env);
 
 // Step 7: Handle cases where the user is not found in the database.
 if (!$userInfo) {
@@ -50,14 +48,14 @@ $profileImageUrl = $baseUrl . "uploads/profile_images/" . $profileImage;
 
 // Step 10: Handle the add product form submission ONLY if the request method is POST.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    handleAddProductForm();
+    handleAddProductForm($config, $env);
 }
 
 // Step 11: Retrieve product categories and tags from the database.
-$pdo = getPDOConnection();
+$pdo = getPDOConnection($config, $env);
 $tags = getAllTags($pdo);
-$categories = getProductCategories();
-$products = getAllProductsWithCategoriesAndTags();
+$categories = getProductCategories($config, $env);
+$products = getAllProductsWithCategoriesAndTags($config, $env);
 
 // Step 12: Handle success/error messages and update cache headers
 $flash = processFlashMessagesAndHeaders($isLive);
