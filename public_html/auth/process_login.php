@@ -28,4 +28,4 @@ try {
 }
 
 // Process Login
-processLoginForm($env, $baseUrl);
+processLoginForm($env, $baseUrl, $config);

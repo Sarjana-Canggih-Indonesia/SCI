@@ -23,7 +23,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
 $user_input = $_GET['input'] ?? ''; // Get user input from the query string
 $sanitized_input = sanitize_input($user_input); // Sanitize the user input to prevent XSS
 
-autoLogin(); // Perform auto-login if applicable
+autoLogin($config, $env); // Perform auto-login if applicable
 
 validateReCaptchaEnvVariables(); // Validate reCAPTCHA environment variables
 
