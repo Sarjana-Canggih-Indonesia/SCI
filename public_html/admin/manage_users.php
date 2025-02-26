@@ -6,8 +6,6 @@ require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/auth/admin_functions.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
 
-use Carbon\Carbon;
-
 // Step 2: Start session and generate CSRF token if it doesn't exist
 startSession();
 
@@ -28,7 +26,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Step 6: Retrieve user information from the session and database.
-$userInfo = getUserInfo($_SESSION['user_id']);
+$userInfo = getUserInfo($_SESSION['user_id'], $config, $env);
 
 // Step 7: Handle cases where the user is not found in the database.
 if (!$userInfo) {
