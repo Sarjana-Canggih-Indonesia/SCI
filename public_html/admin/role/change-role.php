@@ -13,7 +13,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Retrieve user information from the session and database
-$userInfo = getUserInfo($_SESSION['user_id']);
+$userInfo = getUserInfo($_SESSION['user_id'], $config, $env);
 
 // Handle cases where the user is not found in the database
 if (!$userInfo) {
@@ -34,7 +34,7 @@ $new_role = $_POST['new_role'];
 
 try {
     // Panggil fungsi changeUserRole
-    changeUserRole($_SESSION['user_id'], $user_id, $new_role);
+    changeUserRole($_SESSION['user_id'], $user_id, $new_role, $config, $env);
 
     // Simpan pesan sukses ke session
     $_SESSION['success_message'] = "Role berhasil diubah menjadi $new_role.";
