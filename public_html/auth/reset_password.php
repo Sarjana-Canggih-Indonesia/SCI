@@ -23,13 +23,13 @@ redirect_if_logged_in();
 $token = $_GET['hash'] ?? '';
 
 // Get PDO connection
-$pdo = getPDOConnection();
+$pdo = getPDOConnection($config, $env);
 if (!$pdo) {
     die('Database connection failed.');
 }
 
 // Handle password reset logic
-handlePasswordReset($token, $pdo);
+handlePasswordReset($token, $pdo, $baseUrl);
 ?>
 
 <!DOCTYPE html>
