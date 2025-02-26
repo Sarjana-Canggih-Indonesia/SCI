@@ -1435,7 +1435,7 @@ function changeUserRole($admin_id, $user_id, $new_role, $config, $env)
         $stmt->execute();
 
         // Mencatat aksi admin untuk keperluan audit
-        logAdminAction($admin_id, 'change_role', 'users', $user_id, "Changed user role to $new_role for user ID $user_id");
+        logAdminAction($admin_id, 'change_role', 'users', $user_id, "Changed user role to $new_role for user ID $user_id", $config, $env);
 
         // Menampilkan pesan sukses (escaped untuk mencegah XSS)
         echo escapeHTML("User role successfully updated to $new_role.");
