@@ -25,7 +25,7 @@ $userRole = null; // Menyimpan role user
 
 // Only process if user is logged in and has an ID
 if ($isLoggedIn && $userId) {
-    $userInfo = getUserInfo($userId);
+    $userInfo = getUserInfo($userId, $config, $baseUrl);
 
     if ($userInfo) {
         // Set profile image filename if available in the database
@@ -43,7 +43,7 @@ if ($isLoggedIn && $userId) {
 }
 
 // Set the profile image URL using the function
-$profileImageUrl = default_profile_image($profileImage);
+$profileImageUrl = default_profile_image($profileImage, $baseUrl, $config);
 ?>
 
 <!DOCTYPE html>
