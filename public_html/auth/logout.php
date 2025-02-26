@@ -1,5 +1,5 @@
 <?php
-// Include the user actions configuration file
+// Include the configuration file
 require_once __DIR__ . '/../../config/user_actions_config.php';
 
 $config = getEnvironmentConfig(); // Load environment configuration
