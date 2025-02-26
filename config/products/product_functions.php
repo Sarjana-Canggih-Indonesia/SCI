@@ -13,6 +13,11 @@ use Brick\Money\Context\CustomContext;
 use Brick\Money\Exception\UnknownCurrencyException;
 use Brick\Math\RoundingMode;
 
+// Load variable
+$config = getEnvironmentConfig();
+$baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+$env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+
 /**
  * Sanitizes product data to ensure it is safe for storage and processing.
  *
@@ -96,15 +101,15 @@ function generateSlug(string $productName): string
  * @return array Returns an associative array containing all products on success,
  *               or an array with an error message on failure.
  */
-function getProducts()
+function getProducts($config, $env)
 {
     try {
-        $pdo = getPDOConnection();
+        $pdo = getPDOConnection($config, $env);
         $stmt = $pdo->query("SELECT * FROM products");
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
         // Log the error for debugging purposes
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+        handleError($e->getMessage(), $env);
 
         // Return a user-friendly error message
         return [
@@ -125,15 +130,15 @@ function getProducts()
  * @param int $id The ID of the product to retrieve.
  * @return array|null Returns an associative array containing the product data, or null if no product is found.
  */
-function getProductById($id)
+function getProductById($id, $config, $env)
 {
     try {
-        $pdo = getPDOConnection();
+        $pdo = getPDOConnection($config, $env);
         $stmt = $pdo->prepare("SELECT * FROM products WHERE product_id = :id");
         $stmt->execute(['id' => $id]);
         return $stmt->fetch(PDO::FETCH_ASSOC);
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+        handleError($e->getMessage(), $env);
     }
 }
 
@@ -146,14 +151,14 @@ function getProductById($id)
  * 
  * @return array An associative array containing the product categories data.
  */
-function getProductCategories()
+function getProductCategories($config, $env)
 {
     try {
-        $pdo = getPDOConnection(); // Get the PDO database connection
+        $pdo = getPDOConnection($config, $env); // Get the PDO database connection
         $stmt = $pdo->query("SELECT * FROM product_categories"); // Execute the query to fetch all product categories
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Return the fetched data as an associative array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors if the query fails
+        handleError($e->getMessage(), $env); // Handle errors if the query fails
         return []; // Return an empty array in case of an error
     }
 }
@@ -171,10 +176,10 @@ function getProductCategories()
  *
  * @return array Returns an array of products, each containing product details, categories, tags, and images.
  */
-function getAllProductsWithCategoriesAndTags()
+function getAllProductsWithCategoriesAndTags($config, $env)
 {
     try {
-        $pdo = getPDOConnection(); // Establish a database connection.
+        $pdo = getPDOConnection($config, $env); // Establish a database connection.
 
         // SQL query to fetch products with categories, tags, and images.
         $sql = "SELECT 
@@ -209,7 +214,7 @@ function getAllProductsWithCategoriesAndTags()
 
     } catch (Exception $e) {
         // Handle errors by logging them and returning an empty array.
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+        handleError($e->getMessage(), $env);
         return [];
     }
 }
@@ -224,10 +229,10 @@ function getAllProductsWithCategoriesAndTags()
  * @param int $productId The unique identifier of the product.
  * @return array|null Returns an associative array containing product details or null if an error occurs.
  */
-function getProductWithDetails($productId)
+function getProductWithDetails($productId, $config, $env)
 {
     try {
-        $pdo = getPDOConnection(); // Establish a PDO connection
+        $pdo = getPDOConnection($config, $env); // Establish a PDO connection
 
         $sql = "SELECT 
                     p.product_id, 
@@ -263,7 +268,7 @@ function getProductWithDetails($productId)
         return $product; // Return the product data
 
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors based on environment
+        handleError($e->getMessage(), $env); // Handle errors based on environment
         return null; // Return null in case of an error
     }
 }
@@ -280,10 +285,10 @@ function getProductWithDetails($productId)
  * @param int $encodedId The encoded product ID using Optimus.
  * @return array|null The product data as an associative array or null if not found.
  */
-function getProductBySlugAndOptimus($slug, $encodedId)
+function getProductBySlugAndOptimus($slug, $encodedId, $config, $env)
 {
     try {
-        $pdo = getPDOConnection(); // Establishes a database connection
+        $pdo = getPDOConnection($config, $env); // Establishes a database connection
         global $optimus;
         $productId = $optimus->decode($encodedId); // Decodes the Optimus ID to get the real product ID
         $stmt = $pdo->prepare("SELECT * FROM products WHERE product_id = :id AND slug = :slug");
@@ -293,7 +298,7 @@ function getProductBySlugAndOptimus($slug, $encodedId)
             throw new Exception("Invalid product URL");
         return $product;
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handles the error and logs it
+        handleError($e->getMessage(), $env); // Handles the error and logs it
         return null;
     }
 }
@@ -315,7 +320,7 @@ function getProductBySlugAndOptimus($slug, $encodedId)
  * @param array $data The product data including name, price, currency, description, slug, images, and category.
  * @return array An associative array indicating success or failure with an error message if applicable.
  */
-function addProduct($data)
+function addProduct($data, $config, $env)
 {
     $requiredKeys = ['name', 'price_amount', 'currency', 'description', 'slug', 'images', 'category'];
     foreach ($requiredKeys as $key) {
@@ -347,7 +352,7 @@ function addProduct($data)
     $data = sanitizeProductData($data);
 
     try {
-        $pdo = getPDOConnection();
+        $pdo = getPDOConnection($config, $env);
         $pdo->beginTransaction();
 
         // Insert product details
@@ -394,7 +399,7 @@ function addProduct($data)
         }
 
         $pdo->rollBack();
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+        handleError($e->getMessage(), $env);
         return ['error' => true, 'message' => 'A system error occurred. Please try again.'];
     }
 }
@@ -414,7 +419,7 @@ function addProduct($data)
  *
  * @return void Redirects to the manage products page with success or error messages.
  */
-function handleAddProductForm()
+function handleAddProductForm($config, $env)
 {
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
         try {
@@ -451,7 +456,7 @@ function handleAddProductForm()
             }
 
             // Add product to the database
-            $result = addProduct($productData);
+            $result = addProduct($productData, $config, $env);
             if ($result['error']) {
                 // Delete uploaded images if product addition fails
                 foreach ($productData['images'] as $imagePath) {
@@ -557,7 +562,7 @@ function handleProductImagesUpload()
  * @return array Returns an array with a success message on successful update,
  *               or an array with an error message on failure.
  */
-function updateProduct($id, $data)
+function updateProduct($id, $data, $config, $env)
 {
     // Validate product data
     $violations = validateProductData($data);
@@ -565,7 +570,7 @@ function updateProduct($id, $data)
     // If there are any violations, handle the error
     if (count($violations) > 0) {
         // Log the error for debugging purposes
-        handleError("Validation failed: " . implode(", ", array_map(fn($v) => $v->getMessage(), $violations)), getEnvironmentConfig()['local']);
+        handleError("Validation failed: " . implode(", ", array_map(fn($v) => $v->getMessage(), $violations)), $env);
 
         // Return a user-friendly error message
         return [
@@ -592,7 +597,7 @@ function updateProduct($id, $data)
     }
 
     try {
-        $pdo = getPDOConnection();
+        $pdo = getPDOConnection($config, $env);
         $stmt = $pdo->prepare("UPDATE products SET product_name = :name, price = :price, description = :description, image_path = :image_path, slug = :slug WHERE product_id = :id");
 
         // Execute the query
@@ -618,7 +623,7 @@ function updateProduct($id, $data)
         }
     } catch (Exception $e) {
         // Log the error for debugging purposes
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local');
+        handleError($e->getMessage(), $env);
 
         // Return a user-friendly error message
         return [
@@ -643,7 +648,7 @@ function updateProduct($id, $data)
  * @param int $id The ID of the product to be deleted.
  * @return array Returns an associative array with 'error' (boolean) and 'message' (string).
  */
-function deleteProduct($id)
+function deleteProduct($id, $config, $env)
 {
     if (!is_numeric($id) || $id <= 0) {
         return ['error' => true, 'message' => 'Invalid product ID.'];
@@ -651,7 +656,7 @@ function deleteProduct($id)
 
     try {
         $config = getEnvironmentConfig(); // Load environment configuration.
-        $pdo = getPDOConnection(); // Establish a PDO connection.
+        $pdo = getPDOConnection($config, $env); // Establish a PDO connection.
         if (!$pdo) {
             return ['error' => true, 'message' => 'Database connection failed.'];
         }
@@ -715,15 +720,15 @@ function deleteProduct($id)
  * 
  * @return array Returns an array of matching products. If an error occurs, an empty array is returned.
  */
-function searchProducts($keyword)
+function searchProducts($keyword, $config, $env)
 {
     try {
-        $pdo = getPDOConnection(); // Establish database connection
+        $pdo = getPDOConnection($config, $env); // Establish database connection
         $stmt = $pdo->prepare("SELECT * FROM products WHERE product_name LIKE :keyword OR description LIKE :keyword"); // Prepare SQL query
         $stmt->execute(['keyword' => "%$keyword%"]); // Bind keyword and execute query
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return results as an associative array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors based on environment
+        handleError($e->getMessage(), $env); // Handle errors based on environment
         return []; // Return an empty array in case of failure
     }
 }
@@ -742,10 +747,10 @@ function searchProducts($keyword)
  * 
  * @return array Returns an array of filtered products. Returns an empty array if an error occurs.
  */
-function advancedProductSearch($filters)
+function advancedProductSearch($filters, $config, $env)
 {
     try {
-        $pdo = getPDOConnection(); // Establish database connection
+        $pdo = getPDOConnection($config, $env); // Establish database connection
         $query = "SELECT * FROM products WHERE 1=1"; // Base query, ensures dynamic conditions can be appended
         $params = [];
 
@@ -770,7 +775,7 @@ function advancedProductSearch($filters)
         $stmt->execute($params); // Execute query with bound parameters
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return filtered results
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors based on environment
+        handleError($e->getMessage(), $env); // Handle errors based on environment
         return []; // Return an empty array in case of failure
     }
 }
@@ -787,15 +792,15 @@ function advancedProductSearch($filters)
  * 
  * @return array Returns an array of suggested product names. Returns an empty array on failure.
  */
-function getSearchSuggestions($keyword)
+function getSearchSuggestions($keyword, $config, $env)
 {
     try {
-        $pdo = getPDOConnection(); // Establish database connection
+        $pdo = getPDOConnection($config, $env); // Establish database connection
         $stmt = $pdo->prepare("SELECT product_name FROM products WHERE product_name LIKE :keyword LIMIT 5"); // Prepare SQL query
         $stmt->execute(['keyword' => "$keyword%"]); // Bind keyword and execute query
         return $stmt->fetchAll(PDO::FETCH_COLUMN); // Fetch only product names as an array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors based on environment
+        handleError($e->getMessage(), $env); // Handle errors based on environment
         return []; // Return an empty array in case of failure
     }
 }
@@ -811,15 +816,15 @@ function getSearchSuggestions($keyword)
  * 
  * @return array Returns an array of matching products. If no products are found, an empty array is returned.
  */
-function fuzzySearchProducts($keyword)
+function fuzzySearchProducts($keyword, $config, $env)
 {
     try {
-        $pdo = getPDOConnection(); // Establish database connection
+        $pdo = getPDOConnection($config, $env); // Establish database connection
         $stmt = $pdo->prepare("SELECT * FROM products WHERE SOUNDEX(product_name) = SOUNDEX(:keyword)"); // Prepare SQL query with SOUNDEX for fuzzy matching
         $stmt->execute(['keyword' => $keyword]); // Bind the keyword and execute the query
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return all matching products as an associative array
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle errors based on environment
+        handleError($e->getMessage(), $env); // Handle errors based on environment
         return []; // Return an empty array if an error occurs
     }
 }
@@ -836,17 +841,17 @@ function fuzzySearchProducts($keyword)
  * 
  * @return void No value is returned. If an error occurs, it is handled internally.
  */
-function logSearchQuery($keyword, $userId = null)
+function logSearchQuery($keyword, $userId = null, $config, $env)
 {
     try {
-        $pdo = getPDOConnection(); // Establish a database connection
+        $pdo = getPDOConnection($config, $env); // Establish a database connection
         $stmt = $pdo->prepare("INSERT INTO search_logs (user_id, keyword, search_date) VALUES (:user_id, :keyword, NOW())"); // Prepare the insert query
         $stmt->execute([ // Bind values and execute the insert
             'user_id' => $userId,
             'keyword' => $keyword,
         ]);
     } catch (Exception $e) {
-        handleError($e->getMessage(), getEnvironmentConfig()['is_live'] ? 'live' : 'local'); // Handle any potential error
+        handleError($e->getMessage(), $env); // Handle any potential error
     }
 }
 
@@ -863,9 +868,9 @@ function logSearchQuery($keyword, $userId = null)
  * @param array $ids An array of product IDs to be deleted.
  * @return void
  */
-function batchDeleteProducts($ids)
+function batchDeleteProducts($ids, $config, $env)
 {
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection($config, $env);
     if (!$pdo)
         return; // Stop execution if database connection fails
 
@@ -886,7 +891,7 @@ function batchDeleteProducts($ids)
         // Handle database errors and log them appropriately
         handleError(
             "Delete Error: " . $e->getMessage(),
-            ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'
+            $env
         );
         echo 'Error deleting products';
     } finally {
@@ -910,9 +915,9 @@ function batchDeleteProducts($ids)
  * @param int $id The ID of the product to be soft deleted.
  * @return void
  */
-function softDeleteProduct($id)
+function softDeleteProduct($id, $config, $env)
 {
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection($config, $env);
     if (!$pdo)
         return; // Stop execution if database connection fails
 
@@ -933,7 +938,7 @@ function softDeleteProduct($id)
         // Handle database errors and log them appropriately
         handleError(
             "Soft Delete Error: " . $e->getMessage(),
-            ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'
+            $env
         );
         echo 'Error soft deleting product';
     } finally {
@@ -960,9 +965,9 @@ function softDeleteProduct($id)
  * 
  * @return void
  */
-function exportProductsToCSV()
+function exportProductsToCSV($config, $env)
 {
-    $pdo = getPDOConnection();
+    $pdo = getPDOConnection($config, $env);
     if (!$pdo)
         return; // Stop execution if the database connection fails
 
@@ -995,7 +1000,7 @@ function exportProductsToCSV()
         // Handle database errors and log them appropriately
         handleError(
             "Export Error: " . $e->getMessage(),
-            ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live'
+            $env
         );
         echo 'Error exporting products';
     } finally {
