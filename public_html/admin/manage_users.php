@@ -62,8 +62,38 @@ if ($conn->connect_error) {
 }
 
 // Step 14: Fetch users from the database
-$sql = "SELECT user_id, username, email, role FROM users";
+$sql = "SELECT user_id, username, email, role, isactive FROM users";
 $result = $conn->query($sql);
+
+// Step 15: Handle resend activation email request
+if (isset($_GET['resend_email'])) {
+    $email = urldecode($_GET['resend_email']);
+    $result = resendActivationEmail($email);
+
+    // Set flash message based on the result
+    if (strpos($result, 'Activation email has been resent') !== false) {
+        $_SESSION['flash_message'] = ['type' => 'success', 'message' => $result];
+    } else {
+        $_SESSION['flash_message'] = ['type' => 'error', 'message' => $result];
+    }
+
+    // Redirect to the same page to avoid resubmission
+    header("Location: " . $baseUrl . "manage_users");
+    exit();
+}
+
+// Step 16: Display flash messages
+if (isset($_SESSION['flash_message'])) {
+    $flashType = $_SESSION['flash_message']['type'];
+    $flashMessage = $_SESSION['flash_message']['message'];
+    unset($_SESSION['flash_message']); // Clear the message after displaying
+
+    if ($flashType === 'success') {
+        $successMessage = $flashMessage;
+    } else {
+        $errorMessage = $flashMessage;
+    }
+}
 ?>
 
 <!DOCTYPE html>
@@ -169,6 +199,7 @@ $result = $conn->query($sql);
                     <th>Username</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Status Users</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -177,25 +208,33 @@ $result = $conn->query($sql);
                 if ($result->num_rows > 0) {
                     while ($row = $result->fetch_assoc()) {
                         echo "<tr>
-                    <td>{$row['user_id']}</td>
-                    <td>{$row['username']}</td>
-                    <td>{$row['email']}</td>
-                    <td>
-                        <form action='" . $baseUrl . "chnage-role' method='POST' style='display:inline;'>
-                            <input type='hidden' name='user_id' value='{$row['user_id']}'>
-                            <select name='new_role' onchange='this.form.submit()'>
-                                <option value='admin' " . ($row['role'] === 'admin' ? 'selected' : '') . ">Admin</option>
-                                <option value='customer' " . ($row['role'] === 'customer' ? 'selected' : '') . ">Customer</option>
-                            </select>
-                        </form>
-                    </td>
-                    <td class='action-buttons'>
-                        <button onclick='confirmDelete({$row['user_id']})'>Delete</button>
-                    </td>
-                  </tr>";
+                <td>{$row['user_id']}</td>
+                <td>{$row['username']}</td>
+                <td>{$row['email']}</td>
+                <td>
+                    <form action='" . $baseUrl . "change-role' method='POST' style='display:inline;'>
+                        <input type='hidden' name='user_id' value='{$row['user_id']}'>
+                        <select name='new_role' onchange='this.form.submit()'>
+                            <option value='admin' " . ($row['role'] === 'admin' ? 'selected' : '') . ">Admin</option>
+                            <option value='customer' " . ($row['role'] === 'customer' ? 'selected' : '') . ">Customer</option>
+                        </select>
+                    </form>
+                </td>
+                <td>";
+                        // Logika untuk menampilkan status
+                        if ($row['isactive'] == 0) {
+                            echo "<a href='?resend_email=" . urlencode($row['email']) . "'>Inactive</a>";
+                        } else {
+                            echo "Active";
+                        }
+                        echo "</td>
+                <td class='action-buttons'>
+                    <button onclick='confirmDelete({$row['user_id']})'>Delete</button>
+                </td>
+            </tr>";
                     }
                 } else {
-                    echo "<tr><td colspan='5'>Tidak ada data user.</td></tr>";
+                    echo "<tr><td colspan='6'>Tidak ada data user.</td></tr>";
                 }
                 ?>
             </tbody>
