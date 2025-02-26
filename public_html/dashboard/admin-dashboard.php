@@ -11,7 +11,7 @@ startSession();
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $isLive = $config['is_live'];
-$pdo = getPDOConnection();
+$pdo = getPDOConnection($config, $env);
 // Deteksi environment
 $isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
 setCacheHeaders($isLive); // Set header no cache saat local environment
@@ -28,7 +28,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Step 2: Retrieve user information from the session and database.
-$userInfo = getUserInfo($_SESSION['user_id']);
+$userInfo = getUserInfo($_SESSION['user_id'], $config, $env);
 $profileImage = null;
 
 // Step 3: Handle cases where the user is not found in the database.
