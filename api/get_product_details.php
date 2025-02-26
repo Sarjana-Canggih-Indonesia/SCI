@@ -18,7 +18,7 @@ try {
         throw new Exception('Invalid Product ID');
     }
 
-    $product = getProductWithDetails($productId);
+    $product = getProductWithDetails($productId, $config, $env);
 
     if (!$product) {
         throw new Exception('Product not found');
