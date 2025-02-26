@@ -640,17 +640,15 @@ function resendActivationEmail($identifier)
 }
 
 /**
- * Registers a new user by validating input and inserting them into the database.
+ * Registers a new user in the system by validating input, checking for duplicates, hashing the password, 
+ * generating an activation code, and storing the user in the database.
  *
- * Validates username, email, and password. Checks if username or email already exists.
- * Hashes the password, generates an activation code, and inserts the user into the database.
- *
- * @param string $username The username of the user.
- * @param string $email The email of the user.
- * @param string $password The password of the user.
- * @param string $env The environment setting for error handling.
- * @param array $config Database configuration settings.
- * @return string A message indicating the result of the registration process.
+ * @param string $username The username provided by the user.
+ * @param string $email The email address provided by the user.
+ * @param string $password The raw password provided by the user.
+ * @param string $env The current environment (local or live).
+ * @param array $config The configuration settings for database and application.
+ * @return string Registration result message or activation code.
  */
 function registerUser($username, $email, $password, $env, $config)
 {
@@ -660,58 +658,81 @@ function registerUser($username, $email, $password, $env, $config)
         return 'Internal server error. Please try again later.';
     }
 
+    /** Start transaction using beginTransaction function */
+    if (!beginTransaction($pdo, $env)) {
+        return 'Internal server error. Please try again later.';
+    }
+
     try {
-        // Validasi input
+        /** Validate username */
         $usernameViolations = validateUsername($username);
-        if (count($usernameViolations) > 0)
+        if (count($usernameViolations) > 0) {
+            $pdo->rollBack();
             return $usernameViolations[0]->getMessage();
+        }
 
+        /** Validate email */
         $emailViolations = validateEmail($email);
-        if (count($emailViolations) > 0)
+        if (count($emailViolations) > 0) {
+            $pdo->rollBack();
             return $emailViolations[0]->getMessage();
+        }
 
+        /** Validate password */
         $passwordViolations = validatePassword($password);
-        if (count($passwordViolations) > 0)
+        if (count($passwordViolations) > 0) {
+            $pdo->rollBack();
             return $passwordViolations[0]->getMessage();
+        }
 
-        // Periksa apakah username atau email sudah ada
+        /** Check if username or email already exists */
         $checkQuery = "SELECT 1 FROM users WHERE username = :username OR email = :email";
-        $stmt = $pdo->prepare($checkQuery);
-        $stmt->execute(['username' => $username, 'email' => $email]);
-        if ($stmt->fetch())
+        $stmt = executeQuery($pdo, $checkQuery, ['username' => $username, 'email' => $email], $env);
+        if (!$stmt || $stmt->fetch()) {
+            $pdo->rollBack();
             return 'Username or email already exists.';
+        }
 
-        // Hash password
+        /** Hash password securely */
         $hashedPassword = password_hash($password, PASSWORD_BCRYPT);
         if ($hashedPassword === false) {
+            $pdo->rollBack();
             handleError('Password hashing failed.', $env);
             return 'Internal server error. Please try again later.';
         }
 
-        // Generate activation code
+        /** Generate activation code */
         $activationCode = generateActivationCode($email);
 
-        // Gunakan Carbon untuk mencatat waktu
+        /** Get current timestamp */
         $createdAt = Carbon::now()->toDateTimeString();
 
-        // Insert user ke database
+        /** Insert new user into the database */
         $insertQuery = "INSERT INTO users (username, email, password, isactive, activation_code, created_at) 
                         VALUES (:username, :email, :password, 0, :activation_code, :created_at)";
-        $stmt = $pdo->prepare($insertQuery);
-        $stmt->execute([
+        $stmt = executeQuery($pdo, $insertQuery, [
             'username' => $username,
             'email' => $email,
             'password' => $hashedPassword,
             'activation_code' => $activationCode,
             'created_at' => $createdAt
-        ]);
+        ], $env);
 
-        if ($stmt->rowCount() > 0) {
-            return 'Registration successful. Please activate your account via email. Activation Code: ' . $activationCode;
+        /** Check if insertion was successful */
+        if (!$stmt) {
+            $pdo->rollBack();
+            return 'Internal server error. Please try again later.';
         }
 
-        return 'Registration failed. Please try again later.';
+        /** Commit the transaction using commitTransaction function */
+        if (!commitTransaction($pdo, $env)) {
+            return 'Internal server error. Please try again later.';
+        }
+
+        return 'Registration successful. Please activate your account via email. Activation Code: ' . $activationCode;
     } catch (PDOException $e) {
+        /** Rollback transaction if an error occurs */
+        $pdo->rollBack();
         handleError('Database error: ' . $e->getMessage(), $env);
         return 'Internal server error. Please try again later.';
     }
@@ -732,7 +753,7 @@ function handleRegistration($client, $baseUrl, $config)
     /** Validate CSRF and reCAPTCHA */
     $validationResult = validateCsrfAndRecaptcha($_POST, $client);
     if ($validationResult !== true) {
-        $_SESSION['error_message'] = 'Invalid CSRF token or reCAPTCHA. Please try again.';
+        $_SESSION['error_message'] = is_string($validationResult) ? $validationResult : 'Invalid CSRF token or reCAPTCHA. Please try again.';
         header("Location: " . $baseUrl . "register");
         exit();
     }
@@ -761,28 +782,55 @@ function handleRegistration($client, $baseUrl, $config)
     $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
     /** Attempt to register the user */
-    $registrationResult = registerUser($username, $email, $password, $env, $config);
+    $pdo = getPDOConnection($config, $env);
+    if (!$pdo) {
+        $_SESSION['error_message'] = 'Database connection failed.';
+        header("Location: " . $baseUrl . "register");
+        exit();
+    }
 
-    if (strpos($registrationResult, 'Registration successful') !== false) {
-        /** Extract activation code from registration response */
-        preg_match('/Activation Code: (\S+)/', $registrationResult, $matches);
-        $activationCode = $matches[1] ?? '';
+    if (!beginTransaction($pdo, $env)) {
+        $_SESSION['error_message'] = 'Internal server error. Please try again later.';
+        header("Location: " . $baseUrl . "register");
+        exit();
+    }
+
+    try {
+        $activationCode = registerUser($username, $email, $password, $env, $config);
+
+        if (strpos($activationCode, 'Registration successful') !== false) {
+            $_SESSION['error_message'] = $activationCode;
+            $pdo->rollBack();
+            header("Location: " . $baseUrl . "register");
+            exit();
+        }
 
         /** Send activation email */
         $activationResult = sendActivationEmail($email, $activationCode, $username);
-        if ($activationResult === true) {
-            $_SESSION['success_message'] = "Registration successful! Please check your email to activate your account.";
-        } else {
-            /** If email fails, delete the registered user */
-            $pdo = getPDOConnection($config, $env);
-            $stmt = $pdo->prepare("DELETE FROM users WHERE email = :email");
-            $stmt->execute(['email' => $email]);
+        if (!$activationResult) {
+            $stmt = executeQuery($pdo, "DELETE FROM users WHERE email = :email", ['email' => $email], $env);
+            if (!$stmt) {
+                handleError("Failed to delete user after email sending failure.", $env);
+            }
+            $pdo->commit();
 
             $_SESSION['error_message'] = 'Failed to send activation email. Please try again.';
+            header("Location: " . $baseUrl . "register");
+            exit();
         }
-    } else {
-        /** If registration fails, store the error message */
-        $_SESSION['error_message'] = $registrationResult;
+
+        /** Commit transaction */
+        if (!commitTransaction($pdo, $env)) {
+            $_SESSION['error_message'] = 'Internal server error. Please try again later.';
+            header("Location: " . $baseUrl . "register");
+            exit();
+        }
+
+        $_SESSION['success_message'] = "Registration successful! Please check your email to activate your account.";
+    } catch (PDOException $e) {
+        $pdo->rollBack();
+        handleError('Database error: ' . $e->getMessage(), $env);
+        $_SESSION['error_message'] = 'Internal server error. Please try again later.';
     }
 
     /** Redirect to avoid form resubmission */
