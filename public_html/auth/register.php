@@ -12,8 +12,7 @@ $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 $isLive = $config['is_live'];
-// Deteksi environment
-$isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
+
 setCacheHeaders($isLive); // Set header no cache saat local environment
 
 // Sanitize user input
@@ -28,62 +27,7 @@ $client = HttpClient::create();
 validateReCaptchaEnvVariables();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Validasi CSRF dan reCAPTCHA
-    $validationResult = validateCsrfAndRecaptcha($_POST, $client);
-
-    if ($validationResult !== true) {
-        $_SESSION['error_message'] = 'Invalid CSRF token or reCAPTCHA. Please try again.';
-        header("Location: " . $baseUrl . "register");
-        exit();
-    } else {
-        // Honeypot Field Check
-        if (!empty($_POST['honeypot'])) {
-            $_SESSION['error_message'] = 'Bot detected. Submission rejected.';
-            header("Location: " . $baseUrl . "register");
-            exit();
-        } else {
-            // Sanitize and validate form inputs
-            $username = sanitize_input(trim($_POST['username']));
-            $email = sanitize_input(trim($_POST['email']));
-            $password = $_POST['password'];
-            $confirm_password = $_POST['confirm_password'];
-
-            // Validate password confirmation
-            if ($password !== $confirm_password) {
-                $_SESSION['error_message'] = 'Passwords do not match.';
-                header("Location: " . $baseUrl . "register");
-                exit();
-            }
-
-            // Register the user
-            $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
-            $registrationResult = registerUser($username, $email, $password, $env);
-
-            // Periksa apakah hasilnya adalah array dengan pesan sukses
-            if (strpos($registrationResult, 'Registration successful') !== false) {
-                // Registrasi berhasil, ambil activation code
-                preg_match('/Activation Code: (\S+)/', $registrationResult, $matches);
-                $activationCode = $matches[1] ?? '';
-
-                // Kirimkan email aktivasi
-                $activationResult = sendActivationEmail($email, $activationCode, $username);
-
-                if ($activationResult === true) {
-                    $_SESSION['success_message'] = "Registration successful! Please check your email to activate your account.";
-                } else {
-                    // Jika pengiriman email gagal, tangani kesalahan
-                    $_SESSION['error_message'] = $activationResult;
-                }
-            } else {
-                // Jika registrasi gagal, tangani kesalahan
-                $_SESSION['error_message'] = $registrationResult;
-            }
-
-            // Redirect ke halaman yang sama untuk menghindari resubmission
-            header("Location: " . $baseUrl . "register");
-            exit();
-        }
-    }
+    handleRegistration($client, $baseUrl, $config);
 }
 
 // Redirect to the index page if the user is already logged in
