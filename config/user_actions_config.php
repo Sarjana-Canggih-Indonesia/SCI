@@ -729,7 +729,7 @@ function registerUser($username, $email, $password, $env, $config)
             return 'Internal server error. Please try again later.';
         }
 
-        return 'Registration successful. Please activate your account via email. Activation Code: ' . $activationCode;
+        return 'Registration successful. Please activate your account via email.';
     } catch (PDOException $e) {
         /** Rollback transaction if an error occurs */
         $pdo->rollBack();
@@ -799,8 +799,8 @@ function handleRegistration($client, $baseUrl, $config)
         $activationCode = registerUser($username, $email, $password, $env, $config);
 
         if (strpos($activationCode, 'Registration successful') !== false) {
-            $_SESSION['error_message'] = $activationCode;
-            $pdo->rollBack();
+            $_SESSION['success_message'] = $activationCode;
+            $pdo->commit();
             header("Location: " . $baseUrl . "register");
             exit();
         }
@@ -1482,7 +1482,7 @@ function deleteUser($admin_id, $user_id, $config, $env)
         $stmt->execute(); // Execute deletion query
 
         // Log the admin action for auditing purposes
-        logAdminAction($admin_id, 'delete_user', 'users', $user_id, "Deleted user with ID $user_id");
+        logAdminAction($admin_id, 'delete_user', 'users', $user_id, "Deleted user with ID $user_id", $config, $env);
 
         echo escapeHTML("User successfully deleted."); // Display success message (escaped to prevent XSS)
     } catch (PDOException $e) {
