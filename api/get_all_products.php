@@ -15,7 +15,7 @@ header("Access-Control-Allow-Headers: Content-Type");
 
 try {
     // Fetch all products along with their categories and tags
-    $products = getAllProductsWithCategoriesAndTags();
+    $products = getAllProductsWithCategoriesAndTags($config, $env);
 
     // Check if an error occurred while fetching data
     if (isset($products['error']) && $products['error']) {
