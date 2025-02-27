@@ -85,7 +85,7 @@ if ($userInfo['role'] !== 'admin') {
     <!--========== AREA PROMO ==========-->
     <div class="jarak-kustom container">
         <section class="judul-halaman-admin-dashboard">
-            <h2 class="mb-4 text-center">Admin Dashboard</h2>
+            <h2 class="fs-1 mb-5 text-center">Admin Dashboard</h2>
         </section>
         <section class="user-info-dan-navigasi-halaman-admin">
             <div class="row mb-4">
@@ -103,8 +103,8 @@ if ($userInfo['role'] !== 'admin') {
                                 <!-- Profile Image -->
                                 <div class="position-relative">
                                     <img src="<?php echo htmlspecialchars($profileImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                                        alt="Profile Image" class="profile-img shadow-lg rounded-circle"
-                                        data-bs-toggle="tooltip" title="Admin Profile Picture">
+                                        alt="Profile Image" class="profile-img shadow-sm rounded-circle" data-bs-toggle="tooltip"
+                                        title="Admin Profile Picture">
                                 </div>
 
                                 <!-- User Details -->
@@ -152,7 +152,7 @@ if ($userInfo['role'] !== 'admin') {
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-white border-0 py-3">
                             <h5 class="mb-0 text-primary fw-semibold">
-                                <i class="fa-solid fa-compass me-2"></i>Navigation
+                                <i class="fa-solid fa-compass me-2"></i>Quick Navigation
                             </h5>
                         </div>
                         <div class="card-body p-3">
