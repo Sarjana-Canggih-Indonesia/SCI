@@ -17,7 +17,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 // Step 2: Retrieve user information from the session and database.
-$userInfo = getUserInfo($_SESSION['user_id']);
+$userInfo = getUserInfo($_SESSION['user_id'], $config, $env);
 $profileImage = null;
 
 // Step 3: Handle cases where the user is not found in the database.
@@ -38,13 +38,13 @@ if ($userInfo['role'] !== 'admin') {
 }
 
 // Retrieve product categories from the database.
-$categories = getPromoCategories();
+$categories = getPromoCategories($config, $env);
 
 // Load dynamic URL configuration.
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $isLive = $config['is_live'];
-$pdo = getPDOConnection();
+$pdo = getPDOConnection($config, $env);
 
 // Set no-cache headers in the local environment.
 setCacheHeaders($isLive);
