@@ -380,7 +380,3 @@ if (isset($_SESSION['flash_message'])) {
 </body>
 
 </html>
-<?php
-// Tutup koneksi database
-$conn->close();
-?>
