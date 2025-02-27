@@ -131,7 +131,7 @@ setCacheHeaders($isLive);
             <section class="judul-halaman-admin-dashboard">
                 <h2 class="fs-1 mb-5 text-center">Manage Products</h2>
             </section>
-            <!-- Product Summary and User Info Section -->
+            <!-- User Info Section & Admin Navigation -->
             <div class="row mb-4">
                 <!-- User Info -->
                 <div class="col-md-6 user-info-halaman-admin">
