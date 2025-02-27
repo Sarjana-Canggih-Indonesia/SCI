@@ -1,68 +1,79 @@
 <?php
+// process_contact.php
 
-// Include necessary libraries and configuration files
-require_once __DIR__ . '/../../vendor/autoload.php';
+/**
+ * Handles WhatsApp contact form submissions with security checks and validation
+ * 
+ * 1. Loads configuration and dependencies
+ * 2. Performs security validations (CSRF, reCAPTCHA, honeypot)
+ * 3. Processes and sanitizes user input
+ * 4. Generates WhatsApp API link
+ * 5. Redirects user to WhatsApp
+ */
+
+// [1] Load core configuration and dependencies (already includes Dotenv, HttpClient, etc.)
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
 
-use Symfony\Contracts\HttpClient\HttpClientInterface;
 use Symfony\Component\HttpClient\HttpClient;
-use Dotenv\Dotenv;
 
-// Load environment variables from the .env file
-$dotenv = Dotenv::createImmutable(__DIR__ . '/../../');
-$dotenv->load();
-
-// Start session to manage user sessions
+// [2] Session management for CSRF and flash messages
 startSession();
 
-// Validate the CSRF token to protect against cross-site request forgery
-if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
-    die("Invalid CSRF token."); // Terminate if CSRF token is invalid
-}
-
-// Check if the request method is POST
+// [3] Request method validation - MUST be first validation
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    die('Invalid request method.'); // Terminate if request method is not POST
+    http_response_code(405);
+    handleError('Invalid request method', isLive() ? 'live' : 'local');
 }
 
-// Initialize HTTP client for reCAPTCHA and CSRF validation
-$client = HttpClient::create();
-$validationResult = validateCsrfAndRecaptcha($_POST, $client);
-
-// If validation fails, stop execution and display error message
-if ($validationResult !== true) {
-    die($validationResult); // Display error and stop further execution
+// [4] CSRF token validation - prevent cross-site request forgery
+if (!validateCSRFToken($_POST['csrf_token'] ?? '')) {
+    handleError('Invalid CSRF token', isLive() ? 'live' : 'local');
 }
 
-// Check for a honeypot field to detect spam bots
+// [5] Combined CSRF + reCAPTCHA validation using Symfony HttpClient
+try {
+    $client = HttpClient::create();
+    $recaptchaValidation = validateCsrfAndRecaptcha($_POST, $client);
+
+    if ($recaptchaValidation !== true) {
+        handleError($recaptchaValidation, isLive() ? 'live' : 'local');
+    }
+} catch (\Exception $e) {
+    handleError('Security validation failed: ' . $e->getMessage(), isLive() ? 'live' : 'local');
+}
+
+// [6] Honeypot detection - anti-spam measure
 if (!empty($_POST['form-wa-honeypot'])) {
-    die("Spam detected via honeypot."); // Stop execution if honeypot field is filled
+    handleError('Spam detected via honeypot', isLive() ? 'live' : 'local');
 }
 
-// Sanitize the user input for the name, email, and message fields to prevent injection attacks
-$nama = sanitize_input($_POST['form-wa-nama']);
-$email = sanitize_input($_POST['form-wa-email']);
-$pesan = sanitize_input($_POST['form-wa-pesan']);
+// [7] Input sanitization using AntiXSS from config.php
+$sanitizedData = [
+    'nama' => sanitize_input($_POST['form-wa-nama'] ?? ''),
+    'email' => sanitize_input($_POST['form-wa-email'] ?? ''),
+    'pesan' => sanitize_input($_POST['form-wa-pesan'] ?? '')
+];
 
-// Retrieve the phone number from environment variables
-$contact = $_ENV['PHONE_NUMBER'];
-
-// Construct the message to be sent to WhatsApp
-$message = "Nama: $nama\nEmail: $email\nPesan: $pesan";
-// URL encode the message to make it safe for use in a URL
-$encodedMessage = urlencode($message);
-
-// Create the WhatsApp URL with the pre-filled message
-$link = "https://api.whatsapp.com/send?phone=$contact&text=$encodedMessage";
-
-// Clear any existing output buffer if necessary
-if (ob_get_length() > 0) {
-    ob_clean(); // Clean output buffer to avoid unwanted content in the response
+// [8] Validate required fields after sanitization
+if (empty($sanitizedData['nama']) || empty($sanitizedData['pesan'])) {
+    handleError('Name and message are required fields', isLive() ? 'live' : 'local');
 }
 
-// Redirect the user to the WhatsApp link for sending the message
-header("Location: $link");
+// [9] Prepare WhatsApp API parameters
+$whatsappData = [
+    'phone' => $_ENV['PHONE_NUMBER'], // From .env via config.php
+    'message' => urlencode("Nama: {$sanitizedData['nama']}\nEmail: {$sanitizedData['email']}\nPesan: {$sanitizedData['pesan']}")
+];
 
-// Exit the script to ensure no further code is executed
+// [10] Build WhatsApp deep link
+$whatsappUrl = "https://api.whatsapp.com/send?phone={$whatsappData['phone']}&text={$whatsappData['message']}";
+
+// [11] Ensure clean redirect without output buffering issues
+if (ob_get_level() > 0) {
+    ob_end_clean();
+}
+
+// [12] Final redirect to WhatsApp
+header("Location: $whatsappUrl");
 exit();
