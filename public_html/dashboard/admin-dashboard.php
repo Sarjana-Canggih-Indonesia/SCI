@@ -91,7 +91,7 @@ if ($userInfo['role'] !== 'admin') {
             <div class="row mb-4">
                 <!-- User Info -->
                 <div class="col-md-6 user-info-halaman-admin">
-                    <div class="card shadow-lg border-0 overflow-hidden">
+                    <div class="card shadow-sm border-0 overflow-hidden">
                         <div class="card-header bg-primary bg-gradient text-white py-3 position-relative">
                             <h5 class="mb-0 fw-semibold">
                                 <i class="fa-solid fa-user-shield me-2"></i>Admin Profile
@@ -149,61 +149,46 @@ if ($userInfo['role'] !== 'admin') {
 
                 <!-- Navigasi Halaman Admin -->
                 <div class="col-md-6 navigasi-halaman-admin">
-                    <div class="card shadow-lg border-0">
-                        <div class="card-header bg-primary bg-gradient text-white py-3">
-                            <h5 class="mb-0 fw-semibold">
-                                <i class="fa-solid fa-gears me-2"></i>Admin Navigation
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="mb-0 text-primary fw-semibold">
+                                <i class="fa-solid fa-compass me-2"></i>Navigation
                             </h5>
                         </div>
-                        <div class="card-body p-4">
-                            <div class="row g-3">
-                                <!-- Manage Users -->
-                                <div class="col-12">
-                                    <a href="<?php echo $baseUrl; ?>manage_users" target="_blank"
-                                        rel="noopener noreferrer" class="btn btn-outline-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
-                          shadow-sm hover-effect">
-                                        <i class="fa-solid fa-user-gear fs-4 me-3"></i>
-                                        <div>
-                                            <div class="fw-semibold fs-5">Manage Users</div>
-                                            <small class="opacity-75">Manage user accounts and permissions</small>
+                        <div class="card-body p-3">
+                            <div class="row g-2">
+                                <div class="col-6 mb-2">
+                                    <a href="<?php echo $baseUrl; ?>manage_users"
+                                        class="btn btn-light w-100 h-100 p-3 text-start border-hover">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-users fs-4 text-primary me-2"></i>
+                                            <span class="fw-medium">Users</span>
                                         </div>
                                     </a>
                                 </div>
-
-                                <!-- Manage Products -->
-                                <div class="col-12">
-                                    <a href="<?php echo $baseUrl; ?>manage_products" target="_blank"
-                                        rel="noopener noreferrer" class="btn btn-outline-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
-                          shadow-sm hover-effect">
-                                        <i class="fa-solid fa-box fs-4 me-3"></i>
-                                        <div>
-                                            <div class="fw-semibold fs-5">Manage Products</div>
-                                            <small class="opacity-75">Manage product catalog and inventory</small>
+                                <div class="col-6 mb-2">
+                                    <a href="<?php echo $baseUrl; ?>manage_products"
+                                        class="btn btn-light w-100 h-100 p-3 text-start border-hover">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-cube fs-4 text-success me-2"></i>
+                                            <span class="fw-medium">Products</span>
                                         </div>
                                     </a>
                                 </div>
-
-                                <!-- Manage Promos -->
-                                <div class="col-12">
-                                    <a href="<?php echo $baseUrl; ?>manage_promos" target="_blank"
-                                        rel="noopener noreferrer" class="btn btn-outline-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
-                          shadow-sm hover-effect">
-                                        <i class="fa-solid fa-tags fs-4 me-3"></i>
-                                        <div>
-                                            <div class="fw-semibold fs-5">Manage Promos</div>
-                                            <small class="opacity-75">Create and manage promotional offers</small>
+                                <div class="col-6 mb-2">
+                                    <a href="<?php echo $baseUrl; ?>manage_promos"
+                                        class="btn btn-light w-100 h-100 p-3 text-start border-hover">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-percent fs-4 text-danger me-2"></i>
+                                            <span class="fw-medium">Promos</span>
                                         </div>
                                     </a>
                                 </div>
-
-                                <!-- Manage Blogs -->
-                                <div class="col-12">
-                                    <a href="#" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary w-100 text-start p-3 rounded-3 d-flex align-items-center 
-                          shadow-sm hover-effect">
-                                        <i class="fa-solid fa-blog fs-4 me-3"></i>
-                                        <div>
-                                            <div class="fw-semibold fs-5">Manage Blogs</div>
-                                            <small class="opacity-75">Create and publish blog articles</small>
+                                <div class="col-6 mb-2">
+                                    <a href="#" class="btn btn-light w-100 h-100 p-3 text-start border-hover">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-pen-nib fs-4 text-warning me-2"></i>
+                                            <span class="fw-medium">Blogs</span>
                                         </div>
                                     </a>
                                 </div>
