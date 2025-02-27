@@ -1,44 +1,39 @@
 /* AREA HALAMAN ADMIN
 ================================================================================ */
-.user-info-halaman-admin .profile-img {
-  width: 120px;
-  height: 120px;
-  object-fit: cover;
-  transition: all 0.3s ease;
-  border: 3px solid #fff;
+/* Updated Navigation Styles */
+.navigasi-halaman-admin .border-hover {
+  border: 1px solid #dee2e6;
+  transition: all 0.2s ease;
+  border-radius: 8px;
 }
 
-.user-info-halaman-admin .profile-img:hover {
-  transform: scale(1.05);
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-}
-
-.user-info-halaman-admin .header-accent {
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  width: 100%;
-  height: 10px;
-  background: linear-gradient(45deg, rgba(255, 255, 255, 0.15), transparent);
-}
-
-.user-info-halaman-admin .card-header.bg-gradient {
-  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
-}
-
-.navigasi-halaman-admin .hover-effect {
-  transition: all 0.2s ease-in-out;
-  border-left: 4px solid transparent;
-}
-
-.navigasi-halaman-admin .hover-effect:hover {
+.navigasi-halaman-admin .border-hover:hover {
+  border-color: #0d6efd;
+  background-color: #f8f9fa;
   transform: translateY(-2px);
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
-  border-left-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(13, 110, 253, 0.1);
 }
 
-.navigasi-halaman-admin .card-header.bg-gradient {
-  background: linear-gradient(45deg, #0d6efd, #0b5ed7);
+/* Simplified Profile Section */
+.user-info-halaman-admin .profile-img {
+  width: 80px;
+  height: 80px;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-info-halaman-admin .card-header {
+  background: #fff !important;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.user-info-halaman-admin .detail-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.user-info-halaman-admin .detail-item:last-child {
+  border-bottom: 0;
 }
 /* AKHIR AREA HALAMAN ADMIN
 ================================================================================ */
