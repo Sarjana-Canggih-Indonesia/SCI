@@ -128,8 +128,9 @@ setCacheHeaders($isLive);
     <!--========== AREA MANAGE PRODUCTS ==========-->
     <section class="jarak-kustom">
         <div class="container">
-            <h2 class="mb-4 text-center">Manage Products</h2>
-
+            <section class="judul-halaman-admin-dashboard">
+                <h2 class="fs-1 mb-5 text-center">Manage Products</h2>
+            </section>
             <!-- Product Summary and User Info Section -->
             <div class="row mb-4">
                 <!-- User Info -->
@@ -146,7 +147,7 @@ setCacheHeaders($isLive);
                                 <!-- Profile Image -->
                                 <div class="position-relative">
                                     <img src="<?php echo htmlspecialchars($profileImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                                        alt="Profile Image" class="profile-img shadow-lg rounded-circle"
+                                        alt="Profile Image" class="profile-img shadow-sm rounded-circle"
                                         data-bs-toggle="tooltip" title="Admin Profile Picture">
                                 </div>
 
