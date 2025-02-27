@@ -13,6 +13,7 @@ startSession();
 $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $isLive = $config['is_live'];
+$env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
 // Step 4: Set security headers
 header("X-Frame-Options: DENY");
