@@ -7,7 +7,7 @@ require_once __DIR__ . '/../../config/user_actions_config.php';
 startSession();
 
 // Buat koneksi ke database
-$conn = getPDOConnection();
+$conn = getPDOConnection($config, $env);
 
 // Memuat konfigurasi URL Dinamis
 $config = getEnvironmentConfig();
