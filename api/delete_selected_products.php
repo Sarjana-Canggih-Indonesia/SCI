@@ -41,7 +41,7 @@ $failedProducts = [];
 // Process each product ID for deletion
 foreach ($data['product_ids'] as $id) {
     $id = intval($id);
-    $result = deleteProduct($id);
+    $result = deleteProduct($id, $config, $env);
     if ($result['error']) {
         $failedProducts[] = [
             'id' => $id,
