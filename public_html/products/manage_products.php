@@ -134,7 +134,7 @@ setCacheHeaders($isLive);
             <div class="row mb-4">
                 <!-- User Info -->
                 <div class="col-md-6 user-info-halaman-admin">
-                    <div class="card shadow-lg border-0 overflow-hidden">
+                    <div class="card shadow-sm border-0 overflow-hidden">
                         <div class="card-header bg-primary bg-gradient text-white py-3 position-relative">
                             <h5 class="mb-0 fw-semibold">
                                 <i class="fa-solid fa-user-shield me-2"></i>Admin Profile
@@ -190,22 +190,53 @@ setCacheHeaders($isLive);
                     </div>
                 </div>
 
-                <!-- Product Summary -->
-                <div class="col-md-6">
-                    <div class="card shadow-sm">
-                        <div class="card-header bg-success text-white">
-                            <h5 class="mb-0">Product Summary</h5>
+                <!-- Navigasi Halaman Admin -->
+                <div class="col-md-6 navigasi-halaman-admin">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-0 py-3">
+                            <h5 class="mb-0 text-primary fw-semibold">
+                                <i class="fa-solid fa-compass me-2"></i>Quick Navigation
+                            </h5>
                         </div>
-                        <div class="card-body">
-                            <ul class="list-unstyled">
-                                <li><strong>Total Products:</strong>
-                                    <?php echo count($products); ?>
-                                </li>
-                                <li><strong>Total Categories:</strong>
-                                    <?php echo count($categories); ?>
-                                </li>
-                                <li><strong>Total Revenue:</strong> Rp 150,000,000</li>
-                            </ul>
+                        <div class="card-body p-3">
+                            <div class="row g-2">
+                                <div class="col-6 mb-2">
+                                    <a href="<?php echo $baseUrl; ?>admin-dashboard"
+                                        onclick="if(document.referrer) { if(confirm('Kembali ke halaman Admin Dashboard?')) { history.back(); } return false; }"
+                                        class="btn btn-light w-100 h-100 p-3 text-start border-hover">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-arrow-left fs-4 text-secondary me-2"></i>
+                                            <span class="fw-medium">Back</span>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <a href="<?php echo $baseUrl; ?>manage_users"
+                                        class="btn btn-light w-100 h-100 p-3 text-start border-hover">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-users fs-4 text-primary me-2"></i>
+                                            <span class="fw-medium">Users</span>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <a href="<?php echo $baseUrl; ?>manage_promos"
+                                        class="btn btn-light w-100 h-100 p-3 text-start border-hover">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-percent fs-4 text-danger me-2"></i>
+                                            <span class="fw-medium">Promos</span>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-6 mb-2">
+                                    <a href="#" class="btn btn-light w-100 h-100 p-3 text-start border-hover">
+                                        <div class="d-flex align-items-center">
+                                            <i class="fa-solid fa-pen-nib fs-4 text-warning me-2"></i>
+                                            <span class="fw-medium">Blogs</span>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
