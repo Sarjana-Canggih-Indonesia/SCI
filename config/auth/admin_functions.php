@@ -61,3 +61,52 @@ function logAdminAction($admin_id, $action, $table_name = null, $record_id = nul
         handleError("SQL Error: " . $e->getMessage(), $env); // Handle SQL execution errors
     }
 }
+
+/**
+ * Validates if the current user has the admin role and enforces access restrictions.
+ * 
+ * This function performs the following actions:
+ * 1. Sets security headers to protect against common web vulnerabilities.
+ * 2. Retrieves environment-specific configuration and base URL.
+ * 3. Checks if the user is logged in by verifying the session.
+ * 4. Retrieves user information from the database using the session user ID.
+ * 5. Validates the existence of the user in the database.
+ * 6. Ensures the user has the 'admin' role; otherwise, redirects to the login page.
+ * 
+ * @return void
+ * @throws Exception If an error occurs in the local environment (for debugging purposes).
+ */
+function validateAdminRole()
+{
+    // Set security headers to prevent clickjacking, MIME type sniffing, and XSS attacks
+    header("X-Frame-Options: DENY");
+    header("X-Content-Type-Options: nosniff");
+    header("X-XSS-Protection: 1; mode=block");
+
+    // Retrieve environment-specific configuration and base URL
+    $config = getEnvironmentConfig();
+    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
+    $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
+
+    // Check if the user is logged in by verifying the session
+    if (!isset($_SESSION['user_id'])) {
+        header("Location: " . $baseUrl . "login");
+        exit();
+    }
+
+    // Retrieve user information from the database using the session user ID
+    $userInfo = getUserInfo($_SESSION['user_id'], $config, $env);
+
+    // Validate that the user exists in the database
+    if (!$userInfo) {
+        handleError("User not found in the database. Redirecting...", $env);
+        exit();
+    }
+
+    // Ensure the user has the 'admin' role; otherwise, redirect to the login page
+    if (!isset($userInfo['role']) || $userInfo['role'] !== 'admin') {
+        handleError("Unauthorized access attempt", $env);
+        header("Location: " . $baseUrl . "login");
+        exit();
+    }
+}
