@@ -60,7 +60,7 @@ setCacheHeaders($isLive); // Set header no cache saat local environment
             <div class="card fat">
                 <div class="card-body">
                     <h4 class="card-title">Form Kontak</h4>
-                    <form action="<?php echo rtrim($baseUrl, '/'); ?>/process_contact" method="POST">
+                    <form action="<?php echo rtrim($baseUrl, '/'); ?>/process_contact" method="POST" target="_blank">
                         <!-- Nama (Alias atau Nama) -->
                         <div class="mb-3">
                             <label for="form-wa-nama" class="form-label">Nama</label>
