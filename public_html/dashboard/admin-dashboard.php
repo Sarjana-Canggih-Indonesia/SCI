@@ -4,6 +4,7 @@
 // Load application configuration
 require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
+require_once __DIR__ . '/../../config/auth/admin_functions.php';
 
 startSession();
 
@@ -12,41 +13,18 @@ $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $isLive = $config['is_live'];
 $pdo = getPDOConnection($config, $env);
-// Deteksi environment
-$isLiveEnvironment = ($config['BASE_URL'] === $_ENV['LIVE_URL']);
-setCacheHeaders($isLive); // Set header no cache saat local environment
-// Set security headers.
-header("X-Frame-Options: DENY");
-header("X-Content-Type-Options: nosniff");
-header("X-XSS-Protection: 1; mode=block");
 
-// Step 1: Check if the user is logged in. If not, redirect to the login page.
-if (!isset($_SESSION['user_id'])) {
-    $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
-    header("Location: " . $baseUrl . "auth/login.php");
-    exit();
-}
+// Set header no cache in local environment
+setCacheHeaders($isLive);
 
-// Step 2: Retrieve user information from the session and database.
-$userInfo = getUserInfo($_SESSION['user_id'], $config, $env);
+// Validate if the current user has the admin role
+validateAdminRole();
+
 $profileImage = null;
-
-// Step 3: Handle cases where the user is not found in the database.
-if (!$userInfo) {
-    handleError("User not found in the database. Redirecting...", $_ENV['ENVIRONMENT']);
-    exit();
-}
 
 // Step 4: Set the user profile image. If not available, use a default image.
 $profileImage = $userInfo['image_filename'] ?? 'default_profile_image.jpg';
 $profileImageUrl = $baseUrl . "uploads/profile_images/" . $profileImage;
-
-// Restrict access to non-admin users.
-if ($userInfo['role'] !== 'admin') {
-    handleError("Access denied! Role: " . $userInfo['role'], $_ENV['ENVIRONMENT']);
-    exit();
-}
-
 ?>
 
 <!DOCTYPE html>
@@ -103,8 +81,8 @@ if ($userInfo['role'] !== 'admin') {
                                 <!-- Profile Image -->
                                 <div class="position-relative">
                                     <img src="<?php echo htmlspecialchars($profileImageUrl, ENT_QUOTES, 'UTF-8'); ?>"
-                                        alt="Profile Image" class="profile-img shadow-sm rounded-circle" data-bs-toggle="tooltip"
-                                        title="Admin Profile Picture">
+                                        alt="Profile Image" class="profile-img shadow-sm rounded-circle"
+                                        data-bs-toggle="tooltip" title="Admin Profile Picture">
                                 </div>
 
                                 <!-- User Details -->
