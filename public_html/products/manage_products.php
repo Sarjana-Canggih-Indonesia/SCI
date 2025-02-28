@@ -6,6 +6,7 @@ require_once __DIR__ . '/../../config/config.php';
 require_once __DIR__ . '/../../config/user_actions_config.php';
 require_once __DIR__ . '/../../config/products/product_functions.php';
 require_once __DIR__ . '/../../config/products/tag_functions.php';
+require_once __DIR__ . '/../../config/auth/admin_functions.php';
 
 // Step 2: Start session and generate CSRF token if it doesn't exist
 startSession();
@@ -29,6 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 // Step 11: Retrieve product categories and tags from the database.
 $pdo = getPDOConnection($config, $env);
+$activityLogs = getAdminActivityLog($pdo);
 $tags = getAllTags($pdo);
 $categories = getProductCategories($config, $env);
 $products = getAllProductsWithCategoriesAndTags($config, $env);
@@ -328,14 +330,60 @@ setCacheHeaders($isLive);
                         <div class="card-header bg-light">
                             <h5 class="mb-0">Recent Activity</h5>
                         </div>
-                        <div class="card-body">
-                            <div class="list-group">
-                                <a href="#" class="list-group-item list-group-item-action">
-                                    2025-02-01 14:30:00 - User "JohnDoe" added Product A
-                                </a>
-                                <a href="#" class="list-group-item list-group-item-action">
-                                    2025-02-01 15:00:00 - User "JohnDoe" deleted Product B
-                                </a>
+                        <!-- Recent Activity Section -->
+                        <div class="card-body p-2">
+                            <div class="list-group compact-recent-activity">
+                                <?php if (empty($activityLogs)): ?>
+                                    <div class="list-group-item text-center py-2 small text-muted">No recent activities
+                                        found</div>
+                                <?php else: ?>
+                                    <?php foreach ($activityLogs as $log):
+                                        // Define action icons
+                                        $actionIcons = [
+                                            'insert' => 'fa-circle-plus text-success',
+                                            'update' => 'fa-pen-to-square text-warning',
+                                            'delete' => 'fa-trash-can text-danger'
+                                        ];
+                                        $iconClass = $actionIcons[strtolower($log['action'])] ?? 'fa-circle-info text-primary';
+                                        ?>
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                            <div class="row align-items-center g-1">
+                                                <!-- Kolom Waktu -->
+                                                <div class="col-2 text-nowrap">
+                                                    <small class="text-muted">
+                                                        <?= date('H:i', strtotime($log['created_at'])) ?>
+                                                    </small>
+                                                </div>
+
+                                                <!-- Kolom Konten -->
+                                                <div class="col-10">
+                                                    <div class="d-flex align-items-center">
+                                                        <!-- Ikon -->
+                                                        <span class="me-2">
+                                                            <i class="fas <?= $iconClass ?> fa-fw"></i>
+                                                        </span>
+
+                                                        <!-- User dan Action -->
+                                                        <div class="flex-grow-1">
+                                                            <span class="badge bg-secondary bg-opacity-25 text-dark me-2">
+                                                                <?= htmlspecialchars($log['username']) ?>
+                                                            </span>
+                                                            <span class="text-capitalize text-primary">
+                                                                <?= htmlspecialchars($log['action']) ?>
+                                                            </span>
+
+                                                            <?php if (!empty($log['details'])): ?>
+                                                                <div class="text-muted mt-1 small">
+                                                                    <?= htmlspecialchars($log['details']) ?>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </a>
+                                    <?php endforeach; ?>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>
