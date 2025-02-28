@@ -15,32 +15,8 @@ $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $isLive = $config['is_live'];
 $env = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'local' : 'live';
 
-// Step 4: Set security headers
-header("X-Frame-Options: DENY");
-header("X-Content-Type-Options: nosniff");
-header("X-XSS-Protection: 1; mode=block");
-
-// Step 5: Check if the user is logged in. If not, redirect to the login page.
-if (!isset($_SESSION['user_id'])) {
-    header("Location: " . $baseUrl . "login");
-    exit();
-}
-
-// Step 6: Retrieve user information from the session and database.
-$userInfo = getUserInfo($_SESSION['user_id'], $config, $env);
-
-// Step 7: Handle cases where the user is not found in the database.
-if (!$userInfo) {
-    handleError("User not found in the database. Redirecting...", $_ENV['ENVIRONMENT']);
-    exit();
-}
-
-// Step 8: Check if the user is an admin. If not, redirect to the login page.
-if (!isset($userInfo['role']) || $userInfo['role'] !== 'admin') {
-    handleError("Unauthorized access attempt", $_ENV['ENVIRONMENT']);
-    header("Location: " . $baseUrl . "login");
-    exit();
-}
+// Step 4: Validate if the current user has the admin role
+validateAdminRole();
 
 // Step 9: Set the user profile image. If not available, use a default image.
 $profileImage = $userInfo['image_filename'] ?? 'default_profile_image.jpg';
