@@ -302,31 +302,32 @@ if (isset($_SESSION['flash_message'])) {
                         <?php
                         if ($result->num_rows > 0) {
                             while ($row = $result->fetch_assoc()) {
-                                echo "<tr>
-                <td>{$row['user_id']}</td>
-                <td>{$row['username']}</td>
-                <td>{$row['email']}</td>
-                <td>
-                    <form action='" . $baseUrl . "change-role' method='POST' style='display:inline;'>
-                        <input type='hidden' name='user_id' value='{$row['user_id']}'>
-                        <select name='new_role' onchange='this.form.submit()'>
-                            <option value='admin' " . ($row['role'] === 'admin' ? 'selected' : '') . ">Admin</option>
-                            <option value='customer' " . ($row['role'] === 'customer' ? 'selected' : '') . ">Customer</option>
-                        </select>
-                    </form>
-                </td>
-                <td>";
+                                echo
+                                    "<tr>
+                                        <td>{$row['user_id']}</td>
+                                        <td>{$row['username']}</td>
+                                        <td>{$row['email']}</td>
+                                        <td>
+                                            <form action='" . $baseUrl . "change-role' method='POST' style='display:inline;'>
+                                                <input type='hidden' name='user_id' value='{$row['user_id']}'>
+                                                    <select name='new_role' onchange='this.form.submit()'>
+                                                        <option value='admin' " . ($row['role'] === 'admin' ? 'selected' : '') . ">Admin</option>
+                                                        <option value='customer' " . ($row['role'] === 'customer' ? 'selected' : '') . ">Customer</option>
+                                                    </select>
+                                            </form>
+                                        </td>
+                                    <td>";
                                 // Logika untuk menampilkan status
                                 if ($row['isactive'] == 0) {
                                     echo "<a href='?resend_email=" . urlencode($row['email']) . "'>Inactive</a>";
                                 } else {
                                     echo "Active";
                                 }
-                                echo "</td>
-                <td class='action-buttons'>
-                    <button onclick='confirmDelete({$row['user_id']})'>Delete</button>
-                </td>
-            </tr>";
+                                echo "</td>                                
+                                    <td class='action-buttons'>
+                                        <button onclick='confirmDelete({$row['user_id']})'>Delete</button>
+                                    </td>
+                                </tr>";
                             }
                         } else {
                             echo "<tr><td colspan='6'>Tidak ada data user.</td></tr>";
