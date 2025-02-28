@@ -303,7 +303,6 @@ function getProductBySlugAndOptimus($slug, $encodedId, $config, $env)
     }
 }
 
-
 /**
  * Adds a new product to the database.
  *
