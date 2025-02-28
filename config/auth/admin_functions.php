@@ -110,3 +110,35 @@ function validateAdminRole()
         exit();
     }
 }
+
+/**
+ * Retrieves the latest 5 admin activity logs from the database.
+ *
+ * This function fetches the latest records from the `admin_activity_log` table, 
+ * joining with the `users` table to get the username of the admin associated 
+ * with each activity. The query uses an index (`idx_created_at`) for optimized 
+ * performance and orders results by `created_at` in descending order.
+ *
+ * @param PDO $pdo The PDO database connection instance.
+ * @return array An array of activity logs containing admin activity details 
+ *               along with the associated username.
+ */
+function getAdminActivityLog($pdo)
+{
+    $sql = "SELECT a.*, u.username FROM admin_activity_log a USE INDEX (idx_created_at) JOIN users u ON a.admin_id = u.user_id ORDER BY a.created_at DESC LIMIT 5";
+    try {
+        $stmt = $pdo->query($sql); // Execute the query  
+        if (!$stmt) { // Check if the query execution failed
+            $errorInfo = $pdo->errorInfo();
+            error_log("[Admin Activity Log] Query failed! Code: " . $errorInfo[1] . " | Error: " . $errorInfo[2]);
+            return [];
+        }
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return results
+    } catch (PDOException $e) { // Catch database-related errors
+        error_log(sprintf("[Admin Activity Log] Critical DB Error: %s | Code: %d | Trace: %s", $e->getMessage(), $e->getCode(), json_encode($e->getTrace())));
+        return [];
+    } catch (Throwable $t) { // Catch unexpected errors
+        error_log("[Admin Activity Log] Unexpected error: " . $t->getMessage());
+        return [];
+    }
+}
