@@ -387,7 +387,11 @@ function addProduct($data, $config, $env)
         }
 
         $pdo->commit();
-        return ['error' => false, 'message' => 'Product successfully added.'];
+        return [
+            'error' => false,
+            'message' => 'Product successfully added.',
+            'product_id' => $product_id
+        ];
 
     } catch (Exception $e) {
         // Delete uploaded images if an error occurs
@@ -456,6 +460,7 @@ function handleAddProductForm($config, $env)
 
             // Add product to the database
             $result = addProduct($productData, $config, $env);
+
             if ($result['error']) {
                 // Delete uploaded images if product addition fails
                 foreach ($productData['images'] as $imagePath) {
@@ -465,6 +470,17 @@ function handleAddProductForm($config, $env)
                 }
                 throw new Exception($result['message']);
             }
+
+            // Log admin activity after successful addition
+            logAdminAction(
+                $_SESSION['user_id'],        // Admin ID from session
+                'add_product',               // Action type
+                'products',                  // Affected table
+                $result['product_id'],       // New product ID
+                "Added new product: " . $productData['name'], // Details
+                $config,
+                $env
+            );
 
             // Store success message and reset form input
             $_SESSION['success_message'] = 'Produk berhasil ditambahkan!';
