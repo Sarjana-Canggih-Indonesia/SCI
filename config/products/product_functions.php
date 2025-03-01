@@ -365,6 +365,45 @@ function getTotalProductsByCategory($config, $env, $categoryId = null)
 }
 
 /**
+ * Retrieves the total number of products based on a search keyword and category.
+ *
+ * This function connects to the database using `getPDOConnection()`, executes a query 
+ * to count the total number of products matching a given keyword and category, and returns the result. 
+ * If an error occurs, it logs the error and returns 0.
+ *
+ * @param array $config Database configuration settings.
+ * @param string $env Environment settings used for error handling.
+ * @param string $keyword The search keyword for filtering products.
+ * @param int|null $categoryId Optional category ID. If null, counts all products matching the keyword.
+ * @return int The total number of products matching the keyword and category or 0 if an error occurs.
+ */
+function getTotalProductsByKeywordAndCategory($config, $env, $keyword, $categoryId = null)
+{
+    try {
+        $pdo = getPDOConnection($config, $env); // Establish a database connection
+
+        // SQL query to count distinct products matching the keyword and category
+        $sql = "SELECT COUNT(DISTINCT p.product_id) AS total
+                FROM products p
+                LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id
+                LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id
+                LEFT JOIN product_images pi ON p.product_id = pi.product_id
+                WHERE p.product_name LIKE :keyword
+                AND (:category_id IS NULL OR pc.category_id = :category_id)";
+
+        $stmt = $pdo->prepare($sql); // Prepare the query
+        $searchKeyword = "%{$keyword}%"; // Add wildcard for partial matching
+        $stmt->bindParam(':keyword', $searchKeyword, PDO::PARAM_STR); // Bind keyword parameter
+        $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT); // Bind category ID parameter
+        $stmt->execute(); // Execute the query
+        return (int) $stmt->fetchColumn(); // Retrieve and return the total count
+    } catch (Exception $e) {
+        handleError($e->getMessage(), $env); // Log the error message
+        return 0; // Return 0 if an error occurs
+    }
+}
+
+/**
  * Retrieves the total number of products based on a search keyword.
  *
  * This function connects to the database using `getPDOConnection()`, executes a query 
