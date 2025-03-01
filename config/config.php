@@ -376,3 +376,26 @@ function processFlashMessagesAndHeaders($isLive)
     updateCacheHeadersOnRedirect($flash['forceNoCache'], $isLive);
     return $flash;
 }
+
+/**
+ * Configures and sends HTTP response headers for API requests.
+ *
+ * This function sets the appropriate headers for API responses, including
+ * content type, CORS (Cross-Origin Resource Sharing) policies, and allowed 
+ * HTTP methods and headers.
+ *
+ * @param string $contentType The content type of the response. Defaults to 'application/json'.
+ * @return void
+ */
+function configureApiHeaders($contentType = 'application/json')
+{
+    header("Content-Type: $contentType"); // Set the Content-Type header for the API response
+
+    // Determine the allowed origin based on the environment (local or production)
+    $allowedOrigin = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'http://localhost/SCI/' : 'https://sarjanacanggihindonesia.com';
+
+    header("Access-Control-Allow-Origin: $allowedOrigin"); // Set allowed origin for CORS
+    header("Access-Control-Allow-Credentials: true"); // Allow credentials (cookies, authentication headers)
+    header("Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS"); // Specify allowed HTTP methods
+    header("Access-Control-Allow-Headers: Content-Type, Authorization, X-CSRF-TOKEN"); // Specify allowed request headers
+}
