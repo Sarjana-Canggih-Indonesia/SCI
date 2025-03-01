@@ -306,21 +306,27 @@ function getProductBySlugAndOptimus($slug, $encodedId, $config, $env)
 /**
  * Retrieves the total number of products in the database.
  *
- * This function connects to the database using `getPDOConnection()`, 
- * executes a query to count the total number of products in the `products` table, 
- * and returns the result. If an error occurs, it logs the error and returns 0.
+ * This function connects to the database using `getPDOConnection()`, prepares a query 
+ * to count the total number of products, executes the query, and returns the result. 
+ * If an error occurs, it logs the error and returns 0.
  *
  * @param array $config Database configuration settings.
  * @param string $env Environment settings used for error handling.
- * @return int The total number of products. Returns 0 if an error occurs.
+ * @return int The total number of products or 0 if an error occurs.
  */
-function getTotalProducts($config, $env) {
+function getTotalProducts($config, $env)
+{
     try {
         $pdo = getPDOConnection($config, $env); // Establish a database connection
-        $stmt = $pdo->query("SELECT COUNT(*) FROM products"); // Execute a query to count total products
-        return $stmt->fetchColumn(); // Retrieve and return the total count of products
+
+        // SQL query to count the total number of products
+        $sql = "SELECT COUNT(*) AS total FROM products";
+
+        $stmt = $pdo->prepare($sql); // Prepare the query
+        $stmt->execute(); // Execute the query
+        return (int) $stmt->fetchColumn(); // Retrieve and return the total count
     } catch (Exception $e) {
-        handleError($e->getMessage(), $env); // Log error message
+        handleError($e->getMessage(), $env); // Log the error message
         return 0; // Return 0 if an error occurs
     }
 }
