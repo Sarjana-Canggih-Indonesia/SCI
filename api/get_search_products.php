@@ -3,13 +3,16 @@
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/products/product_functions.php';
+require_once __DIR__ . '/../config/auth/validate.php';
 
-header('Content-Type: application/json');
-$allowedOrigin = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'http://localhost/SCI/' : 'https://sarjanacanggihindonesia.com';
-header("Access-Control-Allow-Origin: $allowedOrigin");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: GET");
-header("Access-Control-Allow-Headers: Content-Type");
+// Start session
+startSession();
+
+// Verifies the HTTP request method and ensures it matches the allowed method
+verifyHttpMethod('GET');
+
+// Set response headers for JSON output and CORS policy
+configureApiHeaders();
 
 // Validate the presence of a search keyword
 if (!isset($_GET['keyword'])) {
@@ -18,13 +21,17 @@ if (!isset($_GET['keyword'])) {
 }
 
 $keyword = '%' . $_GET['keyword'] . '%';
+$categoryId = isset($_GET['category_id']) ? (int) $_GET['category_id'] : null;
+$page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+$limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+$offset = ($page - 1) * $limit;
 
 try {
     // Establish a database connection
     $pdo = getPDOConnection($config, $env);
 
     // Prepare the SQL query with adjustments for the updated database structure
-    $stmt = $pdo->prepare("
+    $sql = "
         SELECT 
             p.product_id, 
             p.product_name, 
@@ -42,12 +49,16 @@ try {
         LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id
         LEFT JOIN product_images pi ON p.product_id = pi.product_id
         WHERE p.product_name LIKE :keyword
+        AND (:category_id IS NULL OR pc.category_id = :category_id)
         GROUP BY p.product_id
-    ");
+        LIMIT :limit OFFSET :offset
+    ";
 
-    // Bind the search parameter with wildcards for partial matching
-    $searchKeyword = "%$keyword%";
-    $stmt->bindParam(':keyword', $searchKeyword, PDO::PARAM_STR);
+    $stmt = $pdo->prepare($sql);
+    $stmt->bindParam(':keyword', $keyword, PDO::PARAM_STR);
+    $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
+    $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
     $stmt->execute();
 
     // Fetch the data and process images
@@ -59,10 +70,20 @@ try {
     }
     unset($product); // Remove reference
 
+    // Hitung total produk untuk pagination
+    $totalProducts = getTotalProductsByKeywordAndCategory($config, $env, $keyword, $categoryId);
+    $totalPages = ceil($totalProducts / $limit);
+
     // Return the results as JSON
     echo json_encode([
         "success" => true,
-        "products" => $products
+        "products" => $products,
+        "pagination" => [
+            "total_products" => $totalProducts,
+            "total_pages" => $totalPages,
+            "current_page" => $page,
+            "limit" => $limit,
+        ],
     ]);
 
 } catch (PDOException $e) {
