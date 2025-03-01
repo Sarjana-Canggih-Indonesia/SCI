@@ -1,9 +1,9 @@
 <?php
 // get_all_products.php
 
-// Include necessary configuration and product functions
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/products/product_functions.php';
+require_once __DIR__ . '/../config/auth/validate.php';
 
 // Start session
 startSession();
