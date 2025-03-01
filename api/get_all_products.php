@@ -14,8 +14,17 @@ header("Access-Control-Allow-Methods: GET");
 header("Access-Control-Allow-Headers: Content-Type");
 
 try {
+    // Ambil parameter pagination
+    $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+    $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+    $offset = ($page - 1) * $limit;
+
     // Fetch all products along with their categories and tags
-    $products = getAllProductsWithCategoriesAndTags($config, $env);
+    $products = getAllProductsWithCategoriesAndTags($config, $env, $limit, $offset);
+
+    // Hitung total produk untuk pagination
+    $totalProducts = getTotalProducts($config, $env);
+    $totalPages = ceil($totalProducts / $limit);
 
     // Check if an error occurred while fetching data
     if (isset($products['error']) && $products['error']) {
@@ -23,7 +32,16 @@ try {
         echo json_encode(['success' => false, 'message' => $products['message']]);
     } else {
         // Return the product data in JSON format
-        echo json_encode(['success' => true, 'products' => $products]);
+        echo json_encode([
+            'success' => true,
+            'products' => $products,
+            'pagination' => [
+                'total_products' => $totalProducts,
+                'total_pages' => $totalPages,
+                'current_page' => $page,
+                'limit' => $limit,
+            ],
+        ]);
     }
 } catch (Exception $e) {
     // Handle exceptions and return a server error response
