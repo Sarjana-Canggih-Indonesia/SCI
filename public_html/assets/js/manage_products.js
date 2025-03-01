@@ -70,12 +70,82 @@ function debounce(func, delay) {
     timer = setTimeout(() => func.apply(this, args), delay);
   };
 }
+// ==================== Akhir Global Helper Functions ==================== //
 
-function editProduct(slug, optimusId) {
-  window.open(`${BASE_URL}edit-product/${slug}/${optimusId}`, "_blank");
+// ==================== JS untuk Pagination ==================== //
+async function fetchProducts(page = 1, limit = 10, keyword = "", categoryId = "") {
+  try {
+    let url = `${BASE_URL}api-proxy.php?action=get_all_products&page=${page}&limit=${limit}`;
+    if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+    if (categoryId) url += `&category_id=${categoryId}`;
+
+    const response = await fetch(url, { credentials: "include" });
+    const data = await handleResponse(response);
+
+    if (data.success) {
+      updateTable(data.products);
+      updatePagination(data.pagination);
+    } else {
+      throw new Error(data.message);
+    }
+  } catch (error) {
+    showNotification(`Failed to load data: ${error.message}`, "error");
+  }
 }
 
-// ==================== Akhir Global Helper Functions ==================== //
+function updatePagination(pagination) {
+  const paginationContainer = document.querySelector(".pagination");
+  if (!paginationContainer) return;
+
+  const { total_pages, current_page } = pagination;
+  let paginationHTML = "";
+
+  // Tombol Previous
+  if (current_page > 1) {
+    paginationHTML += `
+      <li class="page-item">
+          <a class="page-link" href="#" data-page="${current_page - 1}">Previous</a>
+      </li>`;
+  } else {
+    paginationHTML += `
+      <li class="page-item disabled">
+          <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Previous</a>
+      </li>`;
+  }
+
+  // Tombol Halaman
+  for (let i = 1; i <= total_pages; i++) {
+    paginationHTML += `
+          <li class="page-item ${i === current_page ? "active" : ""}">
+              <a class="page-link" href="#" data-page="${i}">${i}</a>
+          </li>`;
+  }
+
+  // Tombol Next
+  if (current_page < total_pages) {
+    paginationHTML += `
+      <li class="page-item">
+          <a class="page-link" href="#" data-page="${current_page + 1}">Next</a>
+      </li>`;
+  } else {
+    paginationHTML += `
+      <li class="page-item disabled">
+          <a class="page-link" href="#" tabindex="-1" aria-disabled="true">Next</a>
+      </li>`;
+  }
+
+  paginationContainer.innerHTML = paginationHTML;
+
+  // Tambahkan event listener untuk tombol pagination
+  paginationContainer.querySelectorAll(".page-link").forEach((link) => {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      const page = e.target.getAttribute("data-page");
+      fetchProducts(page);
+    });
+  });
+}
+// ==================== Akhir JS untuk Pagination ==================== //
 
 // ==================== JS untuk Checkboxes dan Delete Selected ==================== //
 /**
@@ -127,31 +197,32 @@ async function deleteSelectedProducts() {
 /**
  * Updates the product table with the provided data.
  */
-function updateTable(products) {
+function updateTable(products, currentPage = 1, limit = 10) {
   const tbody = document.getElementById("productsTableBody");
   tbody.innerHTML = "";
 
   products.forEach((product, index) => {
     const row = document.createElement("tr");
+    const rowNumber = (currentPage - 1) * limit + index + 1; // Hitung nomor urut berdasarkan halaman
     row.innerHTML = `
-      <td>
-        <input type="checkbox" name="selected_products[]" 
-               value="${escapeHtml(product.product_id)}" 
-               class="product-checkbox">
-        ${index + 1}
-      </td>
-      <td>${escapeHtml(product.product_name)}</td>
-      <td>${escapeHtml(product.categories || "Uncategorized")}</td>
-      <td>Rp ${formatPrice(product.price_amount)}</td>
-      <td>
-        <button class="btn btn-info btn-sm" onclick="viewDetails(${escapeHtml(product.product_id)})">
-          <i class="fas fa-eye"></i> View Details
-        </button>
-        <button class="btn btn-warning btn-sm" onclick="editProduct(${escapeHtml(product.product_id)})">
-          <i class="fas fa-edit"></i> Edit
-        </button>
-      </td>
-    `;
+          <td>
+              <input type="checkbox" name="selected_products[]" 
+                     value="${escapeHtml(product.product_id)}" 
+                     class="product-checkbox">
+              ${rowNumber}
+          </td>
+          <td>${escapeHtml(product.product_name)}</td>
+          <td>${escapeHtml(product.categories || "Uncategorized")}</td>
+          <td>Rp ${formatPrice(product.price_amount)}</td>
+          <td>
+              <button class="btn btn-info btn-sm" onclick="viewDetails(${escapeHtml(product.product_id)})">
+                  <i class="fas fa-eye"></i> View Details
+              </button>
+              <button class="btn btn-warning btn-sm" onclick="editProduct(${escapeHtml(product.product_id)})">
+                  <i class="fas fa-edit"></i> Edit
+              </button>
+          </td>
+      `;
     tbody.appendChild(row);
   });
 
@@ -328,6 +399,9 @@ function viewDetails(productId) {
 
 // ==================== Event Listeners dan Inisialisasi ==================== //
 document.addEventListener("DOMContentLoaded", () => {
+  // Ambil halaman pertama saat halaman dimuat
+  fetchProducts(1);
+
   // Event delegation untuk checkbox
   document.getElementById("productsTableBody")?.addEventListener("change", (e) => {
     if (e.target.classList.contains("product-checkbox")) {
@@ -351,14 +425,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Filter Category
   document.getElementById("categoryFilter")?.addEventListener("change", (e) => {
-    filterProductsByCategory(e.target.value || null);
+    const categoryId = e.target.value || null;
+    fetchProducts(1, 10, "", categoryId); // Ambil halaman pertama dengan filter kategori
   });
 
   // Search Bar
   const searchInput = document.getElementById("searchInput");
   const debouncedSearch = debounce(() => {
     const keyword = searchInput.value.trim();
-    keyword ? searchProducts(keyword) : filterProductsByCategory(null);
+    fetchProducts(1, 10, keyword); // Ambil halaman pertama dengan keyword pencarian
   }, 300);
 
   searchInput?.addEventListener("input", debouncedSearch);
@@ -378,3 +453,4 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 });
+// ==================== Akhir Event Listeners dan Inisialisasi ==================== //
