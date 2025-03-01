@@ -375,3 +375,24 @@ function validateUserRole($role, PDO $pdo, string $env)
 
     return true;
 }
+
+/**
+ * Verifies the HTTP request method and ensures it matches the allowed method.
+ *
+ * This function checks the request method used in the HTTP request. If it does not match
+ * the expected method, it sends an HTTP 405 (Method Not Allowed) response, returns a JSON-encoded
+ * error message, and terminates script execution.
+ *
+ * @param string $allowedMethod The HTTP method that is allowed (e.g., 'GET', 'POST').
+ */
+function verifyHttpMethod($allowedMethod)
+{
+    if ($_SERVER['REQUEST_METHOD'] !== $allowedMethod) {
+        http_response_code(405); // Set HTTP response status to 405 Method Not Allowed
+        echo json_encode([
+            'success' => false,
+            'message' => "Only $allowedMethod requests are allowed." // Inform the client of the allowed HTTP method
+        ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE); // Prevent escaping of slashes and Unicode characters
+        exit(); // Stop script execution to prevent further processing
+    }
+}
