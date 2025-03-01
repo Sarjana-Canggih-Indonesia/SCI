@@ -304,7 +304,6 @@ setCacheHeaders($isLive);
             <div class="mb-4 d-flex">
                 <button class="me-1 btn btn-secondary" id="manage_products-selectAllButton"><i
                         class="fas fa-check-circle"></i> Select All</button>
-                <button class="mx-1 btn btn-warning btn-sm"><i class="fas fa-pencil-alt"></i> Quick Edit</button>
                 <button class="mx-1 btn btn-danger d-none" id="deleteSelectedBtn" data-bs-toggle="modal"
                     data-bs-target="#deleteSelectedModal"><i class="fas fa-trash"></i> Delete Selected
                 </button>
