@@ -331,6 +331,38 @@ function getTotalProducts($config, $env)
     }
 }
 
+/**
+ * Retrieves the total number of products based on a specific category.
+ *
+ * This function connects to the database using `getPDOConnection()`, executes a query 
+ * to count the total number of products within a given category, and returns the result. 
+ * If an error occurs, it logs the error and returns 0.
+ *
+ * @param array $config Database configuration settings.
+ * @param string $env Environment settings used for error handling.
+ * @param int|null $categoryId Optional category ID. If null, counts all products.
+ * @return int The total number of products in the specified category or 0 if an error occurs.
+ */
+function getTotalProductsByCategory($config, $env, $categoryId = null)
+{
+    try {
+        $pdo = getPDOConnection($config, $env); // Establish a database connection
+
+        // SQL query to count distinct products within the specified category
+        $sql = "SELECT COUNT(DISTINCT p.product_id) AS total FROM products p 
+                LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id 
+                LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id 
+                WHERE (:category_id IS NULL OR pc.category_id = :category_id)";
+
+        $stmt = $pdo->prepare($sql); // Prepare the query
+        $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT); // Bind category ID parameter
+        $stmt->execute(); // Execute the query
+        return (int) $stmt->fetchColumn(); // Retrieve and return the total count
+    } catch (Exception $e) {
+        handleError($e->getMessage(), $env); // Log the error message
+        return 0; // Return 0 if an error occurs
+    }
+}
 
 /**
  * Adds a new product to the database.
