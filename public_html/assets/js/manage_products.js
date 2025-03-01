@@ -141,8 +141,9 @@ function updatePagination(pagination) {
     link.addEventListener("click", (e) => {
       e.preventDefault();
       const page = e.target.getAttribute("data-page");
+      const keyword = document.getElementById("searchInput").value.trim();
       const categoryId = document.getElementById("categoryFilter").value || null;
-      filterProductsByCategory(categoryId, page);
+      searchProducts(keyword, page, 10, categoryId); // Ambil halaman yang dipilih dengan keyword dan filter kategori
     });
   });
 }
@@ -252,15 +253,22 @@ async function filterProductsByCategory(categoryId, page = 1, limit = 10) {
 }
 
 /**
- * Fetches and updates products based on a search keyword.
+ * Fetches and updates products based on a search keyword and category filter.
  */
-async function searchProducts(keyword) {
+async function searchProducts(keyword, page = 1, limit = 10, categoryId = null) {
   try {
-    const url = `${BASE_URL}api-proxy.php?action=get_search_products&keyword=${encodeURIComponent(keyword)}`;
+    let url = `${BASE_URL}api-proxy.php?action=get_search_products&keyword=${encodeURIComponent(
+      keyword,
+    )}&page=${page}&limit=${limit}`;
+    if (categoryId) {
+      url += `&category_id=${categoryId}`;
+    }
+
     const response = await fetch(url, { credentials: "include" });
     const data = await handleResponse(response);
     if (data.success) {
-      updateTable(data.products);
+      updateTable(data.products, page, limit);
+      updatePagination(data.pagination);
     } else {
       throw new Error(data.message);
     }
@@ -428,14 +436,16 @@ document.addEventListener("DOMContentLoaded", () => {
   // Filter Category
   document.getElementById("categoryFilter")?.addEventListener("change", (e) => {
     const categoryId = e.target.value || null;
-    filterProductsByCategory(categoryId, 1, 10);
+    const keyword = document.getElementById("searchInput").value.trim();
+    searchProducts(keyword, 1, 10, categoryId); // Ambil halaman pertama dengan keyword dan filter kategori
   });
 
   // Search Bar
   const searchInput = document.getElementById("searchInput");
   const debouncedSearch = debounce(() => {
     const keyword = searchInput.value.trim();
-    fetchProducts(1, 10, keyword); // Ambil halaman pertama dengan keyword pencarian
+    const categoryId = document.getElementById("categoryFilter").value || null;
+    searchProducts(keyword, 1, 10, categoryId);
   }, 300);
 
   searchInput?.addEventListener("input", debouncedSearch);
