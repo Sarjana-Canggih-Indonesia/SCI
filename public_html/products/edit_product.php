@@ -42,54 +42,30 @@ $config = getEnvironmentConfig();
 $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 $isLive = $config['is_live'];
 
-// Step 4: Set security headers
-header("X-Frame-Options: DENY");
-header("X-Content-Type-Options: nosniff");
-header("X-XSS-Protection: 1; mode=block");
+// Step 4: Validates if the current user has the admin role and enforces access restrictions.
+validateAdminRole();
 
-// Step 5: Check if the user is logged in. If not, redirect to the login page.
-if (!isset($_SESSION['user_id'])) {
-    header("Location: " . $baseUrl . "login");
-    exit();
-}
-
-// Step 6: Retrieve user information from the session and database.
-$userInfo = getUserInfo($_SESSION['user_id'], $config, $env);
-
-// Step 7: Handle cases where the user is not found in the database.
-if (!$userInfo) {
-    handleError("User not found in the database. Redirecting...", $_ENV['ENVIRONMENT']);
-    exit();
-}
-
-// Check if the user is logged in and has admin privileges
-if (!isset($userInfo['role']) || $userInfo['role'] !== 'admin') {
-    handleError("Unauthorized access attempt", $_ENV['ENVIRONMENT']);
-    header("Location: " . $baseUrl . "login");
-    exit();
-}
-
-// Step 9: Set the user profile image. If not available, use a default image.
+// Step 5: Set the user profile image. If not available, use a default image.
 $profileImage = $userInfo['image_filename'] ?? 'default_profile_image.jpg';
 $profileImageUrl = $baseUrl . "uploads/profile_images/" . $profileImage;
 
-// Step 10: Handle the add product form submission ONLY if the request method is POST.
+// Step 6: Handle the add product form submission ONLY if the request method is POST.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     handleAddProductForm($config, $env);
 }
 
-// Step 11: Retrieve product categories and tags from the database.
+// Step 8: Retrieve product categories and tags from the database.
 $pdo = getPDOConnection($config, $env);
 $tags = getAllTags($pdo);
 $categories = getProductCategories($config, $env);
 $products = getAllProductsWithCategoriesAndTags($config, $env);
 
-// Step 12: Handle success/error messages and update cache headers
+// Step 9: Handle success/error messages and update cache headers
 $flash = processFlashMessagesAndHeaders($isLive);
 $successMessage = $flash['success'];
 $errorMessage = $flash['error'];
 
-// Step 13: Set no-cache headers in the local environment.
+// Step 10: Set no-cache headers in the local environment.
 setCacheHeaders($isLive);
 ?>
 
@@ -137,17 +113,17 @@ setCacheHeaders($isLive);
     <!--========== AREA GENERIC FLASH MESSAGES ==========-->
     <div class="jarak-kustom container">
         <?php if ($successMessage): ?>
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <?= htmlspecialchars($successMessage) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <?= htmlspecialchars($successMessage) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         <?php endif; ?>
 
         <?php if ($errorMessage): ?>
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <?= htmlspecialchars($errorMessage) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <?= htmlspecialchars($errorMessage) ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
         <?php endif; ?>
     </div>
     <!--========== AKHIR AREA GENERIC FLASH MESSAGES ==========-->
@@ -200,8 +176,8 @@ setCacheHeaders($isLive);
                                 foreach ($tags as $tag):
                                     if (trim($tag)):
                                         ?>
-                                                <span class="badge bg-secondary"><?= htmlspecialchars(trim($tag)) ?></span>
-                                                <?php
+                                        <span class="badge bg-secondary"><?= htmlspecialchars(trim($tag)) ?></span>
+                                        <?php
                                     endif;
                                 endforeach;
                                 ?>
@@ -256,9 +232,9 @@ setCacheHeaders($isLive);
                                     foreach ($categories as $category):
                                         $isSelected = in_array($category['category_id'], $currentCategoryIds);
                                         ?>
-                                            <option value="<?= $category['category_id'] ?>" <?= $isSelected ? 'selected' : '' ?>>
-                                                <?= htmlspecialchars($category['category_name']) ?>
-                                            </option>
+                                        <option value="<?= $category['category_id'] ?>" <?= $isSelected ? 'selected' : '' ?>>
+                                            <?= htmlspecialchars($category['category_name']) ?>
+                                        </option>
                                     <?php endforeach; ?>
                                 </select>
                             </div>
