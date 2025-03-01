@@ -311,15 +311,9 @@ setCacheHeaders($isLive);
                 <button class="mx-1 btn btn-success"><i class="fas fa-download"></i> Export Data</button>
             </div>
 
-            <!-- Pagination with Product Count -->
+            <!-- Pagination untuk Tabel Produk -->
             <nav aria-label="Page navigation" class="mt-4">
-                <ul class="pagination justify-content-center">
-                    <li class="page-item"><a class="page-link" href="#">Previous</a></li>
-                    <li class="page-item"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item"><a class="page-link" href="#">2</a></li>
-                    <li class="page-item"><a class="page-link" href="#">3</a></li>
-                    <li class="page-item"><a class="page-link" href="#">Next</a></li>
-                </ul>
+                <ul class="pagination justify-content-center"></ul>
             </nav>
 
             <!-- Price History and Recent Activity Section (in 1 row) -->
