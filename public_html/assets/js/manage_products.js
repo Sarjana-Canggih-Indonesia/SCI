@@ -70,6 +70,15 @@ function debounce(func, delay) {
     timer = setTimeout(() => func.apply(this, args), delay);
   };
 }
+
+/**
+ * Opens the product edit page in a new tab.
+ * @param {*} slug
+ * @param {*} optimusId
+ */
+function editProduct(slug, optimusId) {
+  window.open(`${BASE_URL}edit-product/${slug}/${optimusId}`, "_blank");
+}
 // ==================== Akhir Global Helper Functions ==================== //
 
 // ==================== JS untuk Pagination ==================== //
