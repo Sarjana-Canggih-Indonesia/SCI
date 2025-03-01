@@ -5,13 +5,14 @@
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/products/product_functions.php';
 
+// Start session
+startSession();
+
+// Verifies the HTTP request method and ensures it matches the allowed method
+verifyHttpMethod('GET');
+
 // Set response headers for JSON output and CORS policy
-header('Content-Type: application/json');
-$allowedOrigin = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'http://localhost/SCI/' : 'https://sarjanacanggihindonesia.com';
-header("Access-Control-Allow-Origin: $allowedOrigin");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: GET");
-header("Access-Control-Allow-Headers: Content-Type");
+configureApiHeaders();
 
 try {
     // Ambil parameter pagination
