@@ -141,7 +141,8 @@ function updatePagination(pagination) {
     link.addEventListener("click", (e) => {
       e.preventDefault();
       const page = e.target.getAttribute("data-page");
-      fetchProducts(page);
+      const categoryId = document.getElementById("categoryFilter").value || null;
+      filterProductsByCategory(categoryId, page);
     });
   });
 }
@@ -203,7 +204,7 @@ function updateTable(products, currentPage = 1, limit = 10) {
 
   products.forEach((product, index) => {
     const row = document.createElement("tr");
-    const rowNumber = (currentPage - 1) * limit + index + 1; // Hitung nomor urut berdasarkan halaman
+    const rowNumber = (currentPage - 1) * limit + index + 1;
     row.innerHTML = `
           <td>
               <input type="checkbox" name="selected_products[]" 
@@ -232,15 +233,16 @@ function updateTable(products, currentPage = 1, limit = 10) {
 /**
  * Fetches and updates products based on a category filter.
  */
-async function filterProductsByCategory(categoryId) {
+async function filterProductsByCategory(categoryId, page = 1, limit = 10) {
   try {
     const url = `${BASE_URL}api-proxy.php?action=get_products_by_category${
       categoryId ? `&category_id=${categoryId}` : ""
-    }`;
+    }&page=${page}&limit=${limit}`;
     const response = await fetch(url, { credentials: "include" });
     const data = await handleResponse(response);
     if (data.success) {
-      updateTable(data.products);
+      updateTable(data.products, page, limit);
+      updatePagination(data.pagination);
     } else {
       throw new Error(data.message);
     }
@@ -426,7 +428,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Filter Category
   document.getElementById("categoryFilter")?.addEventListener("change", (e) => {
     const categoryId = e.target.value || null;
-    fetchProducts(1, 10, "", categoryId); // Ambil halaman pertama dengan filter kategori
+    filterProductsByCategory(categoryId, 1, 10);
   });
 
   // Search Bar
