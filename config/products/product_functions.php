@@ -164,19 +164,23 @@ function getProductCategories($config, $env)
 }
 
 /**
- * Retrieves all products with their associated categories, tags, and images.
+ * Retrieves a list of products along with their associated categories, tags, and images.
  *
- * This function performs a database query to fetch all products along with:
- * - Their associated images (concatenated as a string).
- * - Their associated categories (concatenated as a string).
- * - Their associated tags (concatenated as a string).
+ * This function fetches product data from the database, including:
+ * - Product details (ID, name, slug, description, price, currency, timestamps)
+ * - Associated images as a concatenated string
+ * - Associated categories as a concatenated string
+ * - Associated tags as a concatenated string
  * 
- * The data is retrieved using LEFT JOINs to ensure products without images, categories, or tags are still included.
- * The results are grouped by product ID to avoid duplicate entries.
+ * The function supports pagination using the provided limit and offset parameters.
  *
- * @return array Returns an array of products, each containing product details, categories, tags, and images.
+ * @param array $config Database configuration settings.
+ * @param string $env Environment settings used for error handling.
+ * @param int $limit The number of products to retrieve.
+ * @param int $offset The number of products to skip before starting to fetch results.
+ * @return array An associative array containing product data.
  */
-function getAllProductsWithCategoriesAndTags($config, $env)
+function getAllProductsWithCategoriesAndTags($config, $env, $limit = 10, $offset = 0)
 {
     try {
         $pdo = getPDOConnection($config, $env); // Establish a database connection.
@@ -194,28 +198,24 @@ function getAllProductsWithCategoriesAndTags($config, $env)
                     p.updated_at,
                     GROUP_CONCAT(DISTINCT pc.category_name ORDER BY pc.category_name SEPARATOR ', ') AS categories,
                     GROUP_CONCAT(DISTINCT t.tag_name ORDER BY t.tag_name SEPARATOR ', ') AS tags
-                FROM 
-                    products p
-                LEFT JOIN 
-                    product_images pi ON p.product_id = pi.product_id
-                LEFT JOIN 
-                    product_category_mapping pcm ON p.product_id = pcm.product_id
-                LEFT JOIN 
-                    product_categories pc ON pcm.category_id = pc.category_id
-                LEFT JOIN 
-                    product_tag_mapping ptm ON p.product_id = ptm.product_id
-                LEFT JOIN 
-                    tags t ON ptm.tag_id = t.tag_id
-                GROUP BY 
-                    p.product_id";
+                FROM products p
+                LEFT JOIN product_images pi ON p.product_id = pi.product_id -- Join product images
+                LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id -- Mapping table for categories
+                LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id -- Join categories
+                LEFT JOIN product_tag_mapping ptm ON p.product_id = ptm.product_id -- Mapping table for tags
+                LEFT JOIN tags t ON ptm.tag_id = t.tag_id -- Join tags
+                GROUP BY p.product_id
+                LIMIT :limit OFFSET :offset"; // Apply pagination
 
-        $stmt = $pdo->query($sql); // Execute the query.
+        $stmt = $pdo->prepare($sql);
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT); // Bind limit parameter
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT); // Bind offset parameter
+        $stmt->execute();
+
         return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return results as an associative array.
-
     } catch (Exception $e) {
-        // Handle errors by logging them and returning an empty array.
-        handleError($e->getMessage(), $env);
-        return [];
+        handleError($e->getMessage(), $env); // Handle errors by logging them
+        return []; // Return an empty array if an error occurs
     }
 }
 
@@ -302,6 +302,29 @@ function getProductBySlugAndOptimus($slug, $encodedId, $config, $env)
         return null;
     }
 }
+
+/**
+ * Retrieves the total number of products in the database.
+ *
+ * This function connects to the database using `getPDOConnection()`, 
+ * executes a query to count the total number of products in the `products` table, 
+ * and returns the result. If an error occurs, it logs the error and returns 0.
+ *
+ * @param array $config Database configuration settings.
+ * @param string $env Environment settings used for error handling.
+ * @return int The total number of products. Returns 0 if an error occurs.
+ */
+function getTotalProducts($config, $env) {
+    try {
+        $pdo = getPDOConnection($config, $env); // Establish a database connection
+        $stmt = $pdo->query("SELECT COUNT(*) FROM products"); // Execute a query to count total products
+        return $stmt->fetchColumn(); // Retrieve and return the total count of products
+    } catch (Exception $e) {
+        handleError($e->getMessage(), $env); // Log error message
+        return 0; // Return 0 if an error occurs
+    }
+}
+
 
 /**
  * Adds a new product to the database.
