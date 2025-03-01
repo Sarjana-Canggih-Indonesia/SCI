@@ -3,30 +3,22 @@
 
 require_once __DIR__ . '/../config/config.php';
 require_once __DIR__ . '/../config/products/product_functions.php';
+require_once __DIR__ . '/../config/auth/validate.php';
 
-// Start session sebelum header
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Start session
+startSession();
 
-if ($_SERVER['REQUEST_METHOD'] !== 'GET') {
-    http_response_code(405); // Method Not Allowed
-    echo json_encode([
-        'success' => false,
-        'message' => 'Only GET requests are allowed.'
-    ]);
-    exit();
-}
+// Verifies the HTTP request method and ensures it matches the allowed method
+verifyHttpMethod('GET');
 
-header('Content-Type: application/json');
-$allowedOrigin = ($_SERVER['HTTP_HOST'] === 'localhost') ? 'http://localhost/SCI/' : 'https://sarjanacanggihindonesia.com';
-header("Access-Control-Allow-Origin: $allowedOrigin");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: GET");
-header("Access-Control-Allow-Headers: Content-Type");
+// Set response headers for JSON output and CORS policy
+configureApiHeaders();
 
 try {
     $categoryId = isset($_GET['category_id']) ? trim($_GET['category_id']) : null;
+    $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+    $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+    $offset = ($page - 1) * $limit;
 
     if ($categoryId !== null) {
         if (!ctype_digit($categoryId) || (int) $categoryId <= 0) {
@@ -44,6 +36,7 @@ try {
 
     $pdo = getPDOConnection($config, $env);
 
+    // Query untuk mengambil produk berdasarkan kategori dengan pagination
     $sql = "SELECT 
                 p.product_id,
                 p.product_name,
@@ -53,16 +46,30 @@ try {
             LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id
             LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id
             WHERE (:category_id IS NULL OR pc.category_id = :category_id)
-            GROUP BY p.product_id";
+            GROUP BY p.product_id
+            LIMIT :limit OFFSET :offset";
 
     $stmt = $pdo->prepare($sql);
-    $stmt->execute(['category_id' => $categoryId]);
+    $stmt->bindParam(':category_id', $categoryId, PDO::PARAM_INT);
+    $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
+    $stmt->bindParam(':offset', $offset, PDO::PARAM_INT);
+    $stmt->execute();
 
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Hitung total produk untuk pagination
+    $totalProducts = getTotalProductsByCategory($config, $env, $categoryId);
+    $totalPages = ceil($totalProducts / $limit);
+
     echo json_encode([
         'success' => true,
-        'products' => $products
+        'products' => $products,
+        'pagination' => [
+            'total_products' => $totalProducts,
+            'total_pages' => $totalPages,
+            'current_page' => $page,
+            'limit' => $limit,
+        ],
     ]);
 
 } catch (Exception $e) {
