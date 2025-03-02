@@ -57,6 +57,12 @@ try {
 
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
+    // Iterate over each product in the $products array
+    foreach ($products as &$product) {
+        // Encode the 'product_id' using the Optimus library and store it in 'encoded_id'
+        $product['encoded_id'] = $optimus->encode($product['product_id']);
+    }
+
     // Hitung total produk untuk pagination
     $totalProducts = getTotalProductsByCategory($config, $env, $categoryId);
     $totalPages = ceil($totalProducts / $limit);
