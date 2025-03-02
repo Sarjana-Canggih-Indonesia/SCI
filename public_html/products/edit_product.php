@@ -255,11 +255,11 @@ setCacheHeaders($isLive);
                         </div>
 
                         <div class="d-flex justify-content-between border-top pt-4">
-                            <button type="button" class="btn btn-outline-secondary" onclick="history.back()">
-                                <i class="bi bi-arrow-left"></i> Cancel
+                            <button type="button" class="btn btn-outline-danger" onclick="handleClose()">
+                                <i class="fa-solid fa-xmark"></i> Close
                             </button>
                             <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-save"></i> Save Changes
+                                <i class="fa-solid fa-save"></i> Save Changes
                             </button>
                         </div>
                     </form>
@@ -285,6 +285,13 @@ setCacheHeaders($isLive);
     <!-- Custom JS -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
     <script> const BASE_URL = '<?= $baseUrl ?>';</script>
+    <script>
+        function handleClose() {
+            if (confirm('Apakah Anda yakin ingin menutup tab ini?')) {
+                window.close();
+            }
+        }
+    </script>
 </body>
 
 </html>
