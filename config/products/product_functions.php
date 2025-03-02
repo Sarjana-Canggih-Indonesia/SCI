@@ -659,38 +659,43 @@ function handleAddProductForm($config, $env)
 }
 
 /**
- * Handles the upload of product images.
+ * Handles the uploading of product images.
  *
- * This function processes and uploads images submitted via the product form.
- * It performs the following steps:
- * - Checks if `$_FILES['productImages']` is set.
- * - Ensures the upload directory exists, creating it if necessary.
- * - Validates images using `validateProductImages()`.
- * - Iterates over validated images, assigns a unique filename, and moves them to the upload directory.
- * - Returns an array of successfully uploaded image paths.
+ * This function processes uploaded image files, validates them, generates unique filenames, 
+ * and moves them to the designated upload directory. It returns an array of successfully uploaded 
+ * image paths.
  *
- * @return array List of uploaded image file paths.
+ * @param array $files The uploaded file array from $_FILES.
+ * @return array An array containing paths of successfully uploaded images.
  */
-function handleProductImagesUpload()
+function handleProductImagesUpload($files)
 {
-    if (!isset($_FILES['productImages']))
-        return [];
+    if (!isset($files))
+        return []; // Return an empty array if no files are provided
 
     $uploadDir = __DIR__ . '/../../public_html/uploads/products/';
     if (!file_exists($uploadDir))
         mkdir($uploadDir, 0755, true); // Ensure upload directory exists
 
-    $validationResults = validateProductImages($_FILES['productImages']); // Validate uploaded images
+    $validationResults = validateProductImages($files); // Validate uploaded images
     $uploadedImages = [];
 
     foreach ($validationResults as $index => $result) {
         if ($result['error'])
             continue; // Skip invalid images
 
-        // Generate a unique filename for the image
+        // Generate a unique filename for the image to prevent name conflicts
         $filename = uniqid('product_', true) . '.' . $result['data']['extension'];
         $destinationPath = $uploadDir . $filename;
 
+        // Move the uploaded file to the designated directory
+        if (move_uploaded_file($files['tmp_name'][$index], $destinationPath)) {
+            $uploadedImages[] = '/uploads/products/' . $filename; // Store relative file path
+        }
+    }
+
+    return $uploadedImages; // Return successfully uploaded image paths
+}
 /**
  * Updates a product's details, images, and category in the database.
  * 
