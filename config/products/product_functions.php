@@ -855,7 +855,7 @@ function deleteProduct($id, $config, $env)
             $pdo->rollBack(); // Rollback the transaction in case of an error.
         }
 
-        handleError("Database Error: " . $e->getMessage(), $config['is_live'] ? 'live' : 'local');
+        handleError("Database Error: " . $e->getMessage(), $env);
         return ['error' => true, 'message' => 'A database error occurred.'];
     }
 }
