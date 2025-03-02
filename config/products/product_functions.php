@@ -589,10 +589,12 @@ function handleAddProductForm($config, $env)
             $productData['slug'] = generateSlug($_POST['productName']);
 
             // Handle product image uploads
-            $productData['images'] = handleProductImagesUpload();
-            if (empty($productData['images'])) {
+            if (!isset($_FILES['productImages']) || empty($_FILES['productImages']['name'][0])) {
                 throw new Exception("Minimum 1 image required, maximum 10 images allowed");
             }
+
+            // Upload and store image paths
+            $productData['images'] = handleProductImagesUpload($_FILES['productImages']);
 
             // Add product to the database
             $result = addProduct($productData, $config, $env);
@@ -696,6 +698,7 @@ function handleProductImagesUpload($files)
 
     return $uploadedImages; // Return successfully uploaded image paths
 }
+
 /**
  * Updates a product's details, images, and category in the database.
  * 
