@@ -73,11 +73,7 @@ function debounce(func, delay) {
 
 // Function to open the product edit page in a new tab
 function editProduct(slug, encodedId) {
-  // Construct the edit URL using the base URL, product slug, and encoded ID
-  const editUrl = `${BASE_URL}${slug}/${encodedId}`;
-
-  // Open the generated URL in a new browser tab
-  window.open(editUrl, "_blank");
+  window.open(`${BASE_URL}edit-product/${slug}/${encodedId}`, "_blank");
 }
 // ==================== Akhir Global Helper Functions ==================== //
 
