@@ -691,96 +691,235 @@ function handleProductImagesUpload()
         $filename = uniqid('product_', true) . '.' . $result['data']['extension'];
         $destinationPath = $uploadDir . $filename;
 
-        // Move uploaded file to the designated directory
-        if (move_uploaded_file($_FILES['productImages']['tmp_name'][$index], $destinationPath)) {
-            $uploadedImages[] = '/uploads/products/' . $filename;
-        }
-    }
+/**
+ * Updates a product's details, images, and category in the database.
+ * 
+ * This function updates the product information in the `products` table, handles image deletions and insertions, 
+ * updates the category mapping, and ensures data consistency using transactions.
+ * 
+ * @param array $data An associative array containing product details, including:
+ *  - 'name' (string): The updated product name.
+ *  - 'price_amount' (float): The updated price.
+ *  - 'currency' (string): The currency type.
+ *  - 'description' (string): Product description.
+ *  - 'slug' (string): SEO-friendly product URL.
+ *  - 'images_to_delete' (array): List of image paths to be removed.
+ *  - 'new_images' (array): List of new image paths to be added.
+ *  - 'category' (int): The category ID to update.
+ * @param int $product_id The ID of the product to be updated.
+ * @param array $config Database configuration settings.
+ * @param string $env Environment (development/production) for error handling.
+ * 
+ * @return array Returns an associative array with:
+ *  - 'error' (bool): True if an error occurred, false otherwise.
+ *  - 'message' (string): Success or error message.
+ *  - 'product_id' (int, optional): The updated product ID.
+ */
+function updateProduct($data, $product_id, $config, $env)
+{
+    try {
+        $pdo = getPDOConnection($config, $env); // Establish database connection
+        $pdo->beginTransaction(); // Start transaction
 
-    return $uploadedImages; // Return an array of successfully uploaded image paths
+        // Update product details
+        $stmt = $pdo->prepare("UPDATE products SET product_name = :name, price_amount = :price_amount, currency = :currency, description = :description, slug = :slug WHERE id = :product_id");
+        $success = $stmt->execute([
+            'name' => $data['name'],
+            'price_amount' => $data['price_amount'],
+            'currency' => $data['currency'],
+            'description' => $data['description'],
+            'slug' => $data['slug'],
+            'product_id' => $product_id
+        ]);
+        if (!$success || $stmt->rowCount() === 0) {
+            $pdo->rollBack(); // Rollback if update fails
+            return ['error' => true, 'message' => 'Failed to update product in database.'];
+        }
+
+        // Delete selected images if any
+        if (!empty($data['images_to_delete'])) {
+            $stmtDeleteImages = $pdo->prepare("DELETE FROM product_images WHERE product_id = ? AND image_path = ?");
+            foreach ($data['images_to_delete'] as $imagePath) {
+                $stmtDeleteImages->execute([$product_id, $imagePath]); // Delete from database
+                $absPath = __DIR__ . '/../../public_html' . $imagePath;
+                if (file_exists($absPath))
+                    @unlink($absPath); // Delete from file system
+            }
+        }
+
+        // Insert new uploaded images if any
+        if (!empty($data['new_images'])) {
+            $stmtImages = $pdo->prepare("INSERT INTO product_images (product_id, image_path) VALUES (?, ?)");
+            foreach ($data['new_images'] as $imagePath) {
+                $stmtImages->execute([$product_id, $imagePath]);
+            }
+        }
+
+        // Update product category mapping
+        $stmt = $pdo->prepare("UPDATE product_category_mapping SET category_id = :category_id WHERE product_id = :product_id");
+        $success = $stmt->execute(['category_id' => $data['category'], 'product_id' => $product_id]);
+        if (!$success) {
+            $pdo->rollBack(); // Rollback if category update fails
+            return ['error' => true, 'message' => 'Failed to update product category.'];
+        }
+
+        $pdo->commit(); // Commit transaction if all operations succeed
+        return ['error' => false, 'message' => 'Product successfully updated.', 'product_id' => $product_id];
+
+    } catch (Exception $e) {
+        if (isset($pdo))
+            $pdo->rollBack(); // Rollback on error
+
+        // Delete newly uploaded images to maintain data consistency
+        if (!empty($data['new_images'])) {
+            foreach ($data['new_images'] as $imagePath) {
+                $absPath = __DIR__ . '/../../public_html' . $imagePath;
+                if (file_exists($absPath))
+                    @unlink($absPath);
+            }
+        }
+
+        handleError("Database Error: " . $e->getMessage(), $env); // Log error
+        return ['error' => true, 'message' => 'A system error occurred. Please try again.'];
+    }
 }
 
 /**
- * Updates an existing product in the database by its ID.
- *
- * This function establishes a connection to the database using PDO,
- * prepares an SQL query to update a product in the 'products' table,
- * and executes the query with the provided product data and ID.
- * It returns an array with a success message or an error message.
- *
- * @param int $id The ID of the product to update.
- * @param array $data An associative array containing the updated product data (name, price, description, image_path, slug).
- * @return array Returns an array with a success message on successful update,
- *               or an array with an error message on failure.
+ * Handles the product edit form submission, including validation, sanitization, image handling, 
+ * and updating product details in the database.
+ * 
+ * @param array $config Configuration settings for database connection and environment.
+ * @param string $env Environment identifier (e.g., 'development' or 'production').
+ * 
+ * @return void This function does not return a value; it redirects upon completion.
  */
-function updateProduct($id, $data, $config, $env)
+function handleEditProductForm($config, $env)
 {
-    // Validate product data
-    $violations = validateProductData($data);
+    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['csrf_token'])) {
+        try {
+            validateCSRFToken($_POST['csrf_token']); // Validate CSRF token to prevent CSRF attacks
 
-    // If there are any violations, handle the error
-    if (count($violations) > 0) {
-        // Log the error for debugging purposes
-        handleError("Validation failed: " . implode(", ", array_map(fn($v) => $v->getMessage(), $violations)), $env);
-
-        // Return a user-friendly error message
-        return [
-            'error' => true,
-            'message' => 'Data produk tidak valid. Silakan periksa kembali data yang Anda masukkan.'
-        ];
-    }
-
-    // Sanitize data using the sanitizeProductData function
-    $data = sanitizeProductData($data);
-
-    // Validate price
-    try {
-        $price = validatePrice($data['price_amount'], $data['currency']);
-    } catch (\InvalidArgumentException $e) {
-        // Log the error for debugging purposes
-        handleError("Invalid price format: " . $e->getMessage(), getEnvironmentConfig()['local']);
-
-        // Return a user-friendly error message
-        return [
-            'error' => true,
-            'message' => 'Format harga tidak valid. Harap masukkan harga yang benar.'
-        ];
-    }
-
-    try {
-        $pdo = getPDOConnection($config, $env);
-        $stmt = $pdo->prepare("UPDATE products SET product_name = :name, price = :price, description = :description, image_path = :image_path, slug = :slug WHERE product_id = :id");
-
-        // Execute the query
-        $success = $stmt->execute([
-            'id' => $id,
-            'name' => $data['name'],
-            'price' => $price->getAmount(), // Store the amount in cents
-            'description' => $data['description'],
-            'image_path' => $data['image_path'],
-            'slug' => $data['slug'],
-        ]);
-
-        if ($success) {
-            return [
-                'error' => false,
-                'message' => 'Produk berhasil diperbarui.'
+            // Prepare product data from form input
+            $productData = [
+                'name' => $_POST['productName'] ?? '',
+                'category' => (int) ($_POST['productCategory'] ?? 0),
+                'price_amount' => 0, // Will be updated after validation
+                'currency' => 'IDR',
+                'description' => $_POST['productDescription'] ?? '',
+                'slug' => '',
+                'images' => [],
+                'product_id' => (int) ($_POST['product_id'] ?? 0) // Ensure product ID exists
             ];
-        } else {
-            return [
-                'error' => true,
-                'message' => 'Gagal memperbarui produk. Silakan coba lagi nanti.'
-            ];
+
+            // Required keys validation
+            $requiredKeys = ['name', 'price_amount', 'description', 'product_id'];
+            foreach ($requiredKeys as $key) {
+                if (!isset($productData[$key])) {
+                    throw new Exception("Key '$key' not found in product data.");
+                }
+            }
+
+            $productData = sanitizeProductData($productData); // Sanitize input data
+
+            // Validate product price
+            if (!isset($_POST['productPriceAmount']) || !is_numeric($_POST['productPriceAmount'])) {
+                throw new Exception("Invalid price format");
+            }
+
+            // Validate and format price using Money library
+            $price = $_POST['productPriceAmount'];
+            $currency = $_POST['productCurrency'] ?? 'IDR';
+            $money = validatePrice($price, $currency);
+
+            $productData['price_amount'] = $money->getAmount()->toInt();
+            $productData['currency'] = $money->getCurrency()->getCurrencyCode();
+
+            // Generate product slug from name
+            $productData['slug'] = generateSlug($_POST['productName']);
+
+            // Validate product image uploads
+            if (!isset($_FILES['productImages']) || empty($_FILES['productImages']['name'][0])) {
+                throw new Exception("Minimum 1 image required, maximum 10 images allowed");
+            }
+
+            $imageValidationResults = validateProductImages($_FILES['productImages']);
+            foreach ($imageValidationResults as $result) {
+                if ($result['error']) {
+                    throw new Exception($result['message']);
+                }
+            }
+
+            // Upload and store image paths
+            $productData['images'] = handleProductImagesUpload($_FILES['productImages']);
+
+            // Validate product data before updating the database
+            $violations = validateProductData($productData);
+            if (count($violations) > 0) {
+                handleError("Validation failed: " . implode(", ", array_map(fn($v) => $v->getMessage(), $violations)), $env);
+                throw new Exception('Invalid product data. Please check your input.');
+            }
+
+            // Update product in database
+            $result = updateProduct($productData, $productData['product_id'], $config, $env);
+
+            if ($result['error']) {
+                // Delete uploaded images if update fails
+                foreach ($productData['images'] as $imagePath) {
+                    $absPath = __DIR__ . '/../../public_html' . $imagePath;
+                    if (file_exists($absPath))
+                        @unlink($absPath);
+                }
+                throw new Exception($result['message']);
+            }
+
+            // Log admin activity for auditing
+            logAdminAction(
+                $_SESSION['user_id'],        // Admin ID from session
+                'update_product',            // Action type
+                'products',                  // Affected table
+                $result['product_id'],       // Updated product ID
+                "Updated product: " . $productData['name'], // Details
+                $config,
+                $env
+            );
+
+            // Set success message and reset form input
+            $_SESSION['success_message'] = 'Produk berhasil diperbarui!';
+            $_SESSION['form_success'] = true;
+            $_SESSION['old_input'] = [];
+            session_write_close();
+
+            // Redirect to manage products page
+            $config = getEnvironmentConfig();
+            header("Location: " . getBaseUrl($config, $_ENV['LIVE_URL']) . "manage_products");
+            exit();
+
+        } catch (Throwable $e) {
+            // Delete uploaded images if an error occurs
+            if (!empty($productData['images'])) {
+                foreach ($productData['images'] as $imagePath) {
+                    $absPath = __DIR__ . '/../../public_html' . $imagePath;
+                    if (file_exists($absPath))
+                        @unlink($absPath);
+                }
+            }
+
+            // Store error message and retain form input
+            $_SESSION['error_message'] = $e->getMessage();
+            $_SESSION['form_success'] = false;
+            $_SESSION['old_input'] = $_POST;
+            session_write_close();
+
+            // Redirect back to manage products page
+            $config = getEnvironmentConfig();
+            header("Location: " . getBaseUrl($config, $_ENV['LIVE_URL']) . "manage_products");
+            exit();
         }
-    } catch (Exception $e) {
-        // Log the error for debugging purposes
-        handleError($e->getMessage(), $env);
-
-        // Return a user-friendly error message
-        return [
-            'error' => true,
-            'message' => 'Terjadi kesalahan saat memperbarui produk. Silakan hubungi admin.'
-        ];
+    } else {
+        // Handle invalid form submissions
+        $_SESSION['error_message'] = 'Permintaan tidak valid';
+        $_SESSION['form_success'] = false;
+        session_write_close();
     }
 }
 
