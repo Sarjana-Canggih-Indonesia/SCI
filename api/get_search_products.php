@@ -64,11 +64,12 @@ try {
     // Fetch the data and process images
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Convert image string to an array
+    // Convert image string to an array and encode the product ID
     foreach ($products as &$product) {
         $product['images'] = $product['images'] ? explode(',', $product['images']) : [];
+        $product['encoded_id'] = $optimus->encode($product['product_id']);
     }
-    unset($product); // Remove reference
+    unset($product); // Remove reference    
 
     // Hitung total produk untuk pagination
     $totalProducts = getTotalProductsByKeywordAndCategory($config, $env, $keyword, $categoryId);
