@@ -23,6 +23,12 @@ try {
     // Fetch all products along with their categories and tags
     $products = getAllProductsWithCategoriesAndTags($config, $env, $limit, $offset);
 
+    // Iterate over each product in the $products array
+    foreach ($products as &$product) {
+        // Encode the 'product_id' using the Optimus library and store it in 'encoded_id'
+        $product['encoded_id'] = $optimus->encode($product['product_id']);
+    }
+
     // Hitung total produk untuk pagination
     $totalProducts = getTotalProducts($config, $env);
     $totalPages = ceil($totalProducts / $limit);
