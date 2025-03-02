@@ -71,13 +71,13 @@ function debounce(func, delay) {
   };
 }
 
-/**
- * Opens the product edit page in a new tab.
- * @param {*} slug
- * @param {*} optimusId
- */
-function editProduct(slug, optimusId) {
-  window.open(`${BASE_URL}edit-product/${slug}/${optimusId}`, "_blank");
+// Function to open the product edit page in a new tab
+function editProduct(slug, encodedId) {
+  // Construct the edit URL using the base URL, product slug, and encoded ID
+  const editUrl = `${BASE_URL}${slug}/${encodedId}`;
+
+  // Open the generated URL in a new browser tab
+  window.open(editUrl, "_blank");
 }
 // ==================== Akhir Global Helper Functions ==================== //
 
@@ -229,7 +229,9 @@ function updateTable(products, currentPage = 1, limit = 10) {
               <button class="btn btn-info btn-sm" onclick="viewDetails(${escapeHtml(product.product_id)})">
                   <i class="fas fa-eye"></i> View Details
               </button>
-              <button class="btn btn-warning btn-sm" onclick="editProduct(${escapeHtml(product.product_id)})">
+              <button class="btn btn-warning btn-sm" onclick="editProduct('${escapeHtml(product.slug)}', ${escapeHtml(
+      product.encoded_id,
+    )})">
                   <i class="fas fa-edit"></i> Edit
               </button>
           </td>
