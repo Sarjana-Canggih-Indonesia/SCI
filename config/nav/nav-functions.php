@@ -60,8 +60,9 @@ function generateNavItem($href, $pageName, $currentPage, $iconClass, $label)
 function renderNavbar($currentPage)
 {
     $menuItems = [ // Define menu items
-        ['href' => 'home.php', 'page' => 'home', 'icon' => 'fa-solid fa-house', 'label' => 'Home'],
-        ['href' => 'users.php', 'page' => 'users', 'icon' => 'fa-solid fa-users', 'label' => 'Users']
+        ['href' => 'admin-dashboard.php', 'page' => 'home', 'icon' => 'fa-solid fa-house', 'label' => 'Home'],
+        ['href' => 'manage_users.php', 'page' => 'users', 'icon' => 'fa-solid fa-users', 'label' => 'Users'],
+        ['href' => 'manage_products.php', 'page' => 'products', 'icon' => 'fa-solid fa-box', 'label' => 'Products'],
     ];
 
     ob_start(); ?>
