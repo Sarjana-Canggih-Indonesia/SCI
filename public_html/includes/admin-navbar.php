@@ -18,7 +18,7 @@ $scriptName = basename($_SERVER['SCRIPT_NAME'], ".php");
 
 // Converts script names to valid page identifiers used in the navigation system
 $pageMapping = [
-    'admin-dashboard' => 'home',  // Maps manage_products.php to 'products' page
+    'admin-dashboard' => 'home',  // Maps admin-dashboard.php to 'home' page
     'manage_products' => 'products',  // Maps manage_products.php to 'products' page
     'manage_users' => 'users',        // Maps manage_users.php to 'users' page
     'manage_promos' => 'promos'       // Maps manage_promos.php to 'promos' page
