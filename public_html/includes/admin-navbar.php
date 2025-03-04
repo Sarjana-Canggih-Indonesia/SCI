@@ -13,15 +13,16 @@ $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 // Start session from user_actions_config.php
 startSession();
 
-// Auto-detect current page from URL or filename
-$scriptName = basename($_SERVER['SCRIPT_NAME'], ".php");
+// Auto-detect the current page from URL or filename
+$requestUri = trim($_SERVER['REQUEST_URI'], '/'); // Remove leading/trailing slashes
+$scriptName = basename(parse_url($requestUri, PHP_URL_PATH), ".php"); // Get the last part of the URL path
 
-// Converts script names to valid page identifiers used in the navigation system
+// Convert script names to valid page identifiers used in the navigation system
 $pageMapping = [
-    'admin-dashboard' => 'home',  // Maps admin-dashboard.php to 'home' page
-    'manage_products' => 'products',  // Maps manage_products.php to 'products' page
-    'manage_users' => 'users',        // Maps manage_users.php to 'users' page
-    'manage_promos' => 'promos'       // Maps manage_promos.php to 'promos' page
+    'admin-dashboard' => 'home',  // Maps admin-dashboard.php or /admin-dashboard to 'home' page
+    'manage_products' => 'products',  // Maps manage_products.php or /manage_products to 'products' page
+    'manage_users' => 'users',        // Maps manage_users.php or /manage_users to 'users' page
+    'manage_promos' => 'promos'       // Maps manage_promos.php or /manage_promos to 'promos' page
 ];
 
 // Determine current page using mapping, fallback to 'home' if no match found
@@ -30,7 +31,7 @@ $currentPage = $pageMapping[$scriptName] ?? 'home';
 // Render navigation bar with the determined current page
 renderNavbar($currentPage);
 
-// Get user ID from session.
+// Get user ID from session
 $userId = $_SESSION['user_id'] ?? null;
 
 // Check user login status
@@ -39,7 +40,7 @@ $username = $_SESSION['username'] ?? '';
 
 // Set default values
 $profileImage = null;
-$userRole = null; // Menyimpan role user
+$userRole = null; // Stores user role
 
 // Only process if user is logged in and has an ID
 if ($isLoggedIn && $userId) {
@@ -49,7 +50,7 @@ if ($isLoggedIn && $userId) {
         // Set profile image filename if available in the database
         $profileImage = $userInfo['profile_image_filename'] ?? null;
 
-        // Ambil role user
+        // Get user role
         $userRole = $userInfo['role'] ?? 'customer';
     } else {
         // Handle case if user is not found
