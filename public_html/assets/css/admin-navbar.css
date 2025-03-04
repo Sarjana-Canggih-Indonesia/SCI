@@ -3,7 +3,7 @@
   background: #f7f9fb;
   color: #495057;
   width: 250px !important;
-  transition: transform 0.3s ease-in-out;
+  transition: width 0.3s ease-in-out, transform 0.3s ease-in-out;
 }
 
 .offcanvas.offcanvas-start.offcanvas-halaman-admin {
@@ -15,14 +15,17 @@
   text-align: center;
   margin-bottom: 30px;
   padding: 20px;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .offcanvas-halaman-admin .profile-img {
   max-width: 50%;
-  max-height: auto;
+  height: auto;
   object-fit: cover;
   object-position: center;
   background-color: #34495e;
+  transition: all 0.3s ease;
 }
 
 /* Navigation Links */
@@ -44,6 +47,11 @@
   width: 20px;
   text-align: center;
   font-size: 1.1rem;
+  transition: transform 0.3s ease;
+}
+
+.offcanvas-halaman-admin .nav-link span {
+  transition: opacity 0.2s ease;
 }
 
 .offcanvas-halaman-admin .nav-link:hover {
@@ -60,21 +68,25 @@
 
 /* Separator */
 .offcanvas-halaman-admin .separator {
-  margin: 20px 0;
+  margin: 1rem 0;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
 }
 
 /* Logout Button */
 .offcanvas-halaman-admin .logout-btn {
-  position: absolute;
-  bottom: 20px;
-  width: calc(100% - 40px);
+  position: relative; /* Ubah dari absolute ke relative */
+  bottom: auto;
+  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 12px;
   transition: all 0.3s ease;
-  margin: 0;
+  margin: 5px 0;
+  padding: 12px 15px;
+  border-radius: 5px;
+  text-align: left;
+  border: 1px solid transparent;
 }
 
 /* Toggle Button */
@@ -93,6 +105,85 @@
   transition: background 0.3s ease;
 }
 
+/* Desktop Styles */
+@media (min-width: 992px) {
+  .offcanvas.offcanvas-halaman-admin {
+    transform: none !important;
+    visibility: visible !important;
+    position: fixed;
+    height: 100vh;
+  }
+
+  .menu-toggle {
+    display: none !important;
+  }
+
+  .offcanvas-backdrop {
+    display: none !important;
+  }
+}
+
+/* Minimized State */
+.offcanvas.offcanvas-halaman-admin.minimized {
+  width: 60px !important;
+}
+
+.minimized {
+  .offcanvas-title,
+  h6,
+  small,
+  .nav-link span,
+  .separator,
+  .logout-btn span,
+  .profile-section small,
+  .profile-section h6 {
+    display: none !important;
+  }
+
+  .nav {
+    padding: 0 !important;
+  }
+
+  .nav-link {
+    justify-content: center !important;
+    padding: 12px !important;
+    gap: 0 !important;
+  }
+
+  .profile-section {
+    padding: 10px !important;
+    margin-bottom: 15px !important;
+  }
+
+  .profile-image {
+    width: 40px !important;
+    height: 40px !important;
+    margin: 1rem 0 0 0 !important;
+  }
+
+  .profile-img {
+    max-width: 100% !important;
+    max-height: 100% !important;
+  }
+
+  .logout-btn {
+    justify-content: center !important;
+    padding: 12px !important;
+    margin: 2px 0 !important;
+  }
+
+  .logout-btn i {
+    margin: 0 !important;
+  }
+
+  .nav-link:hover {
+    transform: translateX(0) scale(1.1);
+    i {
+      transform: scale(1.2);
+    }
+  }
+}
+
 /* Show toggle button when offcanvas is closed */
 .offcanvas:not(.show) ~ .menu-toggle {
   display: block;
@@ -101,4 +192,48 @@
 .menu-toggle:hover {
   background: rgba(236, 236, 236, 1);
   transform: scale(1.05);
+}
+
+/* Custom Close Logo Button */
+.logo-close-btn {
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+  border: none;
+  background: none;
+  padding: 0.5rem;
+  transition: all 0.3s ease;
+  opacity: 0.8;
+  transition: all 0.3s ease, transform 0.3s ease !important;
+}
+
+.close-logo {
+  width: 30px; /* Sesuaikan dengan ukuran logo */
+  height: 30px;
+  transition: transform 0.2s ease;
+}
+
+.logo-close-btn:hover {
+  opacity: 1;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 50%;
+}
+
+.logo-close-btn:hover .close-logo {
+  transform: scale(1.1);
+}
+
+/* Untuk state minimized */
+.minimized .logo-close-btn {
+  right: 0.5rem;
+  top: 0.5rem;
+}
+
+.minimized .close-logo {
+  width: 24px;
+  height: 24px;
+}
+
+.offcanvas-halaman-admin.minimized .logo-close-btn {
+  transform: rotate(360deg);
 }
