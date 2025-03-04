@@ -13,24 +13,6 @@ $baseUrl = getBaseUrl($config, $_ENV['LIVE_URL']);
 // Start session from user_actions_config.php
 startSession();
 
-// Auto-detect the current page from URL or filename
-$requestUri = trim($_SERVER['REQUEST_URI'], '/'); // Remove leading/trailing slashes
-$scriptName = basename(parse_url($requestUri, PHP_URL_PATH), ".php"); // Get the last part of the URL path
-
-// Convert script names to valid page identifiers used in the navigation system
-$pageMapping = [
-    'admin-dashboard' => 'home',  // Maps admin-dashboard.php or /admin-dashboard to 'home' page
-    'manage_products' => 'products',  // Maps manage_products.php or /manage_products to 'products' page
-    'manage_users' => 'users',        // Maps manage_users.php or /manage_users to 'users' page
-    'manage_promos' => 'promos'       // Maps manage_promos.php or /manage_promos to 'promos' page
-];
-
-// Determine current page using mapping, fallback to 'home' if no match found
-$currentPage = $pageMapping[$scriptName] ?? 'home';
-
-// Render navigation bar with the determined current page
-renderNavbar($currentPage);
-
 // Get user ID from session
 $userId = $_SESSION['user_id'] ?? null;
 
@@ -71,13 +53,92 @@ $profileImageUrl = default_profile_image($profileImage, $baseUrl, $config);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap css -->
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/vendor/css/bootstrap.min.css" />
     <!-- Font Awesome -->
     <link rel="stylesheet" type="text/css"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+    <!-- CSS untuk Navbar Admin -->
+    <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/admin-navbar.css" />
 </head>
 
 <body>
-    <p>PLACEHOLDER, Hello World</p>
+    <!-- Admin Sidebar Offcanvas -->
+    <div class="offcanvas offcanvas-start offcanvas-halaman-admin" tabindex="-1" id="adminSidebar"
+        data-bs-scroll="true">
+        <!-- Offcanvas Close Button -->
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title">Menu</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <!-- Offcanvas Content -->
+        <div class="offcanvas-body p-0">
+            <!-- Profile Section -->
+            <div class="profile-section">
+                <div class="profile-image rounded-circle">
+                    <img src="<?php echo $profileImageUrl; ?>" alt="User Profile Image"
+                        class="profile-img rounded-circle" />
+                </div>
+                <h6 class="mb-1"><?php echo htmlspecialchars($username); ?></h6>
+                <small><?php echo htmlspecialchars($userInfo['email'] ?? 'admin@example.com'); ?></small>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="nav flex-column px-3">
+
+                <a href="<?php echo $baseUrl; ?>" class="nav-link active">
+                    <i class="fas fa-home"></i>
+                    Home
+                </a>
+
+                <div class="separator"></div>
+
+                <a href="<?php echo $baseUrl; ?>admin-dashboard" class="nav-link">
+                    <i class="fas fa-home"></i>
+                    Dashboard
+                </a>
+
+                <div class="separator"></div>
+
+                <a href="<?php echo $baseUrl; ?>manage_users" class="nav-link">
+                    <i class="fas fa-users-cog"></i>
+                    Manage Users
+                </a>
+                <a href="<?php echo $baseUrl; ?>manage_products" class="nav-link">
+                    <i class="fas fa-box-open"></i>
+                    Manage Products
+                </a>
+                <a href="<?php echo $baseUrl; ?>manage_promos" class="nav-link">
+                    <i class="fas fa-percent"></i>
+                    Manage Promos
+                </a>
+                <a href="#" class="nav-link">
+                    <i class="fas fa-tasks"></i>
+                    Manage Projects
+                </a>
+
+                <div class="separator"></div>
+
+                <a href="#" class="nav-link">
+                    <i class="fas fa-cog"></i>
+                    Setting
+                </a>
+
+                <button class="btn btn-outline-danger logout-btn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    Logout
+                </button>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Menu Toggle Button -->
+    <button class="btn menu-toggle" type="button" data-bs-toggle="offcanvas" data-bs-target="#adminSidebar">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <!-- External JS libraries -->
+    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
