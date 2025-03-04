@@ -67,14 +67,16 @@ $profileImageUrl = default_profile_image($profileImage, $baseUrl, $config);
     <div class="offcanvas offcanvas-start offcanvas-halaman-admin" tabindex="-1" id="adminSidebar"
         data-bs-scroll="true">
         <!-- Offcanvas Close Button -->
-        <div class="offcanvas-header">
+        <div class="offcanvas-header position-relative">
             <h5 class="offcanvas-title">Menu</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            <button type="button" class="logo-close-btn" data-toggle-minimize aria-label="Close">
+                <img src="<?php echo $baseUrl; ?>assets/images/logoscblue.png" alt="Logo" class="close-logo">
+            </button>
         </div>
         <!-- Offcanvas Content -->
         <div class="offcanvas-body p-0">
             <!-- Profile Section -->
-            <div class="profile-section">
+            <div class="profile-section" data-toggle-minimize>
                 <div class="profile-image rounded-circle">
                     <img src="<?php echo $profileImageUrl; ?>" alt="User Profile Image"
                         class="profile-img rounded-circle" />
@@ -88,45 +90,43 @@ $profileImageUrl = default_profile_image($profileImage, $baseUrl, $config);
 
                 <a href="<?php echo $baseUrl; ?>" class="nav-link active">
                     <i class="fas fa-home"></i>
-                    Home
+                    <span>Home</span>
                 </a>
 
                 <div class="separator"></div>
 
                 <a href="<?php echo $baseUrl; ?>admin-dashboard" class="nav-link">
-                    <i class="fas fa-home"></i>
-                    Dashboard
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span>Dashboard</span>
                 </a>
-
-                <div class="separator"></div>
 
                 <a href="<?php echo $baseUrl; ?>manage_users" class="nav-link">
                     <i class="fas fa-users-cog"></i>
-                    Manage Users
+                    <span>Manage Users</span>
                 </a>
                 <a href="<?php echo $baseUrl; ?>manage_products" class="nav-link">
                     <i class="fas fa-box-open"></i>
-                    Manage Products
+                    <span>Manage Products</span>
                 </a>
                 <a href="<?php echo $baseUrl; ?>manage_promos" class="nav-link">
                     <i class="fas fa-percent"></i>
-                    Manage Promos
+                    <span>Manage Promos</span>
                 </a>
                 <a href="#" class="nav-link">
                     <i class="fas fa-tasks"></i>
-                    Manage Projects
+                    <span>Manage Projects</span>
                 </a>
 
                 <div class="separator"></div>
 
                 <a href="#" class="nav-link">
                     <i class="fas fa-cog"></i>
-                    Setting
+                    <span>Setting</span>
                 </a>
 
                 <button class="btn btn-outline-danger logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
-                    Logout
+                    <span>Logout</span>
                 </button>
             </nav>
         </div>
@@ -139,6 +139,62 @@ $profileImageUrl = default_profile_image($profileImage, $baseUrl, $config);
 
     <!-- External JS libraries -->
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('adminSidebar');
+            const toggleElements = document.querySelectorAll('[data-toggle-minimize]');
+            const bsOffcanvas = new bootstrap.Offcanvas(sidebar);
+
+            // Fungsi toggle minimize
+            const toggleMinimize = () => {
+                const isMinimized = !sidebar.classList.contains('minimized');
+                sidebar.classList.toggle('minimized', isMinimized);
+                localStorage.setItem('sidebarMinimized', isMinimized);
+            }
+
+            // Handle semua toggle element
+            toggleElements.forEach(element => {
+                element.addEventListener('click', (e) => {
+                    if (window.innerWidth >= 992) {
+                        e.preventDefault();
+                        toggleMinimize();
+                    }
+                });
+            });
+
+            // Handle resize
+            const handleResize = () => {
+                if (window.innerWidth >= 992) {
+                    bsOffcanvas.show();
+                    const wasMinimized = localStorage.getItem('sidebarMinimized') === 'true';
+                    sidebar.classList.toggle('minimized', wasMinimized);
+                } else {
+                    bsOffcanvas.hide();
+                    sidebar.classList.remove('minimized');
+                }
+            }
+
+            // Initial setup
+            const initSidebar = () => {
+                if (window.innerWidth >= 992) {
+                    bsOffcanvas.show();
+                    const wasMinimized = localStorage.getItem('sidebarMinimized') === 'true';
+                    sidebar.classList.toggle('minimized', wasMinimized);
+                }
+            }
+
+            // Event listeners
+            window.addEventListener('resize', handleResize);
+            initSidebar();
+
+            // Handle close button click di mobile
+            document.querySelector('.logo-close-btn').addEventListener('click', () => {
+                if (window.innerWidth < 992) {
+                    bsOffcanvas.hide();
+                }
+            });
+        });
+    </script>
 </body>
 
 </html>
