@@ -45,6 +45,16 @@ if ($isLoggedIn && $userId) {
 
 // Set the profile image URL using the function
 $profileImageUrl = default_profile_image($profileImage, $baseUrl, $config);
+
+// Get URL to determine which page is active
+$currentUri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$baseUrlPath = parse_url($baseUrl, PHP_URL_PATH);
+$relativePath = trim(str_replace($baseUrlPath, '', $currentUri), '/');
+$activePage = $relativePath ?: 'home';
+$is_active = function ($pageName) use ($activePage) {
+    $currentPage = $activePage ?? 'home'; // Default ke 'home' jika $activePage tidak terdefinisi
+    return str_starts_with($currentPage, $pageName) || $pageName === 'home' && empty($currentPage) ? 'active' : '';
+};
 ?>
 
 <!DOCTYPE html>
@@ -68,7 +78,6 @@ $profileImageUrl = default_profile_image($profileImage, $baseUrl, $config);
         data-bs-scroll="true">
         <!-- Offcanvas Close Button -->
         <div class="offcanvas-header position-relative">
-            <h5 class="offcanvas-title">Menu</h5>
             <button type="button" class="logo-close-btn" data-toggle-minimize aria-label="Close">
                 <img src="<?php echo $baseUrl; ?>assets/images/logoscblue.png" alt="Logo" class="close-logo">
             </button>
@@ -88,31 +97,36 @@ $profileImageUrl = default_profile_image($profileImage, $baseUrl, $config);
             <!-- Navigation Links -->
             <nav class="nav flex-column px-3">
 
-                <a href="<?php echo $baseUrl; ?>" class="nav-link active">
+                <!-- Home Link -->
+                <a href="<?php echo $baseUrl; ?>" class="nav-link <?= $is_active('home') ?>">
                     <i class="fas fa-home"></i>
                     <span>Home</span>
                 </a>
 
                 <div class="separator"></div>
 
-                <a href="<?php echo $baseUrl; ?>admin-dashboard" class="nav-link">
+                <!-- Dashboard Link -->
+                <a href="<?= $baseUrl ?>admin-dashboard" class="nav-link <?= $is_active('admin-dashboard') ?>">
                     <i class="fas fa-tachometer-alt"></i>
                     <span>Dashboard</span>
                 </a>
 
-                <a href="<?php echo $baseUrl; ?>manage_users" class="nav-link">
+                <!-- Manage Users Link -->
+                <a href="= $baseUrl ?>manage_users" class="nav-link <?= $is_active('manage_users') ?>">
                     <i class="fas fa-users-cog"></i>
                     <span>Manage Users</span>
                 </a>
-                <a href="<?php echo $baseUrl; ?>manage_products" class="nav-link">
+                <!-- Manage Products Link -->
+                <a href="<?php echo $baseUrl; ?>manage_products" class="nav-link <?= $is_active('manage_products') ?>">
                     <i class="fas fa-box-open"></i>
                     <span>Manage Products</span>
                 </a>
-                <a href="<?php echo $baseUrl; ?>manage_promos" class="nav-link">
+                <!-- Manage Promos Link -->
+                <a href="<?php echo $baseUrl; ?>manage_promos" class="nav-link <?= $is_active('manage_promos') ?>">
                     <i class="fas fa-percent"></i>
                     <span>Manage Promos</span>
                 </a>
-                <a href="#" class="nav-link">
+                <a href="#" class="nav-link <?= $is_active('manage_projects') ?>">
                     <i class="fas fa-tasks"></i>
                     <span>Manage Projects</span>
                 </a>
@@ -124,10 +138,10 @@ $profileImageUrl = default_profile_image($profileImage, $baseUrl, $config);
                     <span>Setting</span>
                 </a>
 
-                <button class="btn btn-outline-danger logout-btn">
+                <a href="<?php echo $baseUrl; ?>logout" class="btn btn-outline-danger logout-btn">
                     <i class="fas fa-sign-out-alt"></i>
                     <span>Logout</span>
-                </button>
+                </a>
             </nav>
         </div>
     </div>
