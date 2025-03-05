@@ -73,7 +73,7 @@ setCacheHeaders($isLive);
 <body style="background-color: #f7f9fb;">
 
     <!--========== INSERT HEADER.PHP ==========-->
-    <?php include '../includes/header.php'; ?>
+    <?php include __DIR__ . '/../includes/admin-navbar.php'; ?>
     <!--========== AKHIR INSERT HEADER.PHP ==========-->
 
     <!--========== AREA SCROLL TO TOP ==========-->
@@ -85,26 +85,8 @@ setCacheHeaders($isLive);
     </div>
     <!--========== AKHIR AREA SCROLL TO TOP ==========-->
 
-    <!--========== AREA GENERIC FLASH MESSAGES ==========-->
-    <div class="jarak-kustom container">
-        <?php if ($successMessage): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <?= htmlspecialchars($successMessage) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-
-        <?php if ($errorMessage): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <?= htmlspecialchars($errorMessage) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-    </div>
-    <!--========== AKHIR AREA GENERIC FLASH MESSAGES ==========-->
-
     <!--========== AREA MANAGE PRODUCTS ==========-->
-    <section class="jarak-kustom">
+    <div class="area-konten-manage-products">
         <div class="container">
             <section class="judul-halaman-admin-dashboard">
                 <h2 class="fs-1 mb-5 text-center">Manage Products</h2>
@@ -247,6 +229,24 @@ setCacheHeaders($isLive);
                     </select>
                 </div>
             </div>
+
+            <!--========== AREA GENERIC FLASH MESSAGES ==========-->
+            <div class="area-generic-flash-messages">
+                <?php if ($successMessage): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($successMessage) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($errorMessage): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($errorMessage) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <!--========== AKHIR AREA GENERIC FLASH MESSAGES ==========-->
 
             <!-- Tombol untuk membuka modal Add Product -->
             <div class="button-add-product">
@@ -607,7 +607,7 @@ setCacheHeaders($isLive);
                 </div>
             </div>
         </div>
-    </section>
+    </div>
     <!--========== AKHIR AREA MANAGE PRODUCTS ==========-->
 
     <!--================ AREA FOOTER =================-->
