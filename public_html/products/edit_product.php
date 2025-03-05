@@ -59,6 +59,8 @@ $pdo = getPDOConnection($config, $env);
 $tags = getAllTags($pdo);
 $categories = getProductCategories($config, $env);
 $products = getAllProductsWithCategoriesAndTags($config, $env);
+$categoryRelations = getProductCategoryRelations($product['product_id'], $config, $env);
+$currentCategoryIds = $categoryRelations['category_ids'] ?? [];
 
 // Step 9: Handle success/error messages and update cache headers
 $flash = processFlashMessagesAndHeaders($isLive);
@@ -134,7 +136,7 @@ setCacheHeaders($isLive);
             <h2 class="mb-4">Halaman Edit Produk / Layanan</h2>
 
             <div class="row g-5">
-                <!-- Kolom Kiri - Live Version -->
+                <!-- KOLOM KIRI - LIVE VERSION -->
                 <div class="col-md-6 separator live-version">
                     <h4 class="section-title">Live Preview</h4>
                     <div class="preview-card shadow-sm">
@@ -186,7 +188,7 @@ setCacheHeaders($isLive);
                     </div>
                 </div>
 
-                <!-- Kolom Kanan - Edit Form -->
+                <!-- KOLOM KANAN - EDIT FORM -->
                 <div class="col-md-6 edit-section">
                     <h4 class="section-title">Edit Product</h4>
                     <form action="<?= $baseUrl ?>edit-product/<?= $slug ?>/<?= $encodedId ?>" method="post"
@@ -195,7 +197,8 @@ setCacheHeaders($isLive);
                         <div class="mb-3">
                             <label for="name" class="form-label">Nama Produk</label>
                             <input type="text" class="form-control" id="name" name="name"
-                                placeholder="Masukkan nama produk">
+                                placeholder="Masukkan nama produk"
+                                value="<?= htmlspecialchars($product['product_name'] ?? '') ?>">
                         </div>
                         <!-- Harga -->
                         <div class="row g-3">
@@ -204,15 +207,18 @@ setCacheHeaders($isLive);
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
                                     <input type="number" class="form-control" id="price" name="price"
-                                        placeholder="50000.00" step="5000">
+                                        placeholder="50000.00" step="5000"
+                                        value="<?= htmlspecialchars($product['price_amount'] ?? '') ?>">
                                 </div>
                             </div>
                             <!-- Status Penjualan -->
                             <div class="col-md-6">
                                 <label for="status" class="form-label">Status</label>
                                 <select class="form-select" id="status" name="status">
-                                    <option value="active" selected>Active</option>
-                                    <option value="inactive">Inactive</option>
+                                    <option value="active" <?= ($product['deleted_at'] === null) ? 'selected' : '' ?>>
+                                        Active</option>
+                                    <option value="inactive" <?= ($product['deleted_at'] !== null) ? 'selected' : '' ?>>
+                                        Inactive</option>
                                 </select>
                             </div>
                         </div>
@@ -220,19 +226,17 @@ setCacheHeaders($isLive);
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
                             <textarea class="form-control" id="description" name="description" rows="4"
-                                placeholder="Masukkan deskripsi produk"></textarea>
+                                placeholder="Masukkan deskripsi produk"><?= htmlspecialchars($product['description'] ?? '') ?>
+                            </textarea>
                         </div>
                         <!-- Category -->
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label for="category_id" class="form-label">Category</label>
-                                <select class="form-select" id="category_id" name="category_id">
-                                    <?php
-                                    $currentCategoryIds = explode(',', $product['category_ids'] ?? '');
-                                    foreach ($categories as $category):
-                                        $isSelected = in_array($category['category_id'], $currentCategoryIds);
-                                        ?>
-                                        <option value="<?= $category['category_id'] ?>" <?= $isSelected ? 'selected' : '' ?>>
+                                <select class="form-select" id="category_id" name="category_id[]" multiple>
+                                    <?php foreach ($categories as $category): ?>
+                                        <option value="<?= $category['category_id'] ?>"
+                                            <?= in_array($category['category_id'], $currentCategoryIds) ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($category['category_name']) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -244,14 +248,15 @@ setCacheHeaders($isLive);
                             <div class="col-md-12">
                                 <label for="tags" class="form-label">Tags</label>
                                 <input type="text" class="form-control" id="tags" name="tags"
-                                    placeholder="Input tag Anda. Tekan spasi untuk melihat daftar tag, pisahkan dengan koma.">
+                                    placeholder="Input tag Anda..."
+                                    value="<?= htmlspecialchars($product['tags'] ?? '') ?>">
                             </div>
                         </div>
                         <!-- Image Produk / Layanan -->
                         <div class="mb-4 mt-4">
                             <label for="image" class="form-label">Product Image</label>
                             <input type="file" class="form-control" id="image" name="image">
-                            <div class="form-text">Current image: product-image.jpg</div>
+                            <div class="form-text">Current image: <?= htmlspecialchars($currentImage) ?></div>
                         </div>
 
                         <div class="d-flex justify-content-between border-top pt-4">
