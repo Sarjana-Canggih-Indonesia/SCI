@@ -112,7 +112,7 @@ $is_active = function ($pageName) use ($activePage) {
                 </a>
 
                 <!-- Manage Users Link -->
-                <a href="= $baseUrl ?>manage_users" class="nav-link <?= $is_active('manage_users') ?>">
+                <a href="<?= $baseUrl ?>manage_users" class="nav-link <?= $is_active('manage_users') ?>">
                     <i class="fas fa-users-cog"></i>
                     <span>Manage Users</span>
                 </a>
