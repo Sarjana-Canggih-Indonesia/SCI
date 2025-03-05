@@ -48,7 +48,7 @@ $profileImageUrl = $baseUrl . "uploads/profile_images/" . $profileImage;
 
 <body style="background-color: #f7f9fb;">
     <!--========== INSERT HEADER.PHP ==========-->
-    <?php include __DIR__ . '/../includes/header.php'; ?>
+    <?php include __DIR__ . '/../includes/admin-navbar.php'; ?>
     <!--========== AKHIR INSERT HEADER.PHP ==========-->
 
     <!--========== AREA SCROLL TO TOP ==========-->
@@ -61,9 +61,9 @@ $profileImageUrl = $baseUrl . "uploads/profile_images/" . $profileImage;
     <!--========== AKHIR AREA SCROLL TO TOP ==========-->
 
     <!--========== AREA PROMO ==========-->
-    <div class="jarak-kustom container">
+    <div class="container">
         <section class="judul-halaman-admin-dashboard">
-            <h2 class="fs-1 mb-5 text-center">Admin Dashboard</h2>
+            <h2 class="fs-1 fw-bold my-5 text-start">Admin Dashboard</h2>
         </section>
         <section class="user-info-dan-navigasi-halaman-admin">
             <div class="row mb-4">
