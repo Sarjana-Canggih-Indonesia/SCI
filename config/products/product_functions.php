@@ -164,6 +164,50 @@ function getProductCategories($config, $env)
 }
 
 /**
+ * Retrieves category relations for a specific product.
+ * 
+ * This function fetches category data related to a given product ID from the database.
+ * It returns an associative array containing:
+ * - `category_ids`: An array of category IDs associated with the product.
+ * - `category_names`: An array of category names associated with the product.
+ * - `error`: A boolean indicating whether an error occurred.
+ * 
+ * @param int $productId The ID of the product whose category relations are being retrieved.
+ * @param array $config Database configuration settings.
+ * @param string $env Environment settings used for error handling.
+ * @return array An associative array containing category relations and an error status.
+ */
+function getProductCategoryRelations($productId, $config, $env)
+{
+    try {
+        $pdo = getPDOConnection($config, $env); // Establishes a database connection
+
+        // SQL query to fetch category details for a specific product
+        $sql = "SELECT pc.category_id, pc.category_name FROM product_categories pc 
+                INNER JOIN product_category_mapping pcm ON pc.category_id = pcm.category_id 
+                WHERE pcm.product_id = :product_id";
+
+        $stmt = $pdo->prepare($sql); // Prepares the SQL statement
+        $stmt->execute(['product_id' => $productId]); // Executes query with bound parameter
+
+        $categories = $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetches results as an associative array
+
+        return [
+            'category_ids' => array_column($categories, 'category_id'), // Extracts category IDs
+            'category_names' => array_column($categories, 'category_name'), // Extracts category names
+            'error' => false // Indicates successful execution
+        ];
+    } catch (Exception $e) {
+        handleError($e->getMessage(), $env); // Handles any errors
+        return [
+            'category_ids' => [],
+            'category_names' => [],
+            'error' => true // Indicates an error occurred
+        ];
+    }
+}
+
+/**
  * Retrieves a list of products with their associated categories, tags, and images.
  * 
  * This function fetches product data from the database, including:
