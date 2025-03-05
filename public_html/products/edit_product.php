@@ -51,7 +51,7 @@ $profileImageUrl = $baseUrl . "uploads/profile_images/" . $profileImage;
 
 // Step 6: Handle the add product form submission ONLY if the request method is POST.
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    handleAddProductForm($config, $env);
+    handleEditProductForm($config, $env);
 }
 
 // Step 8: Retrieve product categories and tags from the database.
