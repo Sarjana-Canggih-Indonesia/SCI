@@ -1307,27 +1307,6 @@ function exportProductsToCSV($config, $env)
 }
 
 /**
- * Generates a URL-friendly slug from a product name.
- * 
- * This function converts the given product name into a lowercase, 
- * hyphen-separated string that can be used as a URL slug.
- * 
- * The process includes:
- * - Converting all characters to lowercase.
- * - Replacing non-alphanumeric characters with hyphens.
- * - Trimming unnecessary hyphens from the start and end of the string.
- * 
- * @param string $name The product name to be converted into a slug.
- * @return string The generated slug.
- */
-function generateProductSlug($name)
-{
-    $slug = strtolower($name); // Convert to lowercase
-    $slug = preg_replace('/[^a-z0-9]+/', '-', $slug); // Replace non-alphanumeric characters with hyphens
-    return trim($slug, '-'); // Trim hyphens from the beginning and end
-}
-
-/**
  * Generates pagination links for navigating between pages.
  * 
  * This function creates an array of pagination links, including:
