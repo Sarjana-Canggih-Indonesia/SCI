@@ -79,7 +79,7 @@ $is_active = function ($pageName) use ($activePage) {
         <!-- Offcanvas Close Button -->
         <div class="offcanvas-header position-relative">
             <button type="button" class="logo-close-btn" data-toggle-minimize aria-label="Close">
-                <img src="<?php echo $baseUrl; ?>assets/images/logoscblue.png" alt="Logo" class="close-logo">
+                <i class="fas fa-times close-icon"></i>
             </button>
         </div>
         <!-- Offcanvas Content -->
@@ -159,11 +159,28 @@ $is_active = function ($pageName) use ($activePage) {
             const toggleElements = document.querySelectorAll('[data-toggle-minimize]');
             const bsOffcanvas = new bootstrap.Offcanvas(sidebar);
 
+            // Fungsi untuk update ikon
+            const updateCloseIcon = () => {
+                const closeIcon = document.querySelector('.logo-close-btn .close-icon');
+                const isMinimized = sidebar.classList.contains('minimized');
+
+                if (closeIcon) {
+                    if (isMinimized) {
+                        closeIcon.classList.remove('fa-times');
+                        closeIcon.classList.add('fa-chevron-right');
+                    } else {
+                        closeIcon.classList.remove('fa-chevron-right');
+                        closeIcon.classList.add('fa-times');
+                    }
+                }
+            }
+
             // Fungsi toggle minimize
             const toggleMinimize = () => {
                 const isMinimized = !sidebar.classList.contains('minimized');
                 sidebar.classList.toggle('minimized', isMinimized);
                 localStorage.setItem('sidebarMinimized', isMinimized);
+                updateCloseIcon();
             }
 
             // Handle semua toggle element
@@ -182,9 +199,16 @@ $is_active = function ($pageName) use ($activePage) {
                     bsOffcanvas.show();
                     const wasMinimized = localStorage.getItem('sidebarMinimized') === 'true';
                     sidebar.classList.toggle('minimized', wasMinimized);
+                    updateCloseIcon();
                 } else {
                     bsOffcanvas.hide();
                     sidebar.classList.remove('minimized');
+                    // Reset ikon ke 'times' di mobile
+                    const closeIcon = document.querySelector('.logo-close-btn .close-icon');
+                    if (closeIcon) {
+                        closeIcon.classList.remove('fa-chevron-right');
+                        closeIcon.classList.add('fa-times');
+                    }
                 }
             }
 
@@ -194,6 +218,7 @@ $is_active = function ($pageName) use ($activePage) {
                     bsOffcanvas.show();
                     const wasMinimized = localStorage.getItem('sidebarMinimized') === 'true';
                     sidebar.classList.toggle('minimized', wasMinimized);
+                    updateCloseIcon();
                 }
             }
 

@@ -207,10 +207,10 @@
   transition: all 0.3s ease, transform 0.3s ease !important;
 }
 
-.close-logo {
-  width: 30px; /* Sesuaikan dengan ukuran logo */
-  height: 30px;
-  transition: transform 0.2s ease;
+.logo-close-btn .close-icon {
+  font-size: 1.2rem;
+  color: #495057;
+  transition: all 0.3s ease;
 }
 
 .logo-close-btn:hover {
@@ -219,21 +219,18 @@
   border-radius: 50%;
 }
 
-.logo-close-btn:hover .close-logo {
-  transform: scale(1.1);
-}
-
-/* Untuk state minimized */
 .minimized .logo-close-btn {
   right: 0.5rem;
   top: 0.5rem;
+  left: 0.375rem;
 }
 
-.minimized .close-logo {
-  width: 24px;
-  height: 24px;
+.minimized .logo-close-btn .close-icon {
+  font-size: 1rem;
+  color: #6c757d;
 }
 
-.offcanvas-halaman-admin.minimized .logo-close-btn {
-  transform: rotate(360deg);
+.logo-close-btn:hover .close-icon {
+  transform: scale(1.1);
+  color: #007bff;
 }
