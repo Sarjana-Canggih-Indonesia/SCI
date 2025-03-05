@@ -164,58 +164,53 @@ function getProductCategories($config, $env)
 }
 
 /**
- * Retrieves a list of products along with their associated categories, tags, and images.
- *
+ * Retrieves a list of products with their associated categories, tags, and images.
+ * 
  * This function fetches product data from the database, including:
- * - Product details (ID, name, slug, description, price, currency, timestamps)
+ * - Product details (ID, name, slug, description, price, currency, active status, timestamps)
  * - Associated images as a concatenated string
  * - Associated categories as a concatenated string
  * - Associated tags as a concatenated string
  * 
- * The function supports pagination using the provided limit and offset parameters.
- *
+ * It supports pagination through the `limit` and `offset` parameters.
+ * 
  * @param array $config Database configuration settings.
  * @param string $env Environment settings used for error handling.
- * @param int $limit The number of products to retrieve.
- * @param int $offset The number of products to skip before starting to fetch results.
+ * @param int $limit The number of products to retrieve per page.
+ * @param int $offset The number of products to skip before fetching results.
  * @return array An associative array containing product data.
  */
 function getAllProductsWithCategoriesAndTags($config, $env, $limit = 10, $offset = 0)
 {
     try {
-        $pdo = getPDOConnection($config, $env); // Establish a database connection.
+        $pdo = getPDOConnection($config, $env); // Establishes a database connection
 
-        // SQL query to fetch products with categories, tags, and images.
+        // SQL query to fetch product details along with associated categories, tags, and images
         $sql = "SELECT 
-                    p.product_id,
-                    p.product_name,
-                    p.slug,
-                    p.description,
-                    p.price_amount,
-                    p.currency,
-                    GROUP_CONCAT(DISTINCT pi.image_path ORDER BY pi.image_id SEPARATOR ', ') AS images,
-                    p.created_at,
-                    p.updated_at,
-                    GROUP_CONCAT(DISTINCT pc.category_name ORDER BY pc.category_name SEPARATOR ', ') AS categories,
+                    p.product_id, p.product_name, p.slug, p.description, 
+                    p.price_amount, p.currency, p.active, 
+                    GROUP_CONCAT(DISTINCT pi.image_path ORDER BY pi.image_id SEPARATOR ', ') AS images, 
+                    p.created_at, p.updated_at, 
+                    GROUP_CONCAT(DISTINCT pc.category_name ORDER BY pc.category_name SEPARATOR ', ') AS categories, 
                     GROUP_CONCAT(DISTINCT t.tag_name ORDER BY t.tag_name SEPARATOR ', ') AS tags
                 FROM products p
-                LEFT JOIN product_images pi ON p.product_id = pi.product_id -- Join product images
-                LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id -- Mapping table for categories
-                LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id -- Join categories
-                LEFT JOIN product_tag_mapping ptm ON p.product_id = ptm.product_id -- Mapping table for tags
-                LEFT JOIN tags t ON ptm.tag_id = t.tag_id -- Join tags
+                LEFT JOIN product_images pi ON p.product_id = pi.product_id  -- Joining product images
+                LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id  -- Mapping products to categories
+                LEFT JOIN product_categories pc ON pcm.category_id = pc.category_id  -- Fetching category names
+                LEFT JOIN product_tag_mapping ptm ON p.product_id = ptm.product_id  -- Mapping products to tags
+                LEFT JOIN tags t ON ptm.tag_id = t.tag_id  -- Fetching tag names
                 GROUP BY p.product_id
-                LIMIT :limit OFFSET :offset"; // Apply pagination
+                LIMIT :limit OFFSET :offset";
 
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT); // Bind limit parameter
-        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT); // Bind offset parameter
-        $stmt->execute();
+        $stmt = $pdo->prepare($sql); // Prepares the SQL statement
+        $stmt->bindParam(':limit', $limit, PDO::PARAM_INT); // Binds the limit parameter
+        $stmt->bindParam(':offset', $offset, PDO::PARAM_INT); // Binds the offset parameter
+        $stmt->execute(); // Executes the query
 
-        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetch and return results as an associative array.
+        return $stmt->fetchAll(PDO::FETCH_ASSOC); // Fetches the results as an associative array
     } catch (Exception $e) {
-        handleError($e->getMessage(), $env); // Handle errors by logging them
-        return []; // Return an empty array if an error occurs
+        handleError($e->getMessage(), $env); // Handles any errors
+        return [];
     }
 }
 
