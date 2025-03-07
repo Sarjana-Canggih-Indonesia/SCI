@@ -445,3 +445,64 @@ function verifyHttpMethod($allowedMethod)
         exit(); // Stop script execution to prevent further processing
     }
 }
+
+/**
+ * Validates product image count constraints
+ * 
+ * @param PDO $pdo Koneksi database
+ * @param int $product_id ID produk
+ * @param array $images_to_delete Gambar yang akan dihapus
+ * @param array $new_images Gambar baru
+ * @return array Array of ValidationViolation objects
+ */
+function validateProductImageCount(PDO $pdo, $product_id, $images_to_delete, $new_images)
+{
+    $violations = [];
+
+    try {
+        $currentImageCount = getCurrentImageCount($pdo, $product_id);
+        $remainingAfterDelete = $currentImageCount - count($images_to_delete);
+        $totalAfterUpdate = $remainingAfterDelete + count($new_images);
+
+        if ($totalAfterUpdate < 1) {
+            $violations[] = new Symfony\Component\Validator\ConstraintViolation(
+                'Produk harus memiliki minimal 1 gambar',
+                '',
+                [],
+                '',
+                '',
+                ''
+            );
+        }
+    } catch (RuntimeException $e) {
+        $violations[] = new Symfony\Component\Validator\ConstraintViolation(
+            'Gagal memvalidasi gambar: ' . $e->getMessage(),
+            '',
+            [],
+            '',
+            '',
+            ''
+        );
+    }
+
+    return $violations;
+}
+
+/**
+ * Retrieves the current number of images associated with a product
+ * 
+ * @param PDO $pdo Koneksi database yang valid
+ * @param int $product_id ID produk yang akan dicek
+ * @return int Jumlah gambar saat ini
+ * @throws RuntimeException Jika terjadi error database
+ */
+function getCurrentImageCount(PDO $pdo, $product_id)
+{
+    try {
+        $stmt = $pdo->prepare("SELECT COUNT(*) FROM product_images WHERE product_id = ?");
+        $stmt->execute([$product_id]);
+        return (int) $stmt->fetchColumn();
+    } catch (PDOException $e) {
+        throw new RuntimeException("Gagal mengambil jumlah gambar: " . $e->getMessage());
+    }
+}
