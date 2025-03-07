@@ -241,7 +241,7 @@ function validateFileCount($fileCount, $minFiles = 1, $maxFiles = 10)
  * @return array An associative array containing 'error' (boolean) and 'message' (string).
  *               If successful, it also returns 'data' containing file details.
  */
-function validateSingleFile($file, $allowedExtensions, $allowedMimeTypes, $maxSize, $maxWidth, $maxHeight)
+function validateUploadedImage($file, $allowedExtensions, $allowedMimeTypes, $maxSize, $maxWidth, $maxHeight)
 {
     if ($file['error'] !== UPLOAD_ERR_OK) {
         return ['error' => true, 'message' => 'Upload error occurred. Error code: ' . $file['error']]; // Return error if upload failed
@@ -335,7 +335,7 @@ function validateProductImages($files, $maxWidth = 2000, $maxHeight = 2000)
         ]; // Extract individual file data
 
         // Validate each file
-        $results[] = validateSingleFile($file, $allowedExtensions, $allowedMimeTypes, $maxSize, $maxWidth, $maxHeight);
+        $results[] = validateUploadedImage($file, $allowedExtensions, $allowedMimeTypes, $maxSize, $maxWidth, $maxHeight);
     }
 
     return $results; // Return validation results for all files
