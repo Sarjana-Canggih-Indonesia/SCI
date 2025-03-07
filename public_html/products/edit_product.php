@@ -276,6 +276,7 @@ setCacheHeaders($isLive);
                                 <i class="fa-solid fa-xmark"></i> Close
                             </button>
                             <button type="submit" class="btn btn-primary">
+                            <!-- Save Changes Button -->
                                 <i class="fa-solid fa-save"></i> Save Changes
                             </button>
                         </div>
