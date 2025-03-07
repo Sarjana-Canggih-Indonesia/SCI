@@ -120,6 +120,35 @@ function getProducts($config, $env)
 }
 
 /**
+ * Retrieves the image path of a product from the database.
+ *
+ * This function queries the `product_images` table to fetch the first image
+ * path associated with a given product ID. If no image is found, it returns `null`.
+ * In case of an exception, it logs the error and also returns `null`.
+ *
+ * @param int $productId The ID of the product whose image path is to be retrieved.
+ * @param array $config The database configuration settings.
+ * @param string $env The environment configuration settings.
+ * @return string|null The image path if found, otherwise null.
+ */
+function getProductImagePath($productId, $config, $env)
+{
+    try {
+        $pdo = getPDOConnection($config, $env); // Establish database connection
+
+        // Prepare query to fetch the first image path for the given product ID
+        $stmt = $pdo->prepare("SELECT image_path FROM product_images WHERE product_id = :product_id LIMIT 1");
+        $stmt->execute(['product_id' => $productId]); // Execute the query with the product ID parameter
+        $image = $stmt->fetch(PDO::FETCH_ASSOC); // Fetch the result as an associative array
+
+        return $image ? $image['image_path'] : null; // Return image path if found, otherwise return null
+    } catch (Exception $e) {
+        handleError($e->getMessage(), $env); // Log the error and return null in case of an exception
+        return null;
+    }
+}
+
+/**
  * Retrieves a single product by its ID from the database.
  *
  * This function establishes a connection to the database using PDO,
