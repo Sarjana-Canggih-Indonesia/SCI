@@ -309,6 +309,118 @@ setCacheHeaders($isLive);
             }
         }
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const fileInput = document.getElementById('image');
+            const fileUploadArea = document.querySelector('.file-upload-area');
+            const imagePreview = document.getElementById('image-preview');
+            const validationFeedback = document.getElementById('validation-feedback');
+            const maxFiles = 10;
+            const maxSize = 2 * 1024 * 1024; // 2MB
+            const maxWidth = 2000;
+            const maxHeight = 2000;
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+            // Drag-and-Drop Functionality
+            fileUploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.add('dragover');
+            });
+
+            fileUploadArea.addEventListener('dragleave', () => {
+                fileUploadArea.classList.remove('dragover');
+            });
+
+            fileUploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                fileUploadArea.classList.remove('dragover');
+                fileInput.files = e.dataTransfer.files;
+                handleFiles(fileInput.files);
+            });
+
+            // File Input Change Event
+            fileInput.addEventListener('change', (e) => {
+                handleFiles(e.target.files);
+            });
+
+            // Handle File Validation and Preview
+            async function handleFiles(files) {
+                validationFeedback.textContent = '';
+                imagePreview.innerHTML = '';
+                let errors = [];
+
+                if (files.length > maxFiles) {
+                    errors.push(`❌ You can upload a maximum of ${maxFiles} files.`);
+                    fileInput.value = '';
+                    validationFeedback.textContent = errors.join('\n');
+                    return;
+                }
+
+                for (const file of files) {
+                    const fileErrors = [];
+                    const img = document.createElement('img');
+                    img.src = URL.createObjectURL(file);
+                    img.classList.add('img-thumbnail', 'preview-image');
+                    img.style.maxWidth = '150px';
+                    img.style.maxHeight = '150px';
+
+                    // Validate File Type
+                    if (!allowedTypes.includes(file.type)) {
+                        fileErrors.push(`❌ ${file.name}: Invalid file type (only JPG, PNG, WEBP allowed).`);
+                    }
+
+                    // Validate File Size
+                    if (file.size > maxSize) {
+                        fileErrors.push(`❌ ${file.name}: File size exceeds 2MB.`);
+                    }
+
+                    // Validate Image Dimensions
+                    try {
+                        await new Promise((resolve, reject) => {
+                            img.onload = () => {
+                                if (img.naturalWidth > maxWidth || img.naturalHeight > maxHeight) {
+                                    reject(`❌ ${file.name}: Dimensions exceed ${maxWidth}x${maxHeight}px.`);
+                                } else {
+                                    resolve();
+                                }
+                            };
+                            img.onerror = () => {
+                                reject(`❌ ${file.name}: Invalid image file.`);
+                            };
+                        });
+                    } catch (error) {
+                        fileErrors.push(error);
+                    }
+
+                    // Display Preview or Errors
+                    if (fileErrors.length > 0) {
+                        errors.push(...fileErrors);
+                    } else {
+                        const previewContainer = document.createElement('div');
+                        previewContainer.classList.add('position-relative', 'd-inline-block');
+                        previewContainer.innerHTML = `
+                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0" onclick="removePreview(this)">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    `;
+                        previewContainer.querySelector('button').insertAdjacentElement('beforebegin', img);
+                        imagePreview.appendChild(previewContainer);
+                    }
+                }
+
+                if (errors.length > 0) {
+                    validationFeedback.textContent = errors.join('\n');
+                    fileInput.value = '';
+                }
+            }
+
+            // Remove Preview Function
+            window.removePreview = function (button) {
+                const previewContainer = button.closest('div');
+                previewContainer.remove();
+            };
+        });
+    </script>
 </body>
 
 </html>
