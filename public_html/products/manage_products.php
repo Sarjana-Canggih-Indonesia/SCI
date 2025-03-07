@@ -231,7 +231,7 @@ setCacheHeaders($isLive);
             </div>
 
             <!--========== AREA GENERIC FLASH MESSAGES ==========-->
-            <div class="area-generic-flash-messages">
+            <div class="area-generic-flash-messages mb-4">
                 <?php if ($successMessage): ?>
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         <?= htmlspecialchars($successMessage) ?>
