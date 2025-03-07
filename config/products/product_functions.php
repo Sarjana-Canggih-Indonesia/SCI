@@ -700,42 +700,44 @@ function handleAddProductForm($config, $env)
 }
 
 /**
- * Handles the uploading of product images.
+ * Handles the upload of multiple product images.
  *
- * This function processes uploaded image files, validates them, generates unique filenames, 
- * and moves them to the designated upload directory. It returns an array of successfully uploaded 
- * image paths.
+ * This function processes uploaded product images by:
+ * - Validating the images using `validateProductImages()`.
+ * - Creating the upload directory if it does not exist.
+ * - Generating unique filenames to prevent conflicts.
+ * - Moving valid images to the designated upload directory.
+ * - Returning an array of successfully uploaded image paths.
  *
- * @param array $files The uploaded file array from $_FILES.
- * @return array An array containing paths of successfully uploaded images.
+ * @param array $files The uploaded files array from `$_FILES`.
+ * 
+ * @return array An array containing the relative paths of successfully uploaded images.
  */
 function handleProductImagesUpload($files)
 {
-    if (!isset($files))
-        return []; // Return an empty array if no files are provided
+    if (!isset($files) || empty($files['name']))
+        return []; // Return an empty array if no files are uploaded
 
     $uploadDir = __DIR__ . '/../../public_html/uploads/products/';
     if (!file_exists($uploadDir))
-        mkdir($uploadDir, 0755, true); // Ensure upload directory exists
+        mkdir($uploadDir, 0755, true); // Ensure the upload directory exists
 
     $validationResults = validateProductImages($files); // Validate uploaded images
     $uploadedImages = [];
 
-    foreach ($validationResults as $index => $result) {
+    foreach ($validationResults as $result) {
         if ($result['error'])
             continue; // Skip invalid images
 
-        // Generate a unique filename for the image to prevent name conflicts
-        $filename = uniqid('product_', true) . '.' . $result['data']['extension'];
-        $destinationPath = $uploadDir . $filename;
+        $filename = uniqid('product_', true) . '.' . $result['data']['extension']; // Generate a unique filename
+        $destinationPath = $uploadDir . $filename; // Define the final file path
 
-        // Move the uploaded file to the designated directory
-        if (move_uploaded_file($files['tmp_name'][$index], $destinationPath)) {
-            $uploadedImages[] = '/uploads/products/' . $filename; // Store relative file path
+        if (move_uploaded_file($result['data']['tmp_path'], $destinationPath)) {
+            $uploadedImages[] = '/uploads/products/' . $filename; // Store the relative file path
         }
     }
 
-    return $uploadedImages; // Return successfully uploaded image paths
+    return $uploadedImages; // Return an array of successfully uploaded image paths
 }
 
 /**
