@@ -149,11 +149,23 @@ setCacheHeaders($isLive);
 
                         <!-- Kategori dan Status -->
                         <div class="d-flex gap-2 mb-3">
-                            <span
-                                class="badge bg-primary"><?= htmlspecialchars($product['category_name'] ?? 'Uncategorized') ?></span>
-                            <span class="badge <?= ($product['deleted_at'] === null) ? 'bg-success' : 'bg-danger' ?>">
-                                <?= ($product['deleted_at'] === null) ? 'Active' : 'Inactive' ?>
-                            </span>
+                            <!-- Kategori -->
+                            <?php
+                            // Loop melalui semua kategori yang tersedia
+                            foreach ($categories as $category) {
+                                // Periksa apakah kategori saat ini terkait dengan produk
+                                if (in_array($category['category_id'], $currentCategoryIds)) {
+                                    echo '<span class="badge bg-primary">' . htmlspecialchars($category['category_name']) . '</span>';
+                                }
+                            }
+
+                            // Jika tidak ada kategori yang terkait, tampilkan "Uncategorized"
+                            if (empty($currentCategoryIds)) {
+                                echo '<span class="badge bg-secondary">Uncategorized</span>';
+                            }
+                            ?>
+                            <!-- Status Penjualan -->
+                            <?= getProductStatus($product['active']) ?>
                         </div>
 
                         <!-- Harga -->
