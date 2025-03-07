@@ -23,9 +23,24 @@ if (!$slug || !$encodedId) {
 
 // Dekode ID menggunakan Optimus
 $productId = $optimus->decode($encodedId);
+try {
+    $currentImages = getProductImages($pdo, $productId);
+} catch (RuntimeException $e) {
+    // Handle error sesuai kebutuhan
+    $currentImages = [];
+    error_log($e->getMessage());
+}
 
 // Dapatkan data produk dari database
 $product = getProductBySlugAndOptimus($slug, $encodedId, $config, $env);
+if ($product) {
+    $product['image_path'] = getProductImagePath($product['product_id'], $config, $env);
+}
+if (isset($_SESSION['old_input'])) {
+    $productData = array_merge($product, $_SESSION['old_input']); // Gabung data
+} else {
+    $productData = $product; // Pakai data database
+}
 
 // Jika produk tidak ditemukan
 if (!$product) {
@@ -35,7 +50,7 @@ if (!$product) {
 }
 
 // Ambil data yang diperlukan dari $product
-$currentImage = $product['image_path'] ?? 'default_product.jpg';
+$currentImage = $product['image_path'] ?? 'default_product.png';
 
 // Step 3: Load dynamic URL configuration
 $config = getEnvironmentConfig();
@@ -58,9 +73,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $pdo = getPDOConnection($config, $env);
 $tags = getAllTags($pdo);
 $categories = getProductCategories($config, $env);
+if (empty($categories)) {
+    die("Error: Tidak ada kategori yang ditemukan di database!");
+}
 $products = getAllProductsWithCategoriesAndTags($config, $env);
 $categoryRelations = getProductCategoryRelations($product['product_id'], $config, $env);
 $currentCategoryIds = $categoryRelations['category_ids'] ?? [];
+$selectedCategoryId = $productData['productCategory'] ?? (isset($currentCategoryIds[0]) ? $currentCategoryIds[0] : null);
+$currentTagIds = getProductTagRelations($productId, $config, $env);
+// Jika tidak ada tag, set sebagai array kosong
+$currentTagIds = $currentTagIds ?: [];
 
 // Step 9: Handle success/error messages and update cache headers
 $flash = processFlashMessagesAndHeaders($isLive);
@@ -95,6 +117,23 @@ setCacheHeaders($isLive);
     <!-- Custom CSS -->
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/halaman-admin.css" />
+    <style>
+        .file-upload-area {
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+        }
+
+        .file-upload-area.dragover {
+            background-color: #e9f5ff !important;
+            border-color: #86b7fe !important;
+        }
+
+        .preview-image {
+            object-fit: cover;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
 </head>
 
 <body style="background-color: #f7f9fb;">
@@ -141,7 +180,7 @@ setCacheHeaders($isLive);
                     <h4 class="section-title">Live Preview</h4>
                     <div class="preview-card shadow-sm">
                         <!-- Gambar Produk -->
-                        <img src="<?= $baseUrl . ($product['image_path'] ?? 'assets/images/default_product.jpg') ?>"
+                        <img src="<?= $baseUrl . ($product['image_path'] ?? 'assets/images/default_product.png') ?>"
                             class="img-fluid mb-3 rounded" alt="Product Image"
                             style="max-height: 200px; object-fit: cover;">
                         <!-- Nama Produk -->
@@ -182,19 +221,11 @@ setCacheHeaders($isLive);
                         </div>
 
                         <!-- Tags -->
-                        <div class="tags-section">
-                            <h5>Tags</h5>
-                            <div class="d-flex gap-2">
-                                <?php
-                                $tags = explode(',', $product['tags'] ?? '');
-                                foreach ($tags as $tag):
-                                    if (trim($tag)):
-                                        ?>
-                                        <span class="badge bg-secondary"><?= htmlspecialchars(trim($tag)) ?></span>
-                                        <?php
-                                    endif;
-                                endforeach;
-                                ?>
+                        <div class="row g-3">
+                            <div class="col-md-12">
+                                <label for="tags" class="form-label">Tags</label>
+                                <input type="hidden" name="tags" id="tag-ids"
+                                    value="<?= implode(',', $currentTagIds) ?>">
                             </div>
                         </div>
                     </div>
@@ -205,20 +236,23 @@ setCacheHeaders($isLive);
                     <h4 class="section-title">Edit Product</h4>
                     <form action="<?= $baseUrl ?>edit-product/<?= $slug ?>/<?= $encodedId ?>" method="post"
                         enctype="multipart/form-data">
+                        <!-- Produk ID -->
+                        <input type="hidden" name="product_id" value="<?= $product['product_id'] ?>">
                         <!-- Nama Produk -->
                         <div class="mb-3">
                             <label for="name" class="form-label">Nama Produk</label>
-                            <input type="text" class="form-control" id="name" name="name"
+                            <input type="text" class="form-control" id="name" name="product_name"
                                 placeholder="Masukkan nama produk"
                                 value="<?= htmlspecialchars($product['product_name'] ?? '') ?>">
                         </div>
-                        <!-- Harga -->
+                        <!-- Harga & Status Penjualan -->
                         <div class="row g-3">
+                            <!-- Harga -->
                             <div class="col-md-6">
                                 <label for="price" class="form-label">Price</label>
                                 <div class="input-group">
                                     <span class="input-group-text">Rp</span>
-                                    <input type="number" class="form-control" id="price" name="price"
+                                    <input type="number" class="form-control" id="price" name="price_amount"
                                         placeholder="50000.00" step="5000"
                                         value="<?= htmlspecialchars($product['price_amount'] ?? '') ?>">
                                 </div>
@@ -226,10 +260,10 @@ setCacheHeaders($isLive);
                             <!-- Status Penjualan -->
                             <div class="col-md-6">
                                 <label for="status" class="form-label">Status</label>
-                                <select class="form-select" id="status" name="status">
-                                    <option value="active" <?= ($product['active'] === null) ? 'selected' : '' ?>>
-                                        Active</option>
-                                    <option value="inactive" <?= ($product['active'] !== null) ? 'selected' : '' ?>>
+                                <select class="form-select" id="status" name="active">
+                                    <option value="active" <?= $product['active'] === 'active' ? 'selected' : '' ?>>Active
+                                    </option>
+                                    <option value="inactive" <?= $product['active'] === 'inactive' ? 'selected' : '' ?>>
                                         Inactive</option>
                                 </select>
                             </div>
@@ -237,18 +271,19 @@ setCacheHeaders($isLive);
                         <!-- Description -->
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
-                            <textarea class="form-control" id="description" name="description" rows="4"
+                            <textarea class="form-control" id="description" name="product_description" rows="4"
                                 placeholder="Masukkan deskripsi produk"><?= htmlspecialchars($product['description'] ?? '') ?>
                             </textarea>
                         </div>
                         <!-- Category -->
                         <div class="row g-3">
                             <div class="col-md-12">
-                                <label for="category_id" class="form-label">Category</label>
-                                <select class="form-select" id="category_id" name="category_id[]" multiple>
+                                <label for="category" class="form-label">Category</label>
+                                <select class="form-select" id="category" name="productCategory">
+                                    <option value="">Pilih Kategori</option>
                                     <?php foreach ($categories as $category): ?>
-                                        <option value="<?= $category['category_id'] ?>"
-                                            <?= in_array($category['category_id'], $currentCategoryIds) ? 'selected' : '' ?>>
+                                        <option value="<?= htmlspecialchars($category['category_id']) ?>"
+                                            <?= ($category['category_id'] == $selectedCategoryId) ? 'selected' : '' ?>>
                                             <?= htmlspecialchars($category['category_name']) ?>
                                         </option>
                                     <?php endforeach; ?>
@@ -259,16 +294,59 @@ setCacheHeaders($isLive);
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label for="tags" class="form-label">Tags</label>
-                                <input type="text" class="form-control" id="tags" name="tags"
-                                    placeholder="Input tag Anda..."
-                                    value="<?= htmlspecialchars($product['tags'] ?? '') ?>">
+                                <input type="hidden" name="tags" id="tag-ids"
+                                    value="<?= implode(',', $currentTagIds) ?>">
+                                <input type="text" class="form-control" id="tag-input"
+                                    placeholder="Cari atau tambah tag...">
                             </div>
                         </div>
                         <!-- Image Produk / Layanan -->
                         <div class="mb-4 mt-4">
-                            <label for="image" class="form-label">Product Image</label>
-                            <input type="file" class="form-control" id="image" name="image">
-                            <div class="form-text">Current image: <?= htmlspecialchars($currentImage) ?></div>
+                            <label for="image" class="form-label">Product Images</label>
+                            <div class="file-upload-area border rounded p-3 text-center bg-light">
+                                <p class="text-muted">Drag & drop images here or click to upload</p>
+                                <input type="file" class="form-control d-none" id="image" name="productImages[]"
+                                    multiple accept="image/*">
+                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                    onclick="document.getElementById('image').click()">
+                                    <i class="fa-solid fa-upload"></i> Upload Images
+                                </button>
+                            </div>
+                            <div id="validation-feedback" class="text-danger small mt-2"></div>
+                            <div id="image-preview" class="d-flex flex-wrap gap-2 mt-3"></div>
+                            <div class="current-images mb-4">
+                                <label class="form-label">Current Images</label>
+                                <div class="row row-cols-3 g-3">
+                                    <?php foreach ($currentImages as $image): ?>
+                                        <div class="col">
+                                            <div class="card position-relative">
+                                                <img src="<?= $baseUrl . $image['image_path'] ?>"
+                                                    class="card-img-top preview-image" alt="Gambar Produk">
+                                                <div class="card-footer">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input" type="checkbox"
+                                                            name="images_to_delete[]"
+                                                            value="<?= htmlspecialchars($image['image_path']) ?>"
+                                                            id="delete-<?= $image['image_id'] ?>">
+                                                        <label class="form-check-label small text-danger"
+                                                            for="delete-<?= $image['image_id'] ?>">
+                                                            Hapus Gambar
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                            <div class="form-text">Upload up to 10 images (JPG, PNG, WEBP), max 2MB each, dimensions up
+                                to 2000x2000px.</div>
+                        </div>
+
+                        <!-- CSRF -->
+                        <div class="csrf">
+                            <input type="hidden" name="csrf_token"
+                                value="<?= htmlspecialchars($_SESSION['csrf_token']) ?>">
                         </div>
 
                         <div class="d-flex justify-content-between border-top pt-4">
@@ -302,7 +380,6 @@ setCacheHeaders($isLive);
     <script type="text/javascript"
         src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
     <!-- Custom JS -->
-    <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/js/custom.js"></script>
     <script> const BASE_URL = '<?= $baseUrl ?>';</script>
     <script>
         function handleClose() {
@@ -322,6 +399,52 @@ setCacheHeaders($isLive);
             const maxWidth = 2000;
             const maxHeight = 2000;
             const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+            // ==================== KONFIGURASI TAGIFY ==================== //
+            const tagInputEl = document.getElementById('tag-input');
+            const tagIdsInput = document.getElementById('tag-ids');
+
+            // Format whitelist untuk Tagify (array of objects)
+            const tagsWhitelist = <?= json_encode(array_map(function ($tag) {
+                return ['id' => $tag['tag_id'], 'value' => $tag['tag_name']];
+            }, $tags)) ?>;
+
+            // Inisialisasi Tagify
+            const tagify = new Tagify(tagInputEl, {
+                whitelist: tagsWhitelist,
+                enforceWhitelist: false, // Izinkan tag custom
+                dropdown: {
+                    enabled: 1,
+                    maxItems: 50,
+                    closeOnSelect: false,
+                    highlightFirst: true
+                },
+                editTags: true,
+                duplicates: false,
+                placeholder: "Masukkan tag...",
+                maxTags: 10,
+                pattern: /^[a-zA-Z0-9\s\-_]+$/, // Pola validasi
+                tagTextProp: 'value', // Tampilkan value dari whitelist
+                idProp: 'id' // Simpan id ke dalam input hidden
+            });
+
+            // Event handler untuk update input hidden
+            tagify.on('add', function (e) {
+                const tagIds = tagify.value.map(tag => tag.id);
+                tagIdsInput.value = tagIds.join(',');
+
+                // Validasi manual
+                const lastTag = e.detail.data;
+                if (!this.pattern.test(lastTag.value)) {
+                    alert(`Tag tidak valid: ${lastTag.value}`);
+                    this.removeTag(lastTag);
+                }
+
+                if (this.value.length > 10) {
+                    alert('Maksimal 10 tag diperbolehkan');
+                    this.removeTag(lastTag);
+                }
+            });
 
             // Drag-and-Drop Functionality
             fileUploadArea.addEventListener('dragover', (e) => {
@@ -357,6 +480,20 @@ setCacheHeaders($isLive);
                     validationFeedback.textContent = errors.join('\n');
                     return;
                 }
+
+                // Validasi total gambar setelah upload *******************************************************
+                const currentImageCount = <?= count($currentImages) ?>;
+                const imagesToDeleteCount = document.querySelectorAll('input[name="images_to_delete[]"]:checked').length;
+                const remainingCurrent = currentImageCount - imagesToDeleteCount;
+                const totalAfterUpload = remainingCurrent + files.length;
+
+                if (totalAfterUpload > 10) {
+                    errors.push(`❌ Maksimal total 10 gambar. Anda akan memiliki ${totalAfterUpload} gambar setelah upload ini.`);
+                    fileInput.value = '';
+                    validationFeedback.textContent = errors.join('\n');
+                    return;
+                }
+                // ***********************************************************************
 
                 for (const file of files) {
                     const fileErrors = [];
