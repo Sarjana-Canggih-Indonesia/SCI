@@ -136,7 +136,7 @@ if (isset($_SESSION['flash_message'])) {
 <body style="background-color: #f7f9fb;">
 
     <!--========== INSERT HEADER.PHP ==========-->
-    <?php include '../includes/header.php'; ?>
+    <?php include __DIR__ . '/../includes/admin-navbar.php'; ?>
     <!--========== AKHIR INSERT HEADER.PHP ==========-->
 
     <!--========== AREA SCROLL TO TOP ==========-->
@@ -148,26 +148,8 @@ if (isset($_SESSION['flash_message'])) {
     </div>
     <!--========== AKHIR AREA SCROLL TO TOP ==========-->
 
-    <!--========== AREA GENERIC FLASH MESSAGES ==========-->
-    <div class="jarak-kustom container">
-        <?php if ($successMessage): ?>
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                <?= htmlspecialchars($successMessage) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-
-        <?php if ($errorMessage): ?>
-            <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                <?= htmlspecialchars($errorMessage) ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        <?php endif; ?>
-    </div>
-    <!--========== AKHIR AREA GENERIC FLASH MESSAGES ==========-->
-
     <!--========== AREA MANAGE USERS ==========-->
-    <div class="jarak-kustom">
+    <div class="area-konten-manage-users">
         <div class="container">
             <section class="judul-halaman-admin-dashboard">
                 <h2 class="fs-1 mb-5 text-center">Manage Users</h2>
@@ -284,6 +266,24 @@ if (isset($_SESSION['flash_message'])) {
                     </div>
                 </div>
             </div>
+
+            <!--========== AREA GENERIC FLASH MESSAGES ==========-->
+            <div class="mb-4">
+                <?php if ($successMessage): ?>
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($successMessage) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($errorMessage): ?>
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <?= htmlspecialchars($errorMessage) ?>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <!--========== AKHIR AREA GENERIC FLASH MESSAGES ==========-->
 
             <!-- Users Table Section -->
             <div class="tabel-users">
