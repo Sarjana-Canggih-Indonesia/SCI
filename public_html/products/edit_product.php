@@ -227,9 +227,9 @@ setCacheHeaders($isLive);
                             <div class="col-md-6">
                                 <label for="status" class="form-label">Status</label>
                                 <select class="form-select" id="status" name="status">
-                                    <option value="active" <?= ($product['deleted_at'] === null) ? 'selected' : '' ?>>
+                                    <option value="active" <?= ($product['active'] === null) ? 'selected' : '' ?>>
                                         Active</option>
-                                    <option value="inactive" <?= ($product['deleted_at'] !== null) ? 'selected' : '' ?>>
+                                    <option value="inactive" <?= ($product['active'] !== null) ? 'selected' : '' ?>>
                                         Inactive</option>
                                 </select>
                             </div>
@@ -272,11 +272,12 @@ setCacheHeaders($isLive);
                         </div>
 
                         <div class="d-flex justify-content-between border-top pt-4">
+                            <!-- Close Button -->
                             <button type="button" class="btn btn-outline-danger" onclick="handleClose()">
                                 <i class="fa-solid fa-xmark"></i> Close
                             </button>
-                            <button type="submit" class="btn btn-primary">
                             <!-- Save Changes Button -->
+                            <button type="submit" class="btn btn-primary">
                                 <i class="fa-solid fa-save"></i> Save Changes
                             </button>
                         </div>
