@@ -149,6 +149,27 @@ function getProductImagePath($productId, $config, $env)
 }
 
 /**
+ * Generates an HTML badge representing the product status.
+ *
+ * This function takes the product's status value from the 'active' column 
+ * and returns an HTML `<span>` element styled as a badge. If the status 
+ * is 'active', a green badge labeled "Active" is returned; otherwise, 
+ * a red badge labeled "Inactive" is returned.
+ *
+ * @param string $status The status of the product ('active' or 'inactive').
+ * @return string The HTML badge representing the product status.
+ */
+function getProductStatus($status)
+{
+    // Check if the product status is 'active' and return the corresponding HTML badge
+    if ($status === 'active') {
+        return '<span class="badge bg-success">Active</span>'; // Green badge for active products
+    } else {
+        return '<span class="badge bg-danger">Inactive</span>'; // Red badge for inactive products
+    }
+}
+
+/**
  * Retrieves a single product by its ID from the database.
  *
  * This function establishes a connection to the database using PDO,
