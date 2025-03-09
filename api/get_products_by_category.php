@@ -41,6 +41,7 @@ try {
                 p.product_id,
                 p.product_name,
                 p.price_amount,
+                p.active,
                 GROUP_CONCAT(DISTINCT pc.category_name SEPARATOR ', ') AS categories
             FROM products p
             LEFT JOIN product_category_mapping pcm ON p.product_id = pcm.product_id

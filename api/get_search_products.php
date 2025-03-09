@@ -42,6 +42,7 @@ try {
             p.deleted_at, 
             p.price_amount, 
             p.currency,
+            p.active, 
             GROUP_CONCAT(DISTINCT pc.category_name SEPARATOR ', ') AS categories,
             COALESCE(GROUP_CONCAT(DISTINCT pi.image_path ORDER BY pi.image_id SEPARATOR ','), '') AS images
         FROM products p
