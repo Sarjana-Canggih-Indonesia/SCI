@@ -220,6 +220,11 @@ function updateTable(products, currentPage = 1, limit = 10) {
           </td>
           <td>${escapeHtml(product.product_name)}</td>
           <td>${escapeHtml(product.categories || "Uncategorized")}</td>
+          <td>
+            <span class="badge bg-${product.active === "active" ? "success" : "danger"}">
+              ${product.active === "active" ? "Active" : "Inactive"}
+            </span>
+          </td>
           <td>Rp ${formatPrice(product.price_amount)}</td>
           <td>
               <button class="btn btn-info btn-sm" onclick="viewDetails(${escapeHtml(product.product_id)})">

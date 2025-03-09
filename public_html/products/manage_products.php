@@ -263,6 +263,7 @@ setCacheHeaders($isLive);
                             <th>No.</th>
                             <th>Product Name</th>
                             <th>Category</th>
+                            <th>Status</th>
                             <th>Price</th>
                             <th>Actions</th>
                         </tr>
@@ -281,6 +282,18 @@ setCacheHeaders($isLive);
                                 </td>
                                 <td><?= htmlspecialchars($product['product_name']) ?></td>
                                 <td><?= htmlspecialchars($product['categories'] ?? 'Uncategorized') ?></td>
+
+                                <!-- Kolom Status Penjualan -->
+                                <td>
+                                    <?php
+                                    $status = strtolower($product['active']);
+                                    $badgeClass = ($status === 'active') ? 'success' : 'danger';
+                                    ?>
+                                    <span class="badge bg-<?= $badgeClass ?>">
+                                        <?= ucfirst($status) ?>
+                                    </span>
+                                </td>
+
                                 <td>Rp <?= number_format($product['price_amount'], 0, ',', '.') ?>,00</td>
                                 <td>
                                     <!-- Tombol View Details -->
