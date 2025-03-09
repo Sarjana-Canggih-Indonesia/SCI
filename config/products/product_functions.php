@@ -5,6 +5,7 @@ require_once __DIR__ . '/../../vendor/autoload.php';
 require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/../user_actions_config.php';
 require_once __DIR__ . '/../auth/validate.php';
+require_once __DIR__ . '/tag_functions.php';
 
 use voku\helper\AntiXSS;
 use Brick\Money\Money;
@@ -958,43 +959,6 @@ function updateProductCoreInfo($pdo, $product_id, $data)
 }
 
 /**
- * Updates the tags associated with a product.
- *
- * This function first removes all existing tags linked to the product by deleting records 
- * from the `product_tag_mapping` table. Then, if new tags are provided, it inserts them 
- * into the table. The function ensures that each tag ID is numeric before inserting 
- * to prevent invalid data entry. If a database error occurs, it throws a `RuntimeException`.
- *
- * @param PDO $pdo The PDO database connection instance.
- * @param int $product_id The unique identifier of the product.
- * @param array $tags An array of tag IDs to be associated with the product.
- * @throws RuntimeException If a tag ID is invalid or a database error occurs.
- */
-function updateProductTags($pdo, $product_id, $tags)
-{
-    try {
-        // Hapus semua tag lama
-        $stmt_delete = $pdo->prepare("DELETE FROM product_tag_mapping WHERE product_id = ?");
-        $stmt_delete->execute([$product_id]);
-
-        if (!empty($tags)) {
-            // Hindari duplikat tag
-            $unique_tags = array_unique($tags);
-
-            $stmt_insert = $pdo->prepare("INSERT INTO product_tag_mapping (product_id, tag_id) VALUES (?, ?)");
-            foreach ($unique_tags as $tag_id) {
-                if (!is_numeric($tag_id)) {
-                    throw new RuntimeException("ID tag tidak valid: " . htmlspecialchars($tag_id));
-                }
-                $stmt_insert->execute([$product_id, (int) $tag_id]);
-            }
-        }
-    } catch (PDOException $e) {
-        throw new RuntimeException("Gagal memperbarui tag: " . $e->getMessage());
-    }
-}
-
-/**
  * Handles the deletion and addition of product images.
  *
  * This function removes selected images from both the database and the filesystem. 
@@ -1144,10 +1108,11 @@ function handleEditProductForm($config, $env)
                 'images_to_delete' => $_POST['images_to_delete'] ?? [],
                 'new_images' => [],
                 'product_id' => (int) ($_POST['product_id'] ?? 0),
-                'tags' => isset($_POST['tags']) ? array_filter(
-                    explode(',', $_POST['tags']),
-                    fn($tag) => is_numeric($tag)
-                ) : []
+                'tags' => isset($_POST['tags']) ?
+                    array_filter(
+                        array_map('trim', explode(',', $_POST['tags'])),
+                        fn($tag) => !empty($tag)
+                    ) : []
             ];
 
             $price = filter_var($_POST['price_amount'], FILTER_SANITIZE_NUMBER_FLOAT, FILTER_FLAG_ALLOW_FRACTION);
