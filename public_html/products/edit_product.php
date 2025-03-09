@@ -80,6 +80,7 @@ $products = getAllProductsWithCategoriesAndTags($config, $env);
 $categoryRelations = getProductCategoryRelations($product['product_id'], $config, $env);
 $currentCategoryIds = $categoryRelations['category_ids'] ?? [];
 $selectedCategoryId = $productData['productCategory'] ?? (isset($currentCategoryIds[0]) ? $currentCategoryIds[0] : null);
+$currentTags = getProductTagNames($productId, $pdo);
 $currentTagIds = getProductTagRelations($productId, $config, $env);
 // Jika tidak ada tag, set sebagai array kosong
 $currentTagIds = $currentTagIds ?: [];
@@ -112,8 +113,6 @@ setCacheHeaders($isLive);
     <!-- Font Awesome -->
     <link rel="stylesheet" type="text/css"
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-    <!-- Tagify CSS -->
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" />
     <!-- Custom CSS -->
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/styles.css" />
     <link rel="stylesheet" type="text/css" href="<?php echo $baseUrl; ?>assets/css/halaman-admin.css" />
@@ -382,9 +381,6 @@ setCacheHeaders($isLive);
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/popper.min.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="<?php echo $baseUrl; ?>assets/vendor/js/fusejs.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.min.js"></script>
-    <script type="text/javascript"
-        src="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
     <!-- Custom JS -->
     <script> const BASE_URL = '<?= $baseUrl ?>';</script>
     <script>
@@ -396,6 +392,7 @@ setCacheHeaders($isLive);
     </script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // ==================== FUNGSI UPLOAD GAMBAR ==================== //
             const fileInput = document.getElementById('image');
             const fileUploadArea = document.querySelector('.file-upload-area');
             const imagePreview = document.getElementById('image-preview');
@@ -405,52 +402,6 @@ setCacheHeaders($isLive);
             const maxWidth = 2000;
             const maxHeight = 2000;
             const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-
-            // ==================== KONFIGURASI TAGIFY ==================== //
-            const tagInputEl = document.getElementById('tag-input');
-            const tagIdsInput = document.getElementById('tag-ids');
-
-            // Format whitelist untuk Tagify (array of objects)
-            const tagsWhitelist = <?= json_encode(array_map(function ($tag) {
-                return ['id' => $tag['tag_id'], 'value' => $tag['tag_name']];
-            }, $tags)) ?>;
-
-            // Inisialisasi Tagify
-            const tagify = new Tagify(tagInputEl, {
-                whitelist: tagsWhitelist,
-                enforceWhitelist: false, // Izinkan tag custom
-                dropdown: {
-                    enabled: 1,
-                    maxItems: 50,
-                    closeOnSelect: false,
-                    highlightFirst: true
-                },
-                editTags: true,
-                duplicates: false,
-                placeholder: "Masukkan tag...",
-                maxTags: 10,
-                pattern: /^[a-zA-Z0-9\s\-_]+$/, // Pola validasi
-                tagTextProp: 'value', // Tampilkan value dari whitelist
-                idProp: 'id' // Simpan id ke dalam input hidden
-            });
-
-            // Event handler untuk update input hidden
-            tagify.on('add', function (e) {
-                const tagIds = tagify.value.map(tag => tag.id);
-                tagIdsInput.value = tagIds.join(',');
-
-                // Validasi manual
-                const lastTag = e.detail.data;
-                if (!this.pattern.test(lastTag.value)) {
-                    alert(`Tag tidak valid: ${lastTag.value}`);
-                    this.removeTag(lastTag);
-                }
-
-                if (this.value.length > 10) {
-                    alert('Maksimal 10 tag diperbolehkan');
-                    this.removeTag(lastTag);
-                }
-            });
 
             // Drag-and-Drop Functionality
             fileUploadArea.addEventListener('dragover', (e) => {
@@ -481,25 +432,24 @@ setCacheHeaders($isLive);
                 let errors = [];
 
                 if (files.length > maxFiles) {
-                    errors.push(`❌ You can upload a maximum of ${maxFiles} files.`);
+                    errors.push(`❌ Maksimal upload ${maxFiles} file`);
                     fileInput.value = '';
                     validationFeedback.textContent = errors.join('\n');
                     return;
                 }
 
-                // Validasi total gambar setelah upload *******************************************************
+                // Validasi total gambar
                 const currentImageCount = <?= count($currentImages) ?>;
                 const imagesToDeleteCount = document.querySelectorAll('input[name="images_to_delete[]"]:checked').length;
                 const remainingCurrent = currentImageCount - imagesToDeleteCount;
                 const totalAfterUpload = remainingCurrent + files.length;
 
                 if (totalAfterUpload > 10) {
-                    errors.push(`❌ Maksimal total 10 gambar. Anda akan memiliki ${totalAfterUpload} gambar setelah upload ini.`);
+                    errors.push(`❌ Maksimal total 10 gambar. Setelah upload ini akan menjadi ${totalAfterUpload} gambar`);
                     fileInput.value = '';
                     validationFeedback.textContent = errors.join('\n');
                     return;
                 }
-                // ***********************************************************************
 
                 for (const file of files) {
                     const fileErrors = [];
@@ -509,45 +459,45 @@ setCacheHeaders($isLive);
                     img.style.maxWidth = '150px';
                     img.style.maxHeight = '150px';
 
-                    // Validate File Type
+                    // Validasi tipe file
                     if (!allowedTypes.includes(file.type)) {
-                        fileErrors.push(`❌ ${file.name}: Invalid file type (only JPG, PNG, WEBP allowed).`);
+                        fileErrors.push(`❌ ${file.name}: Format file tidak didukung`);
                     }
 
-                    // Validate File Size
+                    // Validasi ukuran file
                     if (file.size > maxSize) {
-                        fileErrors.push(`❌ ${file.name}: File size exceeds 2MB.`);
+                        fileErrors.push(`❌ ${file.name}: Ukuran file melebihi 2MB`);
                     }
 
-                    // Validate Image Dimensions
+                    // Validasi dimensi gambar
                     try {
                         await new Promise((resolve, reject) => {
                             img.onload = () => {
                                 if (img.naturalWidth > maxWidth || img.naturalHeight > maxHeight) {
-                                    reject(`❌ ${file.name}: Dimensions exceed ${maxWidth}x${maxHeight}px.`);
+                                    reject(`❌ ${file.name}: Dimensi melebihi 2000x2000px`);
                                 } else {
                                     resolve();
                                 }
                             };
                             img.onerror = () => {
-                                reject(`❌ ${file.name}: Invalid image file.`);
+                                reject(`❌ ${file.name}: File gambar tidak valid`);
                             };
                         });
                     } catch (error) {
                         fileErrors.push(error);
                     }
 
-                    // Display Preview or Errors
+                    // Tampilkan preview atau error
                     if (fileErrors.length > 0) {
                         errors.push(...fileErrors);
                     } else {
                         const previewContainer = document.createElement('div');
                         previewContainer.classList.add('position-relative', 'd-inline-block');
                         previewContainer.innerHTML = `
-                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0" onclick="removePreview(this)">
-                            <i class="fa-solid fa-times"></i>
-                        </button>
-                    `;
+                    <button type="button" class="btn btn-danger btn-sm position-absolute top-0 end-0" onclick="removePreview(this)">
+                        <i class="fa-solid fa-times"></i>
+                    </button>
+                `;
                         previewContainer.querySelector('button').insertAdjacentElement('beforebegin', img);
                         imagePreview.appendChild(previewContainer);
                     }
@@ -559,12 +509,33 @@ setCacheHeaders($isLive);
                 }
             }
 
-            // Remove Preview Function
+            // Fungsi hapus preview
             window.removePreview = function (button) {
                 const previewContainer = button.closest('div');
                 previewContainer.remove();
+
+                // Update files array
+                const dataTransfer = new DataTransfer();
+                const files = Array.from(fileInput.files);
+                const filenames = Array.from(imagePreview.querySelectorAll('img'))
+                    .map(img => img.src.split('/').pop());
+
+                files.forEach((file, index) => {
+                    if (!filenames.includes(file.name)) {
+                        dataTransfer.items.add(file);
+                    }
+                });
+
+                fileInput.files = dataTransfer.files;
             };
         });
+
+        // Fungsi umum
+        function handleClose() {
+            if (confirm('Apakah Anda yakin ingin menutup tab ini?')) {
+                window.location.href = BASE_URL + 'manage_products';
+            }
+        }
     </script>
 </body>
 
