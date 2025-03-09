@@ -212,3 +212,103 @@ function deleteTag(PDO $pdo, int $tagId, int $adminId): bool
     }
     return false; // Return false if deletion failed.
 }
+
+/**
+ * Retrieves the tag names associated with a specific product.
+ *
+ * This function fetches all tag names linked to the given product ID from the database. 
+ * It performs an INNER JOIN between the `tags` table and the `product_tag_mapping` table 
+ * to find relevant tags.
+ *
+ * @param int $productId The unique identifier of the product.
+ * @param PDO $pdo The PDO database connection instance.
+ * @return array An array of tag names associated with the product.
+ * @throws RuntimeException If a database error occurs.
+ */
+function getProductTagNames($productId, $pdo)
+{
+    try {
+        // Prepare SQL query to retrieve tag names associated with the product
+        $stmt = $pdo->prepare("SELECT t.tag_name FROM tags t INNER JOIN product_tag_mapping ptm ON t.tag_id = ptm.tag_id WHERE ptm.product_id = ?");
+
+        // Execute the query with the provided product ID
+        $stmt->execute([$productId]);
+
+        // Fetch all tag names as a simple array
+        return $stmt->fetchAll(PDO::FETCH_COLUMN);
+    } catch (PDOException $e) {
+        // Throw an exception if any database error occurs
+        throw new RuntimeException("Failed to get product tags: " . $e->getMessage());
+    }
+}
+
+/**
+ * Updates the tags associated with a product.
+ *
+ * This function first removes all existing tag mappings for the given product ID from the 
+ * `product_tag_mapping` table. If new tags are provided, it processes each tag:
+ * - Cleans the input to remove whitespace, duplicates, and empty values.
+ * - Checks if the tag already exists in the `tags` table.
+ * - If the tag exists, retrieves its ID; otherwise, inserts it and retrieves the new ID.
+ * - Inserts a mapping between the product and the tag in `product_tag_mapping`.
+ * 
+ * The function logs key operations to assist in debugging and ensures database consistency.
+ *
+ * @param PDO $pdo The PDO database connection instance.
+ * @param int $product_id The unique identifier of the product.
+ * @param array $tags An array of tag names to be associated with the product.
+ * @throws RuntimeException If a database error occurs.
+ */
+function updateProductTags($pdo, $product_id, $tags)
+{
+    try {
+        // Remove all existing tags associated with the product
+        $stmt_delete = $pdo->prepare("DELETE FROM product_tag_mapping WHERE product_id = ?");
+        $stmt_delete->execute([$product_id]);
+        $deletedCount = $stmt_delete->rowCount();
+        error_log("[updateProductTags] Deleted $deletedCount existing tags for product $product_id");
+
+        // Proceed only if new tags are provided
+        if (!empty($tags)) {
+            // Trim whitespace, remove duplicates, and filter out empty values
+            $cleaned_tags = array_map('trim', $tags);
+            $unique_tags = array_unique($cleaned_tags);
+            $non_empty_tags = array_filter($unique_tags, fn($tag) => !empty($tag));
+
+            // If no valid tags remain, return early
+            if (empty($non_empty_tags)) {
+                error_log("[updateProductTags] All provided tags were invalid. No tags added for product $product_id");
+                return;
+            }
+
+            error_log("[updateProductTags] Processing " . count($non_empty_tags) . " tags for product $product_id");
+
+            // Prepare statements for checking, inserting tags, and mapping tags to the product
+            $stmt_check_tag = $pdo->prepare("SELECT tag_id FROM tags WHERE tag_name = ?");
+            $stmt_insert_tag = $pdo->prepare("INSERT INTO tags (tag_name) VALUES (?)");
+            $stmt_insert_mapping = $pdo->prepare("INSERT INTO product_tag_mapping (product_id, tag_id) VALUES (?, ?)");
+
+            foreach ($non_empty_tags as $tag_name) {
+                // Check if the tag already exists in the database
+                $stmt_check_tag->execute([$tag_name]);
+                $tag_id = $stmt_check_tag->fetchColumn();
+
+                // If the tag does not exist, insert it and get its new ID
+                if (!$tag_id) {
+                    $stmt_insert_tag->execute([$tag_name]);
+                    $tag_id = $pdo->lastInsertId();
+                    error_log("[updateProductTags] Created new tag '$tag_name' with ID $tag_id");
+                }
+
+                // Insert the relationship between the product and the tag
+                $stmt_insert_mapping->execute([$product_id, $tag_id]);
+                error_log("[updateProductTags] Mapped product $product_id to tag $tag_id ('$tag_name')");
+            }
+        } else {
+            error_log("[updateProductTags] No new tags provided. Tags cleared for product $product_id");
+        }
+    } catch (PDOException $e) {
+        error_log("[updateProductTags] Error updating tags for product $product_id: " . $e->getMessage());
+        throw new RuntimeException("Failed to update product tags: " . $e->getMessage());
+    }
+}
