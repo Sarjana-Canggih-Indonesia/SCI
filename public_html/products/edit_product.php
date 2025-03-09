@@ -301,10 +301,9 @@ setCacheHeaders($isLive);
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label for="tags" class="form-label">Tags</label>
-                                <input type="hidden" name="tags" id="tag-ids"
-                                    value="<?= implode(',', $currentTagIds) ?>">
-                                <input type="text" class="form-control" id="tag-input"
-                                    placeholder="Cari atau tambah tag...">
+                                <input type="text" class="form-control" id="tags" name="tags"
+                                    placeholder="Masukkan tag, dipisahkan dengan koma"
+                                    value="<?= htmlspecialchars(implode(', ', $currentTags)) ?>">
                             </div>
                         </div>
                         <!-- Image Produk / Layanan EDIT FORM -->
