@@ -902,36 +902,43 @@ function updateProduct($data, $product_id, $config, $env)
 }
 
 /**
- * Updates the core information of a product in the database.
+ * Updates the core information of a product.
  *
- * This function updates the essential details of a product, including its name, price, currency, 
- * description, and slug. It first validates that all required fields are provided in the input data.
- * If any required field is missing, it throws a `RuntimeException`. The update process is performed 
- * using a prepared statement for security. If the update fails or affects zero rows, an exception is thrown.
+ * This function validates the required fields before updating the product record in the `products` table.
+ * If any required field is missing, an error is logged, and an exception is thrown.
+ * 
+ * The function prepares an SQL `UPDATE` statement to modify:
+ * - `product_name`, `price_amount`, `currency`, `description`, `slug`, `active`, and `updated_at` fields.
+ * - The `updated_at` field is automatically set to the current timestamp.
  *
+ * If the update fails or no rows are affected, appropriate error messages are logged and exceptions are thrown.
+ * 
  * @param PDO $pdo The PDO database connection instance.
  * @param int $product_id The unique identifier of the product to be updated.
- * @param array $data An associative array containing the product details.
- * @throws RuntimeException If a required field is missing or the update fails.
+ * @param array $data An associative array containing the new product data. 
+ *                    Expected keys: `name`, `price_amount`, `currency`, `description`, `slug`, `active`.
+ * @throws RuntimeException If a required field is missing, the query fails, or no rows are updated.
  */
 function updateProductCoreInfo($pdo, $product_id, $data)
 {
-    // Pastikan field required ada dan tidak kosong
+    // Define required fields and their labels for error messages
     $required_fields = [
-        'name' => 'Nama produk',
-        'price_amount' => 'Harga',
-        'currency' => 'Mata uang',
-        'description' => 'Deskripsi',
+        'name' => 'Product Name',
+        'price_amount' => 'Price',
+        'currency' => 'Currency',
+        'description' => 'Description',
         'slug' => 'Slug'
     ];
 
+    // Validate required fields
     foreach ($required_fields as $field => $label) {
         if (empty($data[$field])) {
-            throw new RuntimeException("$label harus diisi");
+            error_log("[updateProductCoreInfo] Error: Missing required field '{$field}' for product ID: {$product_id}");
+            throw new RuntimeException("$label is required");
         }
     }
 
-    // Update query dengan nama kolom yang sesuai database
+    // Prepare SQL query to update product information
     $stmt = $pdo->prepare("
         UPDATE products 
         SET 
@@ -940,22 +947,47 @@ function updateProductCoreInfo($pdo, $product_id, $data)
             currency = :currency, 
             description = :description, 
             slug = :slug, 
+            active = :active, 
             updated_at = NOW() 
         WHERE product_id = :product_id
     ");
 
-    $success = $stmt->execute([
-        'product_name' => $data['name'],      // Sesuaikan dengan key di $data
+    // Check if statement preparation was successful
+    if (!$stmt) {
+        $errorInfo = json_encode($pdo->errorInfo());
+        error_log("[updateProductCoreInfo] PDO Prepare Error: {$errorInfo} | Product ID: {$product_id}");
+        throw new RuntimeException("Failed to prepare product update query");
+    }
+
+    // Bind parameters for execution
+    $params = [
+        'product_name' => $data['name'],
         'price_amount' => $data['price_amount'],
         'currency' => $data['currency'],
         'description' => $data['description'],
         'slug' => $data['slug'],
+        'active' => $data['active'],
         'product_id' => $product_id
-    ]);
+    ];
 
-    if (!$success || $stmt->rowCount() === 0) {
-        throw new RuntimeException("Gagal memperbarui informasi produk");
+    // Execute the update query
+    $success = $stmt->execute($params);
+
+    // Check if execution was successful
+    if (!$success) {
+        $errorInfo = json_encode($stmt->errorInfo());
+        $paramsLog = json_encode($params);
+        error_log("[updateProductCoreInfo] Execute Error: {$errorInfo} | Params: {$paramsLog}");
+        throw new RuntimeException("Failed to update product information");
     }
+
+    // Check if any rows were affected (if no rows updated, either no changes or product not found)
+    if ($stmt->rowCount() === 0) {
+        error_log("[updateProductCoreInfo] Warning: No rows affected for product ID: {$product_id} | Data: " . json_encode($data));
+        throw new RuntimeException("No changes made or product not found");
+    }
+
+    error_log("[updateProductCoreInfo] Successfully updated product ID: {$product_id} | Changes: " . json_encode($data));
 }
 
 /**
@@ -1108,6 +1140,7 @@ function handleEditProductForm($config, $env)
                 'images_to_delete' => $_POST['images_to_delete'] ?? [],
                 'new_images' => [],
                 'product_id' => (int) ($_POST['product_id'] ?? 0),
+                'active' => $_POST['active'] ?? 'inactive',
                 'tags' => isset($_POST['tags']) ?
                     array_filter(
                         array_map('trim', explode(',', $_POST['tags'])),
