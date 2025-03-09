@@ -179,16 +179,16 @@ setCacheHeaders($isLive);
                 <div class="col-md-6 separator live-version">
                     <h4 class="section-title">Live Preview</h4>
                     <div class="preview-card shadow-sm">
-                        <!-- Gambar Produk -->
+                        <!-- Gambar Produk LIVE VERSION -->
                         <img src="<?= $baseUrl . ($product['image_path'] ?? 'assets/images/default_product.png') ?>"
                             class="img-fluid mb-3 rounded" alt="Product Image"
                             style="max-height: 200px; object-fit: cover;">
-                        <!-- Nama Produk -->
+                        <!-- Nama Produk LIVE VERSION -->
                         <h3 class="mb-2"><?= htmlspecialchars($product['product_name']) ?></h3>
 
-                        <!-- Kategori dan Status -->
+                        <!-- Kategori dan Status LIVE VERSION -->
                         <div class="d-flex gap-2 mb-3">
-                            <!-- Kategori -->
+                            <!-- Kategori LIVE VERSION -->
                             <?php
                             // Loop melalui semua kategori yang tersedia
                             foreach ($categories as $category) {
@@ -203,16 +203,16 @@ setCacheHeaders($isLive);
                                 echo '<span class="badge bg-secondary">Uncategorized</span>';
                             }
                             ?>
-                            <!-- Status Penjualan -->
+                            <!-- Status Penjualan LIVE VERSION -->
                             <?= getProductStatus($product['active']) ?>
                         </div>
 
-                        <!-- Harga -->
+                        <!-- Harga LIVE VERSION -->
                         <h4 class="text-danger mb-3">
                             Rp <?= number_format($product['price_amount'], 0, ',', '.') ?>
                         </h4>
 
-                        <!-- Deskripsi -->
+                        <!-- Deskripsi LIVE VERSION -->
                         <div class="mb-4">
                             <h5>Description</h5>
                             <p class="text-muted">
@@ -220,7 +220,7 @@ setCacheHeaders($isLive);
                             </p>
                         </div>
 
-                        <!-- Tags -->
+                        <!-- Tags LIVE VERSION -->
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label for="tags" class="form-label">Tags</label>
@@ -238,16 +238,16 @@ setCacheHeaders($isLive);
                         enctype="multipart/form-data">
                         <!-- Produk ID -->
                         <input type="hidden" name="product_id" value="<?= $product['product_id'] ?>">
-                        <!-- Nama Produk -->
+                        <!-- Nama Produk EDIT FORM -->
                         <div class="mb-3">
                             <label for="name" class="form-label">Nama Produk</label>
                             <input type="text" class="form-control" id="name" name="product_name"
                                 placeholder="Masukkan nama produk"
                                 value="<?= htmlspecialchars($product['product_name'] ?? '') ?>">
                         </div>
-                        <!-- Harga & Status Penjualan -->
+                        <!-- Harga & Status Penjualan EDIT FORM -->
                         <div class="row g-3">
-                            <!-- Harga -->
+                            <!-- Harga EDIT FORM -->
                             <div class="col-md-6">
                                 <label for="price" class="form-label">Price</label>
                                 <div class="input-group">
@@ -257,7 +257,7 @@ setCacheHeaders($isLive);
                                         value="<?= htmlspecialchars($product['price_amount'] ?? '') ?>">
                                 </div>
                             </div>
-                            <!-- Status Penjualan -->
+                            <!-- Status Penjualan EDIT FORM -->
                             <div class="col-md-6">
                                 <label for="status" class="form-label">Status</label>
                                 <select class="form-select" id="status" name="active">
@@ -268,14 +268,14 @@ setCacheHeaders($isLive);
                                 </select>
                             </div>
                         </div>
-                        <!-- Description -->
+                        <!-- Description EDIT FORM -->
                         <div class="mb-3">
                             <label for="description" class="form-label">Description</label>
                             <textarea class="form-control" id="description" name="product_description" rows="4"
                                 placeholder="Masukkan deskripsi produk"><?= htmlspecialchars($product['description'] ?? '') ?>
                             </textarea>
                         </div>
-                        <!-- Category -->
+                        <!-- Category EDIT FORM -->
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label for="category" class="form-label">Category</label>
@@ -290,7 +290,7 @@ setCacheHeaders($isLive);
                                 </select>
                             </div>
                         </div>
-                        <!-- Tags -->
+                        <!-- Tags EDIT FORM -->
                         <div class="row g-3">
                             <div class="col-md-12">
                                 <label for="tags" class="form-label">Tags</label>
@@ -300,7 +300,7 @@ setCacheHeaders($isLive);
                                     placeholder="Cari atau tambah tag...">
                             </div>
                         </div>
-                        <!-- Image Produk / Layanan -->
+                        <!-- Image Produk / Layanan EDIT FORM -->
                         <div class="mb-4 mt-4">
                             <label for="image" class="form-label">Product Images</label>
                             <div class="file-upload-area border rounded p-3 text-center bg-light">
