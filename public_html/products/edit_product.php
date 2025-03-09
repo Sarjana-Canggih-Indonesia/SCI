@@ -223,9 +223,16 @@ setCacheHeaders($isLive);
                         <!-- Tags LIVE VERSION -->
                         <div class="row g-3">
                             <div class="col-md-12">
-                                <label for="tags" class="form-label">Tags</label>
-                                <input type="hidden" name="tags" id="tag-ids"
-                                    value="<?= implode(',', $currentTagIds) ?>">
+                                <label class="form-label">Tags</label>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <?php if (!empty($currentTags)): ?>
+                                        <?php foreach ($currentTags as $tag): ?>
+                                            <span class="badge bg-info"><?= htmlspecialchars($tag) ?></span>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <span class="text-muted">No tags</span>
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         </div>
                     </div>
