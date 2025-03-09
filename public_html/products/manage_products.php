@@ -343,32 +343,19 @@ setCacheHeaders($isLive);
                                     <div class="list-group-item text-center py-2 small text-muted">No recent activities
                                         found</div>
                                 <?php else: ?>
-                                    <?php foreach ($activityLogs as $log):
-                                        // Define action icons
-                                        $actionIcons = [
-                                            'insert' => 'fa-circle-plus text-success',
-                                            'update' => 'fa-pen-to-square text-warning',
-                                            'delete' => 'fa-trash-can text-danger'
-                                        ];
-                                        $iconClass = $actionIcons[strtolower($log['action'])] ?? 'fa-circle-info text-primary';
-                                        ?>
+                                    <?php foreach ($activityLogs as $log): ?>
                                         <a href="#" class="list-group-item list-group-item-action">
                                             <div class="row align-items-center g-1">
                                                 <!-- Kolom Waktu -->
-                                                <div class="col-2 text-nowrap">
+                                                <div class="col-1 text-nowrap">
                                                     <small class="text-muted">
                                                         <?= date('H:i', strtotime($log['created_at'])) ?>
                                                     </small>
                                                 </div>
 
                                                 <!-- Kolom Konten -->
-                                                <div class="col-10">
+                                                <div class="col-11">
                                                     <div class="d-flex align-items-center">
-                                                        <!-- Ikon -->
-                                                        <span class="me-2">
-                                                            <i class="fas <?= $iconClass ?> fa-fw"></i>
-                                                        </span>
-
                                                         <!-- User dan Action -->
                                                         <div class="flex-grow-1">
                                                             <span class="badge bg-secondary bg-opacity-25 text-dark me-2">
